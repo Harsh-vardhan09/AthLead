@@ -25,7 +25,7 @@ The main goal of this project is to allow users (athletes or coaches) to **regis
 
 ## 🖼️ Architecture/Workflow
 
-![AthLead Architecture](./AthLead-frontend/public/Assets/AthLead-workflow.png)
+![AthLead Architecture](AthLead-frontend/public/Assets/AthLead-workflow.png)
 
 ---
  

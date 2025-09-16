@@ -25,7 +25,7 @@ The main goal of this project is to allow users (athletes or coaches) to **regis
 
 ## 🖼️ Architecture/Workflow
 
-![AthLead Architecture](../AthLead-frontend/public/Assets/AthLead-workflow.png)
+![AthLead Workflow](AthLead-frontend/public/Assets/AthLead-workflow.png)
 
 ---
  
@@ -50,7 +50,7 @@ npm run dev
 
 ### 📁 'AthLead-JWT-Springboot/README.md'
 
-```markdown
+markdown
 # AthLead Backend (Spring Boot + JWT + PostgreSQL)
 
 This is the **Spring Boot backend** of the AthLead project.  
@@ -74,7 +74,7 @@ open this in intellij by opening folder and run the **JWTImplementationApplicati
 
 ### 📁 `AthLead-ML-model/README.md`
 
-```markdown
+markdown
 # AthLead ML Model (Python + scikit-learn)
 
 This is the **machine learning model** of the AthLead project.  

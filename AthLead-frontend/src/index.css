@@ -1,0 +1,9 @@
+@font-face {
+  font-family: akkurat;
+  src: url("/public/Fonts/fonnts.com-Akkurat-Regular.ttf");
+}
+@import "tailwindcss";
+
+@theme{
+  --font-akkurat:akkurat,"sans-sarif";
+}

@@ -1,0 +1,50 @@
+# ======================
+# Global Git Ignore
+# ======================
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# VSCode
+.vscode/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# ======================
+# React / Frontend (Vite)
+# ======================
+AthLead-frontend/node_modules/
+AthLead-frontend/dist/
+AthLead-frontend/build/
+
+# ======================
+# Python / ML Model
+# ======================
+AthLead-ML-model/__pycache__/
+AthLead-ML-model/*.pyc
+AthLead-ML-model/venv/
+AthLead-ML-model/.venv/
+AthLead-ML-model/*.pkl
+AthLead-ML-model/*.h5
+AthLead-ML-model/*.pt
+
+# ======================
+# Spring Boot / Java
+# ======================
+AthLead-JWT-Springboot/target/
+AthLead-JWT-Springboot/.idea/
+AthLead-JWT-Springboot/.project
+AthLead-JWT-Springboot/.classpath
+AthLead-JWT-Springboot/.settings/

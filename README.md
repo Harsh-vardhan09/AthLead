@@ -25,7 +25,7 @@ The main goal of this project is to allow users (athletes or coaches) to **regis
 
 ## 🖼️ Architecture/Workflow
 
-![AthLead Architecture](./AthLead-frontend/public/Assets/AthLead-workflow.png)
+![AthLead Architecture](../AthLead-frontend/public/Assets/AthLead-workflow.png)
 
 ---
  
@@ -46,7 +46,7 @@ The frontend is built using **React (Vite)** and styled with **Tailwind CSS**. I
 cd AthLead-frontend
 npm install
 npm run dev
-
+```
 
 ### 📁 'AthLead-JWT-Springboot/README.md'
 
@@ -96,6 +96,7 @@ It generates a **performance score** from user input data and exposes it via a R
 cd AthLead-ML-model
 
 ```
+
 ```bash
 
 # # Activate virtual environment

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import sportsImage from "/Assets/Sports tool.jpg";
-import court from "/Assets/court.jpg";
+import court from "/Assets/court.jpg"
 
 const organizations = [
   {

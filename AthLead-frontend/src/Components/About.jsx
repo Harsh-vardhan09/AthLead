@@ -12,8 +12,7 @@ const About = () => {
           <img
             src={youthImage}
             alt="Ministry of Youth Affairs and Sports"
-            className="rounded-2xl shadow-2xl w-full max-w-sm sm:max-w-md md:max-w-lg 
-                       transform hover:scale-105 transition-transform duration-500 mt-10 "
+            className="rounded-2xl shadow-2xl w-full max-w-sm sm:max-w-md md:max-w-lg transform hover:scale-105 transition-transform duration-500 mt-10 "
           />
         </div>
 
@@ -49,8 +48,7 @@ const About = () => {
           <div className="flex justify-center md:justify-start">
             <a
               href="/get-started"
-              className="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-xl shadow-md 
-                         hover:bg-indigo-500 transition duration-300"
+              className="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-xl shadow-md hover:bg-indigo-500 transition duration-300"
             >
               Get Started
             </a>

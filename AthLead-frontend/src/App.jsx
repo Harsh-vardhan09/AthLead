@@ -5,7 +5,7 @@ import Home from "./Components/Home.jsx";
 // import Nav from './Components/NavBar.jsx'
 
 import { Routes, Route } from "react-router-dom";
-import Navbar from "./Components/NavBar.jsx";
+import Navbar from "./Components/Navbar.jsx";
 import Program from "./Components/Program";
 import Events from "./Components/Events";
 import About from "./Components/About";

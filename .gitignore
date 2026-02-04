@@ -28,6 +28,12 @@ Thumbs.db
 AthLead-frontend/node_modules/
 AthLead-frontend/dist/
 AthLead-frontend/build/
+Backend/node_modules/
+Backend/dist/
+Backend/build/
+backend/
+
+
 
 # ======================
 # Python / ML Model

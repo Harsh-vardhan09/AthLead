@@ -31,7 +31,7 @@ AthLead-frontend/build/
 Backend/node_modules/
 Backend/dist/
 Backend/build/
-backend/
+
 
 
 
@@ -49,6 +49,7 @@ AthLead-ML-model/*.pt
 # ======================
 # Spring Boot / Java
 # ======================
+AthLead-JWT-Springboot/
 AthLead-JWT-Springboot/target/
 AthLead-JWT-Springboot/.idea/
 AthLead-JWT-Springboot/.project

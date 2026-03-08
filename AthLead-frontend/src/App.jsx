@@ -1,4 +1,3 @@
-import "./App.css";
 import Dashboard from "./Dynamic/Dashboard";
 import Home from "./Components/Home.jsx";
 // import Authentication from './User/Authentication'

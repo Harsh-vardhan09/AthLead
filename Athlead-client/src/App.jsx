@@ -1,26 +1,16 @@
-import Dashboard from "./pages/Dashboard";
-import Home from "./pages/Home.jsx";
-import { Routes, Route } from "react-router-dom";
-import Navbar from "./Components/Navbar.jsx";
-import Program from "./pages/Program";
-import Events from "./pages/Events";
-import Authentication from "./User/Signin.jsx";
-import Scorecard from "./pages/Scorecard.jsx";
-
-function App() {
+import { Route, Routes } from 'react-router-dom'
+import { Dashboard, Events, Home } from './pages'
+import Layout from './pages/Layout'
+const App = () => {
   return (
-    <div>
-      {/* <Navbar /> */}
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/Dashboard" element={<Dashboard />} />
-        <Route path="/program" element={<Program/>} />
-        <Route path="/events" element={<Events />} />
-        <Route path="/Authentication" element={<Authentication />} />
-        <Route path="/Scorecard" element={<Scorecard/>} />
-      </Routes>
-    </div>
-  );
+    <Routes>
+      <Route path='/' element={<Layout/>}>
+        <Route index element={<Home/>}/>
+        <Route path='/events' element={<Events/>}/>
+        <Route path='/dashboard' element={<Dashboard/>}/>
+      </Route>
+    </Routes>
+  )
 }
 
-export default App;
+export default App

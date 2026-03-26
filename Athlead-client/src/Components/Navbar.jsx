@@ -1,27 +1,106 @@
-import React from 'react'
-import { Link } from 'react-router'
-import { navItems,HiddenItems } from '../constants'
-import Button from './Button'
+import React, { useState } from "react";
+import { assets, navItems } from "../assets/assets";
+import { useNavigate } from "react-router";
+import Button from "./Button";
+import { CircleUser, X } from "lucide-react";
 
-const Navbar = () => {
+const Navbar = ({ sidebar, setSidebar }) => {
+  const navigate = useNavigate();
+  let user = false;
   return (
-    <section className=''>
-      <nav className='flex justify-between items-center'>
-        <Link to="/"> AthLead</Link>
-        <ul className='flex justify-around items-center gap-8'>
-          {navItems.map((item)=>(
-            <li key={item.name}>
-              <Link to={item.path}>{item.name}</Link>
-            </li>
-          ))}
-        </ul>
-        <div>
-          <Button/>
+    <>
+
+    {/* navbar */}
+      <nav className="w-full h-18 flex items-center justify-between absolute b-0 t-0 z-20 border-b border-gray-50/8">
+        <div onClick={() => navigate("/")} className=" ml-15 lg:ml-10 font-bold ">
+          {sidebar?
+          (<></>)
+          :
+          <img
+            src={assets.Logo}
+            className="h-15 w-30 lg:h-20 lg:w-50 "
+          />
+          }
+          
+        </div>
+        <div className="flex justify-end mr-15 ">
+          <ul className=" hidden flex-1 lg:flex items-center justify-between gap:4 lg:gap-8">
+            {navItems.map((item) => (
+              <li
+                key={item.name}
+                onClick={() => navigate(item.path)}
+                className="cursor-pointer text-[#64748b] hover:text-[#a7b0bd] max-lg:text-sm  "
+              >
+                {item.name}
+              </li>
+            ))}
+          </ul>
+          <div className="flex items-center justify-end gap-1 lg:gap-3">
+            {user ? (
+              <Button
+                label="SignIn"
+                classname="border border-[rgba(20,184,166,0.25)] text-[#2dd4bf] bg-[rgba(20,184,166,0.10)] hover:bg-[rgba(53,205,187,0.1)]"
+              />
+            ) : (
+              <>
+                <CircleUser
+                  strokeWidth={1.75}
+                  className="h-8 w-18 ml-4 text-[#2dd4bf] hover:text-[#075f53]"
+                />
+                <Button
+                  label="Logout"
+                  classname="border border-[rgba(20,184,166,0.25)] text-[#2dd4bf] bg-[rgba(20,184,166,0.10)] hover:bg-[rgba(115,232,219,0.1)]"
+                />
+              </>
+            )}
+          </div>
         </div>
       </nav>
-    </section>
-  )
-}
 
-export default Navbar
+      {/* sidebar */}
+      <div
+        className={`fixed top-0 left-0 h-full w-64 bg-black/40 z-30 transform transition-transform duration-300 
+        ${sidebar ? "translate-x-0" : "-translate-x-full"}`}
+      >
+        <div className="flex p-4">
+          <div className="flex flex-col justify-start gap-8">
+            <div className="flex items-center justify-around ">
+              <div onClick={() => {navigate("/");setSidebar(false)}} className="font-bold ">
+                <img
+                  src={assets.Logo}
+                  className="h-15 w-40   "
+                />
+              </div>
 
+              <X
+                className="h-7 w-7 cursor-pointer text-white ml-15"
+                onClick={() => setSidebar(false)}
+              />
+            </div>
+
+            <ul className="flex flex-col gap-10">
+              {navItems.map((item) => (
+                <li
+                  key={item.name}
+                onClick={() => {navigate(item.path);setSidebar(false)}}
+                  className="cursor-pointer text-[#64748b] hover:text-[#a7b0bd] text-lg"
+                >
+                  {item.name}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      {sidebar && (
+        <div
+          onClick={() => setSidebar(false)}
+          className="fixed inset-0 bg-black/50 z-20"
+        />
+      )}
+    </>
+  );
+};
+
+export default Navbar;

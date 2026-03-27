@@ -1,5 +1,4 @@
 import React from "react";
-import Button from "../Components/Button";
 import { ArrowRight, PlayCircle, Section} from "lucide-react";
 import { faqs, features, sportsSupported } from "../assets/assets";
 import FaqItem from "../Components/FaqItem";
@@ -28,10 +27,10 @@ const Home = () => {
           </p>
 
           <div className="flex m-8 gap-8">
-            <button className="h-8 w-35 md:h-12 bg-linear-to-r from-teal-300 to-teal-800 rounded-lg text-white font-medium flex items-center justify-center gap-2">
+            <button className="h-8 w-35 md:h-12 bg-linear-to-r from-teal-300 to-teal-800 rounded-lg text-white font-medium flex items-center justify-center gap-2 hover:from-teal-500 hover:to-blue-600 transition-all hover:ease-in-out">
               Get Started <ArrowRight className="w-5 h-5" />
             </button>
-            <button className="h-8 w-35 md:h-12 text-white font-medium border border-gray-100/20 rounded-lg flex justify-center items-center gap-2">
+            <button className="h-8 w-35 md:h-12 text-white font-medium border border-gray-100/20 rounded-lg flex justify-center items-center gap-2 hover:bg-gray-700 transition-all hover:ease-in-out">
               <PlayCircle className="w-5 h-5 font-light" />
               Watch Demo
             </button>
@@ -65,7 +64,7 @@ const Home = () => {
           return (
             <div
               key={feature.title}
-              className={`p-6 w-80 lg:w-250 rounded-2xl ${feature.bg} ${feature.border} border cursor-pointer transition hover:shadow-md`}
+              className={`p-6 w-80 lg:w-250 rounded-2xl ${feature.bg} ${feature.border} border cursor-pointer transition hover:shadow-md hover:scale-105`}
             >
               <div
                 className={`w-10 h-10 rounded-lg ${feature.iconBg} flex items-center justify-center mb-4`}
@@ -95,7 +94,7 @@ const Home = () => {
         <div className="flex flex-wrap justify-center gap-4 mt-5">
           {
             sportsSupported.map((s,i)=>(
-              <div key={i} className="text-white text-lg border border-white/10 py-3 px-3 rounded-full">
+              <div key={i} className="text-white text-lg border border-white/10 py-3 px-3 rounded-full hover:scale-z-105">
                   {s}
               </div>
             ))

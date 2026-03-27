@@ -1,17 +1,21 @@
 import React, { useState } from "react";
 import { assets, navItems } from "../assets/assets";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import Button from "./Button";
 import { CircleUser, X } from "lucide-react";
+import { cn } from "../utility/cn";
 
 const Navbar = ({ sidebar, setSidebar }) => {
   const navigate = useNavigate();
-  let user = false;
+  let user = true;
+
+  const location = useLocation();
+  const pathname = location.pathname;
   return (
     <>
 
     {/* navbar */}
-      <nav className="w-full h-18 flex items-center justify-between absolute b-0 t-0 z-20 border-b border-gray-50/8">
+      <nav className={cn("w-full h-18 flex items-center justify-between b-0 t-0 z-1 border-b border-gray-50/8", pathname == "/" && "absolute",)}>
         <div onClick={() => navigate("/")} className=" ml-15 lg:ml-10 font-bold ">
           {sidebar?
           (<></>)
@@ -37,20 +41,23 @@ const Navbar = ({ sidebar, setSidebar }) => {
           </ul>
           <div className="flex items-center justify-end gap-1 lg:gap-3">
             {user ? (
-              <Button
-                label="SignIn"
-                classname="border border-[rgba(20,184,166,0.25)] text-[#2dd4bf] bg-[rgba(20,184,166,0.10)] hover:bg-[rgba(53,205,187,0.1)]"
-              />
+              <button button
+                className="h-10 w-24 flex items-center justify-center rounded-xl ml-4 cursor-pointer border border-[rgba(20,184,166,0.25)] text-[#2dd4bf] bg-[rgba(20,184,166,0.10)] hover:bg-[rgba(53,205,187,0.1)]"
+                onClick={()=>navigate('/signin')}
+                >
+                  Login
+                </button>
             ) : (
               <>
                 <CircleUser
                   strokeWidth={1.75}
-                  className="h-8 w-18 ml-4 text-[#2dd4bf] hover:text-[#075f53]"
+                  className="h-8 w-18 ml-4 text-[#2dd4bf] hover:text-[#075f53] hover:ease-in-out transition-all"
                 />
-                <Button
-                  label="Logout"
-                  classname="border border-[rgba(20,184,166,0.25)] text-[#2dd4bf] bg-[rgba(20,184,166,0.10)] hover:bg-[rgba(115,232,219,0.1)]"
-                />
+                <button button
+                className="h-10 w-24 flex items-center justify-center rounded-xl ml-4 cursor-pointer border border-[rgba(20,184,166,0.25)] text-[#2dd4bf] bg-[rgba(20,184,166,0.10)] hover:bg-[rgba(53,205,187,0.1)]"
+                >
+                  Logout
+                </button>
               </>
             )}
           </div>

@@ -25,9 +25,9 @@ Thumbs.db
 # ======================
 # React / Frontend (Vite)
 # ======================
-AthLead-frontend/node_modules/
-AthLead-frontend/dist/
-AthLead-frontend/build/
+AthLead-client/node_modules/
+AthLead-client/dist/
+AthLead-client/build/
 Backend/node_modules/
 Backend/dist/
 Backend/build/

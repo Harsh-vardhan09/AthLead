@@ -21,4 +21,9 @@
   .basic {
     color: #64748b;
   }
+
+  .dark-bg{
+    /* background-color:#0b131c */
+    background-color:#08121e
+  }
 }

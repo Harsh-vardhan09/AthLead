@@ -6,7 +6,7 @@ import { Menu, X } from "lucide-react";
 const Layout = () => {
   const [sidebar, setSidebar] = useState(false);
   return (
-    <section >
+    <section className="dark-bg" >
       <Navbar sidebar={sidebar} setSidebar={setSidebar} />
       <div>
         <Outlet />

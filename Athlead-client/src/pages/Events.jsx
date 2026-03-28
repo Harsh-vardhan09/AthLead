@@ -2,11 +2,14 @@ import { Search } from "lucide-react";
 import React, { useState } from "react";
 import { events, sports } from "../assets/assets";
 import EventCard from "../Components/EventCard";
+import EventDetails from "../Components/EventDetails";
 
 const Events = () => {
   const [type, setType] = useState("All");
   const [search, setSearch] = useState("");
   const [selected,setSelected]=useState(null)
+  const [isOpen,setIsOpen]=useState(false);
+  console.log(isOpen);
 
   const event=async (params) => {
     
@@ -46,11 +49,12 @@ const Events = () => {
            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 my-8 w-full lg:px-20">
             {
             filtered.map((event)=>(
-              <EventCard key={event.title} e={event} setSelected={setSelected}/>
+              <EventCard key={event.title} e={event} setSelected={setSelected} setIsOpen={setIsOpen}/>
             ))
             }
           </div>
         </div>
+        {isOpen && <EventDetails selected={selected} setIsOpen={setIsOpen}/>}
     </section>
   );
 };

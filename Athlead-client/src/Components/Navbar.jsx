@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { assets, navItems } from "../assets/assets";
 import { useLocation, useNavigate } from "react-router";
-import Button from "./Button";
 import { CircleUser, X } from "lucide-react";
 import { cn } from "../utility/cn";
 

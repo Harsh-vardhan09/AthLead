@@ -2,12 +2,13 @@ import React from "react";
 import { sportIcon } from "../assets/assets";
 import { Calendar, Clock, Locate, MapPin, Medal, Watch } from "lucide-react";
 
-const EventCard = ({ e, setSelected }) => {
+const EventCard = ({ e, setSelected,setIsOpen }) => {
+
   return (
     <div
       key={e.id}
       className=" h-65 w-auto bg-white/5 border border-white/10 rounded-xl cursor-pointer hover:scale-[1.01] transition overflow-hidden "
-      onClick={() => setSelected(e)}
+      onClick={() => {setSelected(e),setIsOpen(true)}}
     >
       <div className="realtive top-0 left-0 right-0 h-0.75 bg-linear-to-r from-cyan-400 to-cyan-600 rounded-t-2xl " />
       {/* Header */}
@@ -53,7 +54,7 @@ const EventCard = ({ e, setSelected }) => {
         ))}
       </div>
       <div className="flex items-center justify-center ">
-        <button className="my-6 text-center bg-linear-to-br from-cyan-400 to-cyan-600 w-full rounded-xl h-10 max-w-70 hover:from-cyan-600 hover:to-cyan-800">Register Now</button>
+        <button onClick={()=>setSelected(e)} className="my-6 text-center bg-linear-to-br from-cyan-400 to-cyan-600 w-full rounded-xl h-10 max-w-70 hover:from-cyan-600 hover:to-cyan-800">Register Now</button>
       </div>
     </div>
   );

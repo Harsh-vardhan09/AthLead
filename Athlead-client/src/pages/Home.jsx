@@ -6,7 +6,7 @@ import Footer from "../Components/Footer";
 
 const Home = () => {
   return (
-    <section className="relative w-screen min-h-screen bg-[#050d1a] bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[60px_60px] bg-repeat overflow-hidden">
+    <section className="relative max-w-screen min-h-screen bg-[#050d1a] bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[60px_60px] bg-repeat overflow-hidden">
       <main className="relative min-h-screen flex items-center justify-center font-segoe mt-20">
         {/* background style */}
         <div className="absolute -top-15 right-220 w-120 h-120 rounded-full bg-teal-radial " />
@@ -64,7 +64,7 @@ const Home = () => {
           return (
             <div
               key={feature.title}
-              className={`p-6 w-80 lg:w-250 rounded-2xl ${feature.bg} ${feature.border} border cursor-pointer transition hover:shadow-md hover:scale-105`}
+              className={`p-6 w-80 lg:w-250 rounded-2xl ${feature.bg} ${feature.border} border cursor-pointer transition hover:shadow-md hover:scale-105 duration-200`}
             >
               <div
                 className={`w-10 h-10 rounded-lg ${feature.iconBg} flex items-center justify-center mb-4`}
@@ -94,7 +94,7 @@ const Home = () => {
         <div className="flex flex-wrap justify-center gap-4 mt-5">
           {
             sportsSupported.map((s,i)=>(
-              <div key={i} className="text-white text-lg border border-white/10 py-3 px-3 rounded-full hover:scale-z-105">
+              <div key={i} className="text-white text-lg border border-white/10 py-3 px-3 rounded-full hover:scale-105">
                   {s}
               </div>
             ))

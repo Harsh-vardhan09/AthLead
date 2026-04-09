@@ -26,4 +26,19 @@
     /* background-color:#0b131c */
     background-color:#08121e
   }
+
+  .input{
+   @apply flex items-center justify-center h-10 w-full rounded-lg px-4 border  focus:outline-none focus:ring-0;
+  }
+  .label{
+    @apply text-[12px] font-semibold text-slate-400 tracking-wide;
+  }
+  .input[type="number"] {
+    -moz-appearance: textfield;
+  }
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
 }

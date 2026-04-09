@@ -9,7 +9,6 @@ const Events = () => {
   const [search, setSearch] = useState("");
   const [selected,setSelected]=useState(null)
   const [isOpen,setIsOpen]=useState(false);
-  console.log(isOpen);
 
   const event=async (params) => {
     
@@ -35,13 +34,17 @@ const Events = () => {
             />
           </div>
           <div className="flex items-start gap-3 mt-5 w-full max-w-4xl flex-wrap">
+            
           {
             sports.map((sport)=>(
-              <div key={sport} className={` border border-gray-700 px-5 py-1 rounded-lg  cursor-pointer ${type===sport?'bg-[#2596be] text-white border-green-400/20':'bg-[#c3d4dc] text-black'}`} onClick={()=>setType(sport)}>
-                {sport}
-              </div>
+             
+                <div key={sport} className={` border border-gray-700 px-5 py-1 rounded-lg  cursor-pointer ${type===sport?'bg-[#2596be] text-white border-green-400/20':'bg-[#c3d4dc] text-black'}`} onClick={()=>setType(sport)}>
+                  {sport}
+                </div>
+            
             ))
           }
+          
 
           </div >
 

@@ -42,7 +42,7 @@ const Navbar = ({ sidebar, setSidebar }) => {
             {user ? (
               <button button
                 className="h-10 w-24 flex items-center justify-center rounded-xl ml-4 cursor-pointer border border-[rgba(20,184,166,0.25)] text-[#2dd4bf] bg-[rgba(20,184,166,0.10)] hover:bg-[rgba(53,205,187,0.1)]"
-                onClick={()=>navigate('/signin')}
+                onClick={()=>navigate('/login')}
                 >
                   Login
                 </button>

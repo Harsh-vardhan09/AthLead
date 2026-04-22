@@ -1,11 +1,9 @@
 import Logo from "./Logo.png";
-import basketball from "./basketball.webp";
 import court from "./court.jpg";
 import { Brain, Globe, Calendar } from "lucide-react";
 
 export const assets = {
   Logo,
-  basketball,
   court,
 };
 

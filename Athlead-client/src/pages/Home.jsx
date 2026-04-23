@@ -9,9 +9,10 @@ const Home = () => {
     <section className="relative max-w-screen min-h-screen bg-[#050d1a] bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[60px_60px] bg-repeat overflow-hidden">
       <main className="relative min-h-screen flex items-center justify-center font-segoe mt-20">
         {/* background style */}
-        <div className="absolute -top-15 right-220 w-120 h-120 rounded-full bg-teal-radial " />
+        <div className="absolute -top-15 right-220 w-120 h-120 rounded-full bg-teal-radial animate-backforth" />
         <div className="absolute top-100 right-0 w-120 h-120 rounded-full bg-teal-radial " />
-        <div className="absolute top-400 left-0 w-150 h-150 rounded-full bg-teal-radial "/>
+        <div className="absolute top-400 left-0 w-150 h-150 rounded-full bg-teal-radial animate-backforth"/>
+
 
         <div className=" flex-1 w-full flex flex-col items-center justify-start text-center ">
           <h1 className="text-4xl sm:text-6xl font-extrabold text-white leading-snug">
@@ -30,7 +31,7 @@ const Home = () => {
             <button className="h-8 w-35 md:h-12 bg-linear-to-r from-teal-300 to-teal-800 rounded-lg text-white font-medium flex items-center justify-center gap-2 hover:from-teal-500 hover:to-blue-600 transition-all hover:ease-in-out">
               Get Started <ArrowRight className="w-5 h-5" />
             </button>
-            <button className="h-8 w-35 md:h-12 text-white font-medium border border-gray-100/20 rounded-lg flex justify-center items-center gap-2 hover:bg-gray-700 transition-all hover:ease-in-out">
+            <button className="h-8 w-35 md:h-12 text-white font-medium border border-gray-100/20 rounded-lg flex justify-center items-center gap-2 hover:bg-gray-700 transition-all hover:ease-in-out" onClick={()=>location.href = "https://youtu.be/cbeLysHmkaQ"}>
               <PlayCircle className="w-5 h-5 font-light" />
               Watch Demo
             </button>

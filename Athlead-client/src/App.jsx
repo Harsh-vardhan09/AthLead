@@ -1,5 +1,5 @@
 import { Route, Routes } from "react-router-dom";
-import { Announcement, Dashboard, Events, Home, Login, Signup } from "./pages";
+import { Announcement, Dashboard, Events, EventSignup, Home, Login, Signup } from "./pages";
 import Layout from "./pages/Layout";
 import React from "react";
 const LazyEvents = React.lazy(() => import("./pages/Events"));
@@ -17,7 +17,7 @@ const App = () => {
             </React.Suspense>
           }
         />
-        {/* <Route path="/events/:eventId" element={<EventSignup/>} /> */}
+        <Route path="/events/:eventId" element={<EventSignup/>} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/news" element={<Announcement />} />
         <Route path="/signup" element={<Signup />} />

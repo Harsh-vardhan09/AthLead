@@ -42,3 +42,16 @@
     margin: 0;
   }
 }
+
+@keyframes backforth {
+  0% {
+    transform: translate(0,0);
+  }
+  100% {
+    transform: translate(300px,100px);
+  }
+}
+
+.animate-backforth {
+  animation: backforth 3s ease-in-out infinite alternate;
+}

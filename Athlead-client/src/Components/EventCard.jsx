@@ -1,9 +1,11 @@
 import React from "react";
 import { sportIcon } from "../assets/assets";
 import { Calendar, Clock, Locate, MapPin, Medal, Watch } from "lucide-react";
+import { useNavigate } from "react-router";
 
 
 const EventCard = ({ e, setSelected, setIsOpen }) => {
+  const navigate=useNavigate()
   return (
       <div
         key={e.id}
@@ -57,7 +59,7 @@ const EventCard = ({ e, setSelected, setIsOpen }) => {
         </div>
         <div className="flex items-center justify-center ">
           <button
-            onClick={() => setSelected(e)}
+            onClick={() => {setSelected(e);navigate('/events/:eventId')}}
             className="my-6 text-center bg-linear-to-br from-cyan-400 to-cyan-600 w-full rounded-xl h-10 max-w-70 hover:from-cyan-600 hover:to-cyan-800"
           >
             Register Now

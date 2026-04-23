@@ -46,12 +46,9 @@ AthLead-ML-model/*.pkl
 AthLead-ML-model/*.h5
 AthLead-ML-model/*.pt
 
-# ======================
-# Spring Boot / Java
-# ======================
-AthLead-JWT-Springboot/
-AthLead-JWT-Springboot/target/
-AthLead-JWT-Springboot/.idea/
-AthLead-JWT-Springboot/.project
-AthLead-JWT-Springboot/.classpath
-AthLead-JWT-Springboot/.settings/
+
+
+
+**/dist/
+
+**.vscode

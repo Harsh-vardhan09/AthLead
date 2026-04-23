@@ -3,6 +3,9 @@ import mongoose from "mongoose";
 import 'dotenv/config';
 import cors from 'cors'
 import { getNews } from './controllers/newsController.js';
+import db from './db/db.js';
+
+db()
 
 const app=express();
 app.use(cors());

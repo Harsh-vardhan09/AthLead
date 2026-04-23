@@ -84,37 +84,33 @@ const Signup = () => {
             />
           </div>
 
-            <div className="flex  justify-between items-center py-1">
-              <fieldset className="flex items-center justify-center gap-2">
-                <input
-                  type="radio"
-                  name="gender"
-                  value="male"
-                  {...register("gender", {
-                    required: { value: true, message: "Required" },
-                  })}
-                />
-                <label htmlFor="" className="label">
-                  Male
+            <div>
+            
+            <div className="flex gap-2.5">
+              {["male", "female"].map((g) => (
+                <label
+                  key={g}
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border border-white/12 bg-white/5 text-sm text-white/50 cursor-pointer has-checked:border-[#1d9e75] has-checked:bg-[#1d9e75]/15 has-checked:text-[#5dcaa5] has-checked:font-medium transition-all"
+                >
+                  <input
+                    type="radio"
+                    value={g}
+                    {...register("gender", {
+                      required: { value: true, message: "Required" },
+                    })}
+                    className="hidden"
+                  />
+                  {g === "male" ? "♂" : "♀"}{" "}
+                  {g.charAt(0).toUpperCase() + g.slice(1)}
                 </label>
-              </fieldset>
-              <fieldset className="flex items-center justify-center gap-2">
-                <input
-                  type="radio"
-                  name="gender"
-                  value="female"
-                  {...register("gender", {
-                    required: { value: true, message: "Required" },
-                  })}
-                />
-                <label htmlFor="" className="label">
-                  Female
-                </label>
-              </fieldset>
-              {errors.gender && (
-              <p className="text-sm text-red-700">{errors.gender.message}</p>
-            )}
+              ))}
             </div>
+            {errors.gender && (
+              <p className="text-xs text-red-400 mt-1">
+                {errors.gender.message}
+              </p>
+            )}
+          </div>
             
 
 

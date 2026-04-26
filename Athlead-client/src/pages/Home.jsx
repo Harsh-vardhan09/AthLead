@@ -3,8 +3,12 @@ import { ArrowRight, PlayCircle, Section} from "lucide-react";
 import { faqs, features, sportsSupported } from "../assets/assets";
 import FaqItem from "../Components/FaqItem";
 import Footer from "../Components/Footer";
+import { useAuth } from "../context/AppProvider";
+import { useNavigate } from "react-router";
 
 const Home = () => {
+  const {loggedIn}=useAuth()
+  const navigate=useNavigate()
   return (
     <section className="relative max-w-screen min-h-screen bg-[#050d1a] bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[60px_60px] bg-repeat overflow-hidden">
       <main className="relative min-h-screen flex items-center justify-center font-segoe mt-20">
@@ -21,14 +25,16 @@ const Home = () => {
               Now with AI
             </span>
           </h1>
-          <p className=" text-sm md:text-lg basic font-medium">
+          <p className=" text-sm md:text-lg basic font-medium mx-3">
             A unified Ai powered Platform for users to rank, evaluate talent
             accross india,
             <br /> --Giving every athleate an fair Data driven shot at greatness
           </p>
 
           <div className="flex m-8 gap-8">
-            <button className="h-8 w-35 md:h-12 bg-linear-to-r from-teal-300 to-teal-800 rounded-lg text-white font-medium flex items-center justify-center gap-2 hover:from-teal-500 hover:to-blue-600 transition-all hover:ease-in-out">
+            <button
+            onClick={loggedIn?()=>navigate('/dashboard'):()=>navigate('/login')} 
+            className="h-8 w-35 md:h-12 bg-linear-to-r from-teal-300 to-teal-800 rounded-lg text-white font-medium flex items-center justify-center gap-2 hover:from-teal-500 hover:to-blue-600 transition-all hover:ease-in-out">
               Get Started <ArrowRight className="w-5 h-5" />
             </button>
             <button className="h-8 w-35 md:h-12 text-white font-medium border border-gray-100/20 rounded-lg flex justify-center items-center gap-2 hover:bg-gray-700 transition-all hover:ease-in-out" onClick={()=>location.href = "https://youtu.be/cbeLysHmkaQ"}>
@@ -37,7 +43,7 @@ const Home = () => {
             </button>
           </div> 
 
-          <div className="  flex max-lg:flex-wrap items-center  gap-5 lg:gap-10 mb-5">
+          <div className="  flex max-lg:flex-wrap items-center justify-center gap-5 lg:gap-10 mb-5 my-5">
             <div className="border border-gray-100/10 h-25 w-35 rounded-xl flex flex-col justify-center text-xl text-white font-bold transition-all ease-in-out hover:shadow-[0_10px_20px_rgba(255,255,255,0.25)] hover:scale-105">
               12,000+ <br />
               <span className="text-xs basic font-medium">

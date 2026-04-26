@@ -10,13 +10,9 @@ const EventSchema = new mongoose.Schema(
     location: { type: String, required: true },
     date: { type: Date, required: true },
     tags: {
-      type: String,
+      type: [String],
       enum: ["Freestyle", "national", "Youth", "singles", "doubles"], // Allowed values
-      default: "youth",
-    },
-    participants: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      default: ["youth"],
     },
     deleteAt: {
       type: Date,

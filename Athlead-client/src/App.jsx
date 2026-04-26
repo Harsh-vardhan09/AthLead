@@ -16,6 +16,7 @@ import { useState } from "react";
 import AppProvider from "./context/AppProvider";
 import ProtectedRoute from "./context/ProtectedRoute";
 import Score from "./pages/Score";
+import EventCardSkeleton from "./Components/EventCardSkelton";
 
 const App = () => {
   return (
@@ -27,7 +28,15 @@ const App = () => {
           <Route
             path="/events"
             element={
-              <React.Suspense>
+              <React.Suspense
+                fallback={
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 my-8 w-full lg:px-20">
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <EventCardSkeleton key={i} />
+                    ))}
+                  </div>
+                }
+              >
                 <LazyEvents />
               </React.Suspense>
             }

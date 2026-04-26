@@ -5,6 +5,11 @@ import { useNavigate } from "react-router";
 
 const EventCard = ({ e, setSelected, setIsOpen }) => {
   const navigate = useNavigate();
+  const formattedDate = new Date(e.date).toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
   return (
     <div
       key={e.id}
@@ -31,7 +36,7 @@ const EventCard = ({ e, setSelected, setIsOpen }) => {
         <div className=" text-xs ">
           <p className="flex gap-1 mb-2">
             <Calendar className="text-teal-600 h-4 w-4" />
-            {e.date}
+            {formattedDate}
           </p>
           <p className="flex gap-1">
             <MapPin className="text-teal-600 h-4 w-4" />
@@ -41,7 +46,7 @@ const EventCard = ({ e, setSelected, setIsOpen }) => {
         <div className="text-xs">
           <p className="flex gap-1 mb-2">
             <Clock className="text-teal-600 h-4 w-4" />
-            {e.time}
+            {e.time?e.time:'09:00 AM'}
           </p>
           <p className="flex gap-1">
             <Medal className="text-teal-600 h-4 w-4" />
@@ -58,10 +63,10 @@ const EventCard = ({ e, setSelected, setIsOpen }) => {
       </div>
       <div className="flex items-center justify-center ">
         <button
-          onClick={(e) => {
+          onClick={(event) => {
             setSelected(e);
-            navigate("/events/:eventId");
-            e.stopPropagation()
+            navigate(`/events/${e._id}`);
+            event.stopPropagation();
           }}
           className="my-6 text-center bg-linear-to-br from-cyan-400 to-cyan-600 w-full rounded-xl h-10 max-w-70 hover:from-cyan-600 hover:to-cyan-800"
         >

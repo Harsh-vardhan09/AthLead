@@ -10,7 +10,13 @@ export const signupVal = z.object({
     errorMap: () => ({ message: "Gender must be male, female, or other" }),
   }),
   password: z.string().regex(/[a-zA-z0-9_\-\.\@\$]{7,16}/i),
-  phone: z.string().regex(/^[0-9]{10}$/, "Phone must be exactly 10 digits"),
+  phone: z
+  .string()
+  .transform(val => val === "" ? undefined : val)
+  .optional()
+  .refine(val => !val || /^[0-9]{10}$/.test(val), {
+    message: "Phone must be exactly 10 digits"
+  })
 });
 
 

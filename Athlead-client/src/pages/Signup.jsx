@@ -2,6 +2,8 @@ import { Eye, EyeClosed } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router";
+import toast, { Toaster } from "react-hot-toast";
+import { api } from "../api/axios";
 
 const Signup = () => {
   const {
@@ -14,10 +16,18 @@ const Signup = () => {
 
   const navigate = useNavigate();
 
-  const onSubmit = (data) => {
-    console.log(data);
-  };
+  const onSubmit = async (data) => {
+    const res = await api.post("/api/auth/signup", data);
+    
+    if (res.data.success) {
+      toast.success(res.data.message);
+      
+    } else {
+      toast.error(res.data.message);
+    }
 
+    navigate("/login");
+  };
   return (
     <section className="dark-bg relative max-w-screen min-h-screen flex items-center justify-center bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[60px_60px] bg-repeat overflow-hidden">
       <div className=" h-2/3 max-w-96 w-full  bg-[#08325b]/30 border border-[#47a2bf]/60 text-start text-white rounded-xl">
@@ -45,7 +55,7 @@ const Signup = () => {
               type="text"
               placeholder="John Doe..."
               {...register("fullname", {
-                required:true ,
+                required: true,
                 maxLength: { value: 20, message: "Must be < 20 letters" },
               })}
               className={`input mb-4 ${errors.fullname ? "border-red-500/80" : "border-white/30"}`}
@@ -61,7 +71,7 @@ const Signup = () => {
               type="email"
               placeholder="XXX@ABC.com"
               {...register("email", {
-                required:true ,
+                required: true,
                 pattern: {
                   value: /^[a-zA-Z0-9._%+-]+[@][a-zA-Z0-9.-]+[\.][a-zA-Z]{2,}$/,
                   message: "Wrong email format",
@@ -84,8 +94,7 @@ const Signup = () => {
             />
           </div>
 
-            <div>
-            
+          <div>
             <div className="flex gap-2.5">
               {["male", "female"].map((g) => (
                 <label
@@ -111,16 +120,16 @@ const Signup = () => {
               </p>
             )}
           </div>
-            
-
 
           <div>
-            <fieldset className={`input mb-4 ${errors.password ? "border-red-500/80" : "border-white/30"}`}>
+            <fieldset
+              className={`input mb-4 ${errors.password ? "border-red-500/80" : "border-white/30"}`}
+            >
               <input
                 type={show ? "text" : "password"}
                 placeholder="Enter Password"
                 {...register("password", {
-                  required:true,
+                  required: true,
                   pattern: {
                     value: /[a-zA-z0-9_\-\.\@\$]{7,16}/i,
                     message: "Need 7-16,special Character,uppercase",

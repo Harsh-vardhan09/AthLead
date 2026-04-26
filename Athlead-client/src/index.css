@@ -55,3 +55,9 @@
 .animate-backforth {
   animation: backforth 3s ease-in-out infinite alternate;
 }
+
+@theme {
+  --breakpoint-xs: 30rem;
+  /* --breakpoint-2xl: 100rem;
+  --breakpoint-3xl: 120rem; */
+}

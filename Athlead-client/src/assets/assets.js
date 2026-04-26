@@ -371,41 +371,50 @@ export const performanceData = [
   { name: "Week 12", score: 90 },
 ];
 
-export const radarData = [
+export const radarData=([
   {
-    subject: 'Math',
-    A: 120,
-    B: 110,
+    subject: "VO2 Max",
+    A:0,
     fullMark: 150,
   },
   {
-    subject: 'Chinese',
-    A: 98,
-    B: 130,
+    subject: "HRV",
+    A:  0,
     fullMark: 150,
   },
   {
-    subject: 'English',
-    A: 86,
-    B: 130,
+    subject: "Lactate Threshold",
+    A: 0,
     fullMark: 150,
   },
   {
-    subject: 'Geography',
-    A: 99,
-    B: 100,
+    subject: "Stride Length",
+    A: 0,
     fullMark: 150,
   },
   {
-    subject: 'Physics',
-    A: 85,
-    B: 90,
+    subject: "Cadence",
+    A:0,
     fullMark: 150,
   },
   {
-    subject: 'History',
-    A: 65,
-    B: 85,
+    subject: "Force",
+    A:0,
     fullMark: 150,
   },
-];
+  {
+    subject: "Performance",
+    A:0,
+    fullMark: 150,
+  },
+  {
+    subject: "Adaptability",
+    A: 0,
+    fullMark: 150,
+  },
+  {
+    subject: "Final Score",
+    A:  0,
+    fullMark: 150,
+  },
+]);

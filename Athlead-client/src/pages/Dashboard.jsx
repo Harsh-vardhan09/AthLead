@@ -16,9 +16,10 @@ import {
   PolarAngleAxis,
   PolarRadiusAxis,
 } from "recharts";
+import { useNavigate } from "react-router";
 
 const Dashboard = () => {
-  
+  const navigate=useNavigate()
   return (
     <section className="dark-bg relative max-w-screen min-h-screen flex flex-col items-start justify-center">
       <div className="grid grid-cols-1 md:grid-cols-2 mt-10 w-full gap-5 p-10">
@@ -136,7 +137,9 @@ const Dashboard = () => {
 
           </div>
           <div className="flex items-center justify-center">      
-              <button  className="flex justify-center  w-2/3 bg-linear-to-r from-teal-500 via-blue-900 to-blue-200 cursor-pointer my-2 rounded-md p-2 hover:scale-105">
+              <button 
+              onClick={()=>navigate('/score')}
+               className="flex justify-center  w-2/3 bg-linear-to-r from-teal-500 via-blue-900 to-blue-200 cursor-pointer my-2 rounded-md p-2 hover:scale-105">
                 Get Score
               </button>
               

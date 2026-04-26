@@ -12,7 +12,10 @@ import userRouter from './routes/userRoutes.js'
 db()
 
 const app=express();
-app.use(cors());
+app.use(cors({
+    origin:process.env.FRONTEND_URL,
+    credentials:true
+}));
 app.use(express.json());
 app.use(express.urlencoded({extended:true}))
 app.use(passport.initialize());
@@ -23,7 +26,7 @@ import { requireAuth } from './middleware/middleware.js';
 
 app.use('/api/auth',userRouter)
 
-app.get('/api/news',requireAuth,getNews);
+app.get('/api/news',getNews);
 app.post('/api/refresh',refesh);
 
 app.get("/",(req,res)=>{

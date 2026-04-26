@@ -1,8 +1,10 @@
 import React from "react";
 import { sportIcon } from "../assets/assets";
 import { Calendar, Clock, MapPin, Medal } from "lucide-react";
+import { useNavigate } from "react-router";
 
 const EventDetails = ({ selected, setIsOpen }) => {
+  const navigate=useNavigate()
   return (
     <section onClick={() => setIsOpen(false)} className="fixed inset-0 z-10 min-h-screen h-full w-full bg-black/60 backdrop-blur-md flex items-center justify-center">
       <div onClick={(e) => e.stopPropagation()} className="w-full max-w-xl h-full max-h-4/6 bg-[#040e1a]/95 rounded-4xl border border-[rgba(6,182,212,0.2)] shadow-[0_0_60px_rgba(6,182,212,0.15)]">
@@ -58,7 +60,9 @@ const EventDetails = ({ selected, setIsOpen }) => {
           </div>
         </div>
         <div className="flex items-center justify-center max-w-3xl">
-          <button className="text-center bg-linear-to-br from-cyan-400 to-cyan-600 w-full rounded-xl h-10 max-w-120 hover:from-cyan-600 hover:to-cyan-800 mx-4">
+          <button 
+          onClick={()=>navigate('/events/:eventId')}
+          className="text-center bg-linear-to-br from-cyan-400 to-cyan-600 w-full rounded-xl h-10 max-w-120 hover:from-cyan-600 hover:to-cyan-800 mx-4">
             Register Now
           </button>
         </div>

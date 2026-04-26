@@ -2,12 +2,14 @@ import React, { useState } from "react";
 import Navbar from "../Components/Navbar";
 import { Outlet } from "react-router";
 import { Menu, X } from "lucide-react";
+import { useAuth } from "../context/AppProvider";
 
 const Layout = () => {
   const [sidebar, setSidebar] = useState(false);
+  const {loggedIn,setLoggedIn}=useAuth();
   return (
     <section className="dark-bg " >
-      <Navbar sidebar={sidebar} setSidebar={setSidebar} />
+      <Navbar sidebar={sidebar} setSidebar={setSidebar} loggedIn={loggedIn} setLoggedIn={setLoggedIn} />
       <div>
         <Outlet />
       </div>

@@ -11,8 +11,9 @@ const Announcement = () => {
   const getNews = async () => {
     try {
       setIsLoading(true);
-      const { data } = await api.get("/news");
-
+      const { data } = await api.get("/api/news");
+      console.log(data);
+      
       if (data.success) {
         setNews(data.message);
       }

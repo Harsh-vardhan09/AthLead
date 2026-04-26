@@ -2,6 +2,9 @@ import { Eye, EyeClosed } from "lucide-react";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router";
+import { api } from "../api/axios";
+import toast from "react-hot-toast";
+import { useAuth } from "../context/AppProvider";
 
 const Login = () => {
   const {
@@ -11,13 +14,26 @@ const Login = () => {
     formState: { errors },
   } = useForm();
   const [show, setShow] = useState(false);
+  const {setLoggedIn} =useAuth()
 
   const navigate = useNavigate();
 
   const toggleVisibility = () => {};
 
-  const onSubmit = (data) => {
-    console.log(data);
+  const onSubmit = async(data) => {
+    const res=await api.post('/api/auth/login',data)
+    
+    localStorage.setItem('accessToken',res.data.accessToken)
+    setLoggedIn(true)
+    if (res.data.success) {
+      toast.success(res.data.message);
+      navigate("/dashboard");
+    } else{
+      toast.error(res.data.message);
+    }
+    
+    
+    
   };
 
   return (

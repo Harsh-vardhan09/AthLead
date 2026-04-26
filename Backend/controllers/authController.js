@@ -2,10 +2,15 @@ import bcrypt, { compareSync, hashSync } from "bcrypt";
 import jwt from "jsonwebtoken";
 import { LoginVal, signupVal } from "../utils/zodValidation.js";
 import { User } from "../models/Users.js";
+import { success } from "zod";
 
 //Signup auth
 export const SingupAuth = async (req, res) => {
   const result = signupVal.safeParse(req.body);
+  console.log(req.body);
+  console.log(result);
+  
+  
   if (!result.success) {
     return res.status(400).json({
       errors: result.error.format(),
@@ -43,13 +48,13 @@ export const LoginAuth = async (req, res) => {
 
   const user = await User.findOne({ email: email });
   if (!user) {
-    return res.status(401).json({
+    return res.json({
       success: false,
       message: "No User with this mail",
     });
   }
   if (!compareSync(password, user.password)) {
-    return res.status(401).json({
+    return res.json({
       success: false,
       message: "Wrong password",
     });
@@ -59,8 +64,8 @@ export const LoginAuth = async (req, res) => {
   const refreshToken = user.generateRefreshToken();
   const accessToken = user.generateAccessToken();
 
-   console.log(refreshToken);
-   console.log(accessToken);
+  //  console.log(refreshToken);
+  //  console.log(accessToken);
    
   const option = {
     httpOnly: true,
@@ -72,7 +77,9 @@ export const LoginAuth = async (req, res) => {
     .cookie("refreshToken", refreshToken, option)
     .cookie("accessToken", accessToken, option)
     .json({
+      success:true,
       message: "user Logged in",
+      accessToken
     });
 };
 
@@ -105,6 +112,7 @@ export const refesh = async (req, res) => {
 export const logout=(req,res)=>{
   res.clearCookie('accessToken').clearCookie('refreshToken')
   res.json({
+    success:true,
     message:"logged out"
   })
 }

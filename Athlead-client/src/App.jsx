@@ -17,6 +17,7 @@ import AppProvider from "./context/AppProvider";
 import ProtectedRoute from "./context/ProtectedRoute";
 import Score from "./pages/Score";
 import EventCardSkeleton from "./Components/EventCardSkelton";
+import IsLoggedIn from "./context/IsLoggedIn";
 
 const App = () => {
   return (
@@ -24,7 +25,12 @@ const App = () => {
       <Toaster />
       <Routes>
         <Route path="/" element={<Layout />}>
-          <Route index element={<Home />} />
+          <Route index element={
+            <IsLoggedIn>
+                 <Home />
+            </IsLoggedIn>
+           
+            } />
           <Route
             path="/events"
             element={

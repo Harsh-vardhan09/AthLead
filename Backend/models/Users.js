@@ -8,14 +8,15 @@ const UserSchema = new mongoose.Schema(
     phone: { type: Number },
     gender: { type: String, required: true },
     password: { type: String, required: true },
-    image: { type: String},
+    image: { type: String ,default:'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQw3k1c6JaNUexk2h38jFUHu4j3O73P8mgVkw&s'},
     state:{ type: String},
     role:{ type: String, enum: ["user", "admin"], default: "user" },
+    DOB:{ type: Date },
   },
   { timestamps: true },
 );
 
-const UserEventSchema = new mongoose.Schema({
+const ParticipationSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
@@ -24,7 +25,7 @@ const UserEventSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Event",
   },
-  name: { type: String, required: true },
+  fullname: { type: String, required: true },
   email: { type: String, required: true },
   phone: { type: Number,required: true },
   gender: { type: String, required: true },
@@ -44,7 +45,7 @@ UserSchema.methods.generateRefreshToken=function(){
 
 
 const User = mongoose.model("User", UserSchema);
-const UserEvent = mongoose.model("UserEvent", UserEventSchema);
+const Participation = mongoose.model("Participation", ParticipationSchema);
 
 
-export  {User,UserEvent};
+export  {User,Participation};

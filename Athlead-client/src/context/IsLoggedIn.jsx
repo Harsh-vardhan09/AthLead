@@ -3,17 +3,14 @@ import { useAuth } from "./AppProvider"
 import { Children } from "react"
 
 
-
-
-const ProtectedRoute = ({children}) => {
+const IsLoggedIn = ({children}) => {
 
     const {loggedIn}=useAuth()
   
-    if(!loggedIn){
-        return <Navigate to={'/login'} replace/>
+    if(loggedIn){
+        return <Navigate to={'/dashboard'} replace/>
     }
   return children
 }
 
-
-export default ProtectedRoute
+export default IsLoggedIn

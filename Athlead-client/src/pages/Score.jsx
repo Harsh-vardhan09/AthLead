@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import toast, {} from 'react-hot-toast'
 import {
   RadarChart,
   Radar,
@@ -8,11 +9,13 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from "recharts";
+import { api } from "../api/axios";
+import { useNavigate } from "react-router";
 
 export default function Score() {
   const [formData, setFormData] = useState({
     sport: "cycling",
-    age: "",
+    age: "20",
     gender: "M",
     training_years: "",
     vo2_max: "",
@@ -26,7 +29,7 @@ export default function Score() {
   });
 
   const [score, setScore] = useState(null);
-  const [radarData, setRadarData] = useState([]);
+  const navigate=useNavigate()
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -35,20 +38,18 @@ export default function Score() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log(formData);
     
+    const res=await api.post('/api/score',formData)
+    console.log(res);
+    
+    if(res.data.success){
+      toast.success(res.data.message)
+      navigate('/dashboard')
+    }
   };
 
-  const emptyRadarData = [
-    { metric: "VO2 Max", value: 0 },
-    { metric: "HRV", value: 0 },
-    { metric: "Lactate Threshold", value: 0 },
-    { metric: "Stride Length", value: 0 },
-    { metric: "Cadence", value: 0 },
-    { metric: "Force", value: 0 },
-    { metric: "Performance", value: 0 },
-    { metric: "Adaptability", value: 0 },
-    { metric: "Final Score", value: 0 },
-  ];
+  
 
   return (
     <div className="min-h-screen dark-bg text-white p-6 md:p-10 flex flex-col items-center justify-center">
@@ -70,8 +71,6 @@ export default function Score() {
               onChange={handleChange}
               className="p-2 rounded bg-gray-700 text-white w-full"
             />
-
-           
 
           
             {[

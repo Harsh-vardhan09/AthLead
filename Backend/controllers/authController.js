@@ -18,7 +18,7 @@ export const SingupAuth = async (req, res) => {
   console.log(result);
 
   if (!result.success) {
-    return res.status(400).json({
+    return res.json({
       errors: result.error.format(),
     });
   }

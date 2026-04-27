@@ -42,7 +42,6 @@ AthLead-ML-model/__pycache__/
 AthLead-ML-model/*.pyc
 AthLead-ML-model/venv/
 AthLead-ML-model/.venv/
-AthLead-ML-model/*.pkl
 AthLead-ML-model/*.h5
 AthLead-ML-model/*.pt
 

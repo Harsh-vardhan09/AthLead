@@ -50,7 +50,7 @@ app.get('/api/user/me',passport.authenticate('jwt',{session:false}),getUser)
 app.get('/api/score/rank',passport.authenticate('jwt',{session:false}),getRanking);
 
 app.all("/",(req,res)=>{
-    res.send("jai ho");
+    res.render('index.js')
 })
 
 

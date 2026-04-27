@@ -7,18 +7,27 @@ import dayjs from "dayjs";
 
 export const setScore = async (req, res) => {
   const data = req.body;
-  const user = req.user._id;
+  const userId = req.user._id;
 
   console.log(process.env.ML_URI);
   console.log(data);
 
   try {
-    const participant = await Participation.find({
-      user: user,
+    const participant = await Participation.findOne({
+      user: userId,
     }).select("DOB gender");
 
+    if (!participant) {
+      return res.json({
+        success:false,
+        message:"You must participate in at least one event before getting a score.",
+      });
+    }
     const birthDate = dayjs(participant[0].DOB).format("YYYY-MM-DD");
+
     const age = dobToAge(birthDate);
+    console.log(age);
+
     const gen = participant[0].gender.toUpperCase().slice(0, 1);
 
     data.age = `${age.count}`;
@@ -33,11 +42,11 @@ export const setScore = async (req, res) => {
       score: mlResponse.data.predicted_potential_score,
     });
     console.log(mlResponse.data.predicted_potential_score);
-    
+
     res.json({
-        success:true,
-        message:`obtained ${mlResponse.data.predicted_potential_score}`
-    })
+      success: true,
+      message: `obtained ${mlResponse.data.predicted_potential_score}`,
+    });
   } catch (error) {
     res.json({
       success: false,

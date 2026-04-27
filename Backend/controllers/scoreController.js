@@ -17,18 +17,20 @@ export const setScore = async (req, res) => {
       user: userId,
     }).select("DOB gender");
 
+    console.log(participant);
+    
     if (!participant) {
       return res.json({
         success:false,
         message:"You must participate in at least one event before getting a score.",
       });
     }
-    const birthDate = dayjs(participant[0].DOB).format("YYYY-MM-DD");
+    const birthDate = dayjs(participant.DOB).format("YYYY-MM-DD");
 
     const age = dobToAge(birthDate);
     console.log(age);
 
-    const gen = participant[0].gender.toUpperCase().slice(0, 1);
+    const gen = participant.gender.toUpperCase().slice(0, 1);
 
     data.age = `${age.count}`;
     data.gender = `${gen}`;
@@ -38,7 +40,7 @@ export const setScore = async (req, res) => {
     const mlResponse = await axios.post(`${process.env.ML_URI}/rank`, data);
 
     const result = await Score.create({
-      user: user,
+      user: userId,
       score: mlResponse.data.predicted_potential_score,
     });
     console.log(mlResponse.data.predicted_potential_score);

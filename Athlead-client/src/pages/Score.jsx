@@ -46,6 +46,8 @@ export default function Score() {
     if(res.data.success){
       toast.success(res.data.message)
       navigate('/dashboard')
+    }else{
+      toast.error(res.data.message)
     }
   };
 

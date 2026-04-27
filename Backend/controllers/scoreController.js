@@ -74,7 +74,7 @@ export const getScore = async (req, res) => {
   } catch (error) {
     res.json({
       success: false,
-      message: error,
+      message: error.message,
     });
   }
 };

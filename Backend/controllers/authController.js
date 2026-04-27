@@ -26,18 +26,25 @@ export const SingupAuth = async (req, res) => {
   const { fullname, email, phone, gender, password } = result.data;
   const hashedPassword = hashSync(password, 10);
 
-  const user = await User.create({
-    fullname,
-    email,
-    phone,
-    gender,
-    password: hashedPassword,
-  });
+  try {
+    const user = await User.create({
+      fullname,
+      email,
+      phone,
+      gender,
+      password: hashedPassword,
+    });
 
-  res.json({
-    success: true,
-    message: "Sign Up Successful",
-  });
+    res.json({
+      success: true,
+      message: "Sign Up Successful",
+    });
+  } catch (error) {
+    res.json({
+      success: false,
+      message: error.message,
+    });
+  }
 };
 
 //login Auth
@@ -51,63 +58,76 @@ export const LoginAuth = async (req, res) => {
   }
 
   const { email, password } = result.data;
+  try {
+    const user = await User.findOne({ email: email });
+    if (!user) {
+      return res.json({
+        success: false,
+        message: "No User with this mail",
+      });
+    }
+    if (!compareSync(password, user.password)) {
+      return res.json({
+        success: false,
+        message: "Wrong password",
+      });
+    }
 
-  const user = await User.findOne({ email: email });
-  if (!user) {
-    return res.json({
+    const refreshToken = user.generateRefreshToken();
+    const accessToken = user.generateAccessToken();
+
+    //  console.log(refreshToken);
+    //  console.log(accessToken);
+
+    const option = {
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
+    };
+
+    res.cookie("refreshToken", refreshToken, option).json({
+      success: true,
+      message: "user Logged in",
+      accessToken,
+    });
+  } catch (error) {
+    res.json({
       success: false,
-      message: "No User with this mail",
+      message: error.message,
     });
   }
-  if (!compareSync(password, user.password)) {
-    return res.json({
-      success: false,
-      message: "Wrong password",
-    });
-  }
-
-  const refreshToken = user.generateRefreshToken();
-  const accessToken = user.generateAccessToken();
-
-  //  console.log(refreshToken);
-  //  console.log(accessToken);
-
-  const option = {
-    httpOnly: true,
-    secure: true,
-    sameSite: "strict",
-  };
-
-  res.cookie("refreshToken", refreshToken, option).json({
-    success: true,
-    message: "user Logged in",
-    accessToken,
-  });
 };
 
 export const refesh = async (req, res) => {
   const token = req.cookies.refreshToken;
-  console.log(token);
+  // console.log(token);
 
-  if (!token) {
-    return res.status(401).json({
-      message: "token not present",
+  try {
+    if (!token) {
+      return res.status(401).json({
+        message: "token not present",
+      });
+    }
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (!decoded) {
+      return res.status(401).json({
+        message: "invalid token",
+      });
+    }
+    const user = await User.findOne({ _id: decoded.id });
+    console.log(user);
+  
+    const newAccessToken = user.generateAccessToken();
+  
+    res.json({
+      accessToken: newAccessToken,
     });
+  } catch (error) {
+    res.json({
+      success:false,
+      message:error.message
+    })
   }
-  const decoded = jwt.verify(token, process.env.JWT_SECRET);
-  if (!decoded) {
-    return res.status(401).json({
-      message: "invalid token",
-    });
-  }
-  const user = await User.findOne({ _id: decoded.id });
-  console.log(user);
-
-  const newAccessToken = user.generateAccessToken();
-
-  res.json({
-    accessToken: newAccessToken,
-  });
 };
 
 export const logout = (req, res) => {
@@ -123,24 +143,24 @@ export const editUser = async (req, res) => {
   const { fullname, phone, address, DOB } = req.body;
   // console.log(req.user._id);
   console.log(DOB);
-  
+
   try {
     const profileUrl = await cloudinary.uploader.upload(profilePicture);
-     
+
     const user = await User.findByIdAndUpdate(
       req.user._id,
       {
         fullname,
         phone,
         state: address,
-        DOB:DOB,
+        DOB: DOB,
         image: profileUrl.url,
       },
       { returnDocument: "after" },
     );
 
     console.log(user);
-    
+
     res.json({
       success: true,
       message: "User Updated",
@@ -170,7 +190,7 @@ export const getUser = async (req, res) => {
   } catch (error) {
     res.json({
       success: false,
-      message: error,
+      message: error,message,
     });
   }
 };

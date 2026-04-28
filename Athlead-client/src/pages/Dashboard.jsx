@@ -43,14 +43,14 @@ const Dashboard = () => {
     const getUser=async()=>{
       const resUser=await api.get('/api/user/me');
       setUser(resUser.data.user);
-      console.log(resUser);
+      // console.log(resUser);
     }
     getUser()
 
     const getRank=async()=>{
       const res=await api.get('/api/score/rank');
       setRank(res.data.rank)
-      console.log(res.data.rank);
+      // console.log(res.data.rank);
       
     }
     getRank()

@@ -5,6 +5,7 @@ import EventCard from "../Components/EventCard";
 import EventDetails from "../Components/EventDetails";
 import { api } from "../api/axios";
 import EventCardSkeleton from "../Components/EventCardSkelton";
+import toast from "react-hot-toast";
 
 const Events = () => {
   const [type, setType] = useState("All");
@@ -20,6 +21,10 @@ const Events = () => {
       const res = await api.get("/api/events");
       setEvents(res.data.events);
       setLoading(false)
+
+      if(!res.data.success){
+        toast.error(res.data.message)
+      }
     };
     getEvents();
   }, []);

@@ -25,12 +25,14 @@ const App = () => {
       <Toaster />
       <Routes>
         <Route path="/" element={<Layout />}>
-          <Route index element={
-            <IsLoggedIn>
-                 <Home />
-            </IsLoggedIn>
-           
-            } />
+          <Route
+            index
+            element={
+              <IsLoggedIn>
+                <Home />
+              </IsLoggedIn>
+            }
+          />
           <Route
             path="/events"
             element={
@@ -55,7 +57,14 @@ const App = () => {
               </ProtectedRoute>
             }
           />
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/news" element={<Announcement />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/login" element={<Login />} />

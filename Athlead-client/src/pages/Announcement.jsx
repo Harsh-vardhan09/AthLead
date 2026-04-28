@@ -12,7 +12,7 @@ const Announcement = () => {
     try {
       setIsLoading(true);
       const { data } = await api.get("/api/news");
-      console.log(data);
+      // console.log(data);
       
       if (data.success) {
         setNews(data.message);

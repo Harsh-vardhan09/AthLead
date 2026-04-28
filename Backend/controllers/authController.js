@@ -115,7 +115,7 @@ export const refesh = async (req, res) => {
       });
     }
     const user = await User.findOne({ _id: decoded.id });
-    console.log(user);
+    // console.log(user);
   
     const newAccessToken = user.generateAccessToken();
   
@@ -142,7 +142,7 @@ export const editUser = async (req, res) => {
   const profilePicture = req.file.path;
   const { fullname, phone, address, DOB } = req.body;
   // console.log(req.user._id);
-  console.log(DOB);
+  // console.log(DOB);
 
   try {
     const profileUrl = await cloudinary.uploader.upload(profilePicture);
@@ -159,7 +159,7 @@ export const editUser = async (req, res) => {
       { returnDocument: "after" },
     );
 
-    console.log(user);
+    // console.log(user);
 
     res.json({
       success: true,
@@ -181,7 +181,7 @@ export const getUser = async (req, res) => {
     const user = await User.findOne({ _id: userId }).select(
       "-password -createdAt -updatedAt -role -email",
     );
-    console.log(user);
+    // console.log(user);
 
     res.json({
       success: true,

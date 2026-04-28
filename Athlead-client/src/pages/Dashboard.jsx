@@ -37,6 +37,8 @@ const Dashboard = () => {
         date: dayjs(item.date).format("DD MMM YY"),
       }));
       setScores(formattedScores);
+      console.log(scores);
+      
     };
     getScore();
 

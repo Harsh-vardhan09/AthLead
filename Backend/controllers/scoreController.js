@@ -58,14 +58,16 @@ export const setScore = async (req, res) => {
 };
 
 export const getScore = async (req, res) => {
-  const user = req.user._id;
-
+  const userId = req.user._id;
+  // console.log(userId);
+  
+  
   try {
     const scores = await Score.find({
-      user: user,
-    }).sort({ createdAt: 1 });
+      user: userId,
+    });
 
-    console.log(scores);
+    // console.log(scores);
 
     res.json({
       success: true,

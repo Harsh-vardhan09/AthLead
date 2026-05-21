@@ -1,27 +1,36 @@
-import { Eye, EyeClosed } from "lucide-react";
+import { Eye, EyeClosed, Calendar } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router";
 import toast, { Toaster } from "react-hot-toast";
 import { api } from "../api/axios";
+import CalendarPicker from "../Components/CalendarPicker";
 
 const Signup = () => {
   const {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
   } = useForm();
   const [show, setShow] = useState(false);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const navigate = useNavigate();
 
   const onSubmit = async (data) => {
-    const res = await api.post("/api/auth/signup", data);
-    
+    // Formatting Date from DD-MM-YYYY to YYYY-MM-DD
+    const formattedData = { ...data };
+    if (data.DOB) {
+      const [day, month, year] = data.DOB.split("/");
+      formattedData.DOB = `${year}-${month}-${day}`;
+    }
+
+    const res = await api.post("/api/auth/signup", formattedData);
+
     if (res.data.success) {
       toast.success(res.data.message);
-      
     } else {
       toast.error(res.data.message);
     }
@@ -92,6 +101,54 @@ const Signup = () => {
               {...register("phone")}
               className={`input mb-4 ${errors.phone ? "border-red-500/80" : "border-white/30"}`}
             />
+          </div>
+          <div className="w-full relative">
+            <label className="label">Date of Birth</label>
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="DD/MM/YYYY"
+                {...register("DOB", {
+                  required: "Date of Birth is Required",
+                  pattern: {
+                    value: /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/,
+                    message: "Use DD/MM/YYYY Format",
+                  },
+                  validate: {
+                    notFuture: (value) => {
+                      const [day, month, year] = value.split("/").map(Number);
+                      const dob = new Date(year, month - 1, day);
+                      const minDate = new Date();
+                      minDate.setHours(0, 0, 0, 0);
+                      // Future DOB Vaidation - Setting Mininmun Age Limit
+                      // minDate.setFullYear(minDate.getFullYear() - 5) // For 5 Years and Older
+                      return (
+                        dob < minDate ||
+                        "Date of Birth should not today or later"
+                      ); // Change based on Min Age
+                    },
+                  },
+                })}
+                className={`input mb-4 pr-10 ${errors.DOB ? "border-red-500/80" : "border-white/30"}`}
+                readOnly
+              />
+              <Calendar
+                className="absolute right-3 top-1/2 -translate-y-1/2 h-full cursor-pointer hover:text-[#5dcaa5] transition-colors"
+                onClick={() => setIsCalendarOpen(!isCalendarOpen)}
+              />
+              {isCalendarOpen && (
+                <CalendarPicker
+                  selectedDate={watch("DOB")}
+                  onSelect={(formatted) => {
+                    setValue("DOB", formatted);
+                  }}
+                  onClose={() => setIsCalendarOpen(false)}
+                />
+              )}
+            </div>
+            {errors.DOB && (
+              <p className="text-sm text-red-700">{errors.DOB.message}</p>
+            )}
           </div>
 
           <div>

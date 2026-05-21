@@ -44,7 +44,8 @@ AthLead-ML-model/venv/
 AthLead-ML-model/.venv/
 AthLead-ML-model/*.h5
 AthLead-ML-model/*.pt
-
+# Virtual Environment used for installing ML Packages
+.venv
 
 
 
@@ -53,3 +54,7 @@ AthLead-ML-model/*.pt
 **.vscode
 
 **.VSCODECOUNTER
+
+# Same as Above but to match the content of Folder
+.VSCodeCounter
+

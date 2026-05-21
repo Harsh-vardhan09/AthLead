@@ -23,7 +23,7 @@ export const SingupAuth = async (req, res) => {
     });
   }
 
-  const { fullname, email, phone, gender, password } = result.data;
+  const { fullname, email, phone, gender, password, DOB } = result.data;
   const hashedPassword = hashSync(password, 10);
 
   try {
@@ -33,6 +33,7 @@ export const SingupAuth = async (req, res) => {
       phone,
       gender,
       password: hashedPassword,
+      DOB,
     });
 
     res.json({
@@ -116,17 +117,17 @@ export const refesh = async (req, res) => {
     }
     const user = await User.findOne({ _id: decoded.id });
     // console.log(user);
-  
+
     const newAccessToken = user.generateAccessToken();
-  
+
     res.json({
       accessToken: newAccessToken,
     });
   } catch (error) {
     res.json({
-      success:false,
-      message:error.message
-    })
+      success: false,
+      message: error.message,
+    });
   }
 };
 
@@ -190,7 +191,8 @@ export const getUser = async (req, res) => {
   } catch (error) {
     res.json({
       success: false,
-      message: error,message,
+      message: error,
+      message,
     });
   }
 };

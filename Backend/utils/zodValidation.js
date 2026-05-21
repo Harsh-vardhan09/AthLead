@@ -11,16 +11,18 @@ export const signupVal = z.object({
   }),
   password: z.string().regex(/[a-zA-z0-9_\-\.\@\$]{7,16}/i),
   phone: z
-  .string()
-  .transform(val => val === "" ? undefined : val)
-  .optional()
-  .refine(val => !val || /^[0-9]{10}$/.test(val), {
-    message: "Phone must be exactly 10 digits"
-  })
+    .string()
+    .transform((val) => (val === "" ? undefined : val))
+    .optional()
+    .refine((val) => !val || /^[0-9]{10}$/.test(val), {
+      message: "Phone must be exactly 10 digits",
+    }),
+  DOB: z.string().refine((val) => !isNaN(Date.parse(val)), {
+    message: "Date provided must be in YYYY-MM-DD format",
+  }),
 });
 
-
-export const LoginVal=z.object({
-    email: z.string().email("Invalid email address"),
-    password: z.string(),
-})
+export const LoginVal = z.object({
+  email: z.string().email("Invalid email address"),
+  password: z.string(),
+});

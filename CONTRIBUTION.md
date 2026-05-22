@@ -33,14 +33,17 @@ git remote -v
 
 ## Branch naming
 
-Recommended Formats
-|Type	          |        Example                      |
-|Feature	      |       feature/user-authentication   | 
-|Bug Fix	      |        fix/navbar-overflow          |
-|Documentation	  |        docs/update-readme           |
-|Refactor	      |        refactor/api-service         |
-|Test	          |        test/login-module            |
-|Hotfix	          |        hotfix/payment-crash         |
+## Recommended Branch Formats
+
+| Type          | Example                     |
+|----------------|-----------------------------|
+| Feature        | `feature/user-authentication` |
+| Bug Fix        | `fix/navbar-overflow` |
+| Documentation  | `docs/update-readme` |
+| Refactor       | `refactor/api-service` |
+| Test           | `test/login-module` |
+| Hotfix         | `hotfix/payment-crash` |
+
 
 
 **Create a Branch**
@@ -48,12 +51,17 @@ Recommended Formats
 git checkout -b feature/your-feature-name
 ```
 
-|Common      |Commit Types        |
-|Type	     |Purpose             |
-|feat	     |New feature         |
-|fix	     |Bug  fix            |
-|docs	     |Documentation       |
-|style	     |Formatting changes  |
-|refactor    |Code restructuring  |
-|test	     |Adding tests        |
-|chore	     |Maintenance tasks   |
+
+## Common Commit Message Formats
+
+| Type      | Example                          |
+|-----------|----------------------------------|
+| Feature   | `feat: add user authentication` |
+| Bug Fix   | `fix: resolve navbar overflow` |
+| Docs      | `docs: update installation guide` |
+| Style     | `style: format login component` |
+| Refactor  | `refactor: simplify API service` |
+| Test      | `test: add unit tests for login` |
+| Chore     | `chore: update dependencies` |
+
+---

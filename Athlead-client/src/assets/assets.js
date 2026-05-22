@@ -371,14 +371,14 @@ export const performanceData = [
   { name: "Week 12", score: 90 },
 ];
 
-export const radarData=[
-    { metric: "VO2 Max", value: Math.floor(Math.random() * 151) },
-    { metric: "HRV", value: Math.floor(Math.random() * 151) },
-    { metric: "Lactate Threshold", value: Math.floor(Math.random() * 151) },
-    { metric: "Stride Length", value: Math.floor(Math.random() * 151) },
-    { metric: "Cadence", value: Math.floor(Math.random() * 151) },
-    { metric: "Force", value: Math.floor(Math.random() * 151) },
-    { metric: "Performance", value: Math.floor(Math.random() * 151) },
-    { metric: "Adaptability", value: Math.floor(Math.random() * 151) },
-    { metric: "Final Score", value: Math.floor(Math.random() * 151) },
-  ];
+export const radarData = [
+  { metric: "VO2 Max", value: Math.floor(Math.random() * 151) },
+  { metric: "HRV", value: Math.floor(Math.random() * 151) },
+  { metric: "Lactate Threshold", value: Math.floor(Math.random() * 151) },
+  { metric: "Stride Length", value: Math.floor(Math.random() * 151) },
+  { metric: "Cadence", value: Math.floor(Math.random() * 151) },
+  { metric: "Force", value: Math.floor(Math.random() * 151) },
+  { metric: "Performance", value: Math.floor(Math.random() * 151) },
+  { metric: "Adaptability", value: Math.floor(Math.random() * 151) },
+  { metric: "Final Score", value: Math.floor(Math.random() * 151) },
+];

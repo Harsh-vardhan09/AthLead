@@ -10,30 +10,25 @@ const Login = () => {
   const {
     register,
     handleSubmit,
-    watch,
     formState: { errors },
   } = useForm();
   const [show, setShow] = useState(false);
-  const {setLoggedIn} =useAuth()
+  const { setLoggedIn } = useAuth();
 
   const navigate = useNavigate();
 
-  const toggleVisibility = () => {};
 
-  const onSubmit = async(data) => {
-    const res=await api.post('/api/auth/login',data)
-    
-    localStorage.setItem('accessToken',res.data.accessToken)
-    setLoggedIn(true)
+  const onSubmit = async (data) => {
+    const res = await api.post("/api/auth/login", data);
+
+    localStorage.setItem("accessToken", res.data.accessToken);
+    setLoggedIn(true);
     if (res.data.success) {
       toast.success(res.data.message);
       navigate("/dashboard");
-    } else{
+    } else {
       toast.error(res.data.message);
     }
-    
-    
-    
   };
 
   return (
@@ -59,11 +54,12 @@ const Login = () => {
               })}
               className={`input ${errors.email ? "border-red-500/80" : "border-white/30"}`}
             />
-            
           </fieldset>
 
           <fieldset className="w-full">
-            <div className={`input mb-4 ${errors.password ? "border-red-500/80" : "border-white/30"}`}>
+            <div
+              className={`input mb-4 ${errors.password ? "border-red-500/80" : "border-white/30"}`}
+            >
               <input
                 type={show ? "text" : "password"}
                 placeholder="Enter Password"
@@ -79,7 +75,6 @@ const Login = () => {
                 {show ? <Eye /> : <EyeClosed />}
               </div>
             </div>
-            
           </fieldset>
           <button
             type="submit"

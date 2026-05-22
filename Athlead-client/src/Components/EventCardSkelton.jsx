@@ -5,7 +5,6 @@ import "react-loading-skeleton/dist/skeleton.css";
 const EventCardSkeleton = () => {
   return (
     <div className="h-65 w-auto bg-white/5 border border-white/10 rounded-xl overflow-hidden p-3">
-      
       {/* Top Gradient Line */}
       <div className="h-1 w-full mb-3">
         <Skeleton height={3} />

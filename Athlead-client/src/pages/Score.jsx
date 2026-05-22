@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import toast, {} from 'react-hot-toast'
+import React from "react";
+import toast from "react-hot-toast";
 import {
   RadarChart,
   Radar,
@@ -28,8 +28,7 @@ export default function Score() {
     adaptability_score: "",
   });
 
-  const [score, setScore] = useState(null);
-  const navigate=useNavigate()
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -39,19 +38,17 @@ export default function Score() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log(formData);
-    
-    const res=await api.post('/api/score',formData)
+
+    const res = await api.post("/api/score", formData);
     console.log(res);
-    
-    if(res.data.success){
-      toast.success(res.data.message)
-      navigate('/dashboard')
-    }else{
-      toast.error(res.data.message)
+
+    if (res.data.success) {
+      toast.success(res.data.message);
+      navigate("/dashboard");
+    } else {
+      toast.error(res.data.message);
     }
   };
-
-  
 
   return (
     <div className="min-h-screen dark-bg text-white p-6 md:p-10 flex flex-col items-center justify-center">
@@ -74,7 +71,6 @@ export default function Score() {
               className="p-2 rounded bg-gray-700 text-white w-full"
             />
 
-          
             {[
               "training_years",
               "vo2_max",
@@ -99,15 +95,13 @@ export default function Score() {
           </div>
           <div className="p-6 flex items-center justify-center">
             <button
-                type="submit"
-                className="mt-4 w-full bg-linear-to-r from-teal-300 to-teal-800 hover:to-purple-700 py-2 px-4 rounded-lg text-white font-semibold"
+              type="submit"
+              className="mt-4 w-full bg-linear-to-r from-teal-300 to-teal-800 hover:to-purple-700 py-2 px-4 rounded-lg text-white font-semibold"
             >
-                Generate Score
+              Generate Score
             </button>
           </div>
         </form>
-
-
       </div>
     </div>
   );

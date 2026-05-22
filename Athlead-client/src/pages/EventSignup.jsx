@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React from "react";
 import { useForm } from "react-hook-form";
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from "react-router-dom";
 import { api } from "../api/axios";
 import toast from "react-hot-toast";
 
@@ -8,26 +8,24 @@ const EventSignup = () => {
   const {
     register,
     handleSubmit,
-    watch,
     formState: { errors },
   } = useForm();
 
-  const navigate=useNavigate()
-  const {eventId}=useParams();
-  const onSubmit = async(data) => {
-    const res=await api.post(`/api/events/${eventId}/register`,data)
-    if(res.data.success){
-      toast.success(res.data.message)
-      navigate('/events')
-    }else{
-       toast.error(res.data.message)
+  const navigate = useNavigate();
+  const { eventId } = useParams();
+  const onSubmit = async (data) => {
+    const res = await api.post(`/api/events/${eventId}/register`, data);
+    if (res.data.success) {
+      toast.success(res.data.message);
+      navigate("/events");
+    } else {
+      toast.error(res.data.message);
     }
   };
 
   return (
     <section className="dark-bg relative max-w-screen min-h-screen flex items-center justify-center ">
       <div className="h-2/3 max-w-180 w-full bg-linear-to-br from-[#0f2027] via-[#1a3a4a] to-[#0f2027] border border-[#1d9e75]/40 text-start text-white rounded-2xl shadow-xl">
-
         <div className="text-center pt-6 pb-2 px-8">
           <span className="inline-flex items-center gap-1.5 bg-[#1d9e75]/15 border border-[#1d9e75]/40 text-[#5dcaa5] text-xs font-medium px-3 py-1 rounded-full mb-3">
             ● Registration open
@@ -59,7 +57,6 @@ const EventSignup = () => {
           onSubmit={handleSubmit(onSubmit)}
           className="flex flex-col gap-3 px-8 pb-8"
         >
-
           <div>
             <label className="block text-[11px] font-medium text-white/50 uppercase tracking-widest mb-1.5">
               Full Name
@@ -81,7 +78,6 @@ const EventSignup = () => {
               </p>
             )}
           </div>
-
 
           <div className="grid md:grid-cols-2 gap-3 grid-cols-1">
             <div>
@@ -126,9 +122,7 @@ const EventSignup = () => {
                 </p>
               )}
             </div>
-            
           </div>
-
 
           <div className="grid grid-cols-1 gap-3 ">
             <div>
@@ -151,7 +145,6 @@ const EventSignup = () => {
             </div>
           </div>
 
-  
           <div>
             <label className="block text-[11px] font-medium text-white/50 uppercase tracking-widest mb-1.5">
               Gender

@@ -1,10 +1,8 @@
 import axios from "axios";
 import Score from "../models/Score.js";
-import { wrapAsync } from "../middleware/middleware.js";
 import { User } from "../models/Users.js";
 import dobToAge from "dob-to-age";
 import dayjs from "dayjs";
-import { success } from "zod";
 
 export const setScore = async (req, res) => {
   const data = req.body;
@@ -45,7 +43,7 @@ export const setScore = async (req, res) => {
 
     const mlResponse = await axios.post(`${process.env.ML_URI}/rank`, data);
 
-    const result = await Score.create({
+    await Score.create({
       user: userId,
       score: mlResponse.data.predicted_potential_score,
     });

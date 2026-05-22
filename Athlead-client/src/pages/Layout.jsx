@@ -6,10 +6,15 @@ import { useAuth } from "../context/AppProvider";
 
 const Layout = () => {
   const [sidebar, setSidebar] = useState(false);
-  const {loggedIn,setLoggedIn}=useAuth();
+  const { loggedIn, setLoggedIn } = useAuth();
   return (
-    <section className="dark-bg " >
-      <Navbar sidebar={sidebar} setSidebar={setSidebar} loggedIn={loggedIn} setLoggedIn={setLoggedIn} />
+    <section className="dark-bg ">
+      <Navbar
+        sidebar={sidebar}
+        setSidebar={setSidebar}
+        loggedIn={loggedIn}
+        setLoggedIn={setLoggedIn}
+      />
       <div>
         <Outlet />
       </div>

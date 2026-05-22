@@ -1,16 +1,11 @@
 import mongoose from "mongoose";
 import Event from "../models/Event.js";
-import dotenv from 'dotenv';
+import dotenv from "dotenv";
 dotenv.config();
-
-
 
 const seed = async () => {
   try {
-
     await mongoose.connect();
-   
-    
 
     await Event.deleteMany(); // optional: clears old data
 
@@ -80,4 +75,4 @@ const seed = async () => {
   }
 };
 
-seed()
+seed();

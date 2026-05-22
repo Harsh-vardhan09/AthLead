@@ -16,14 +16,19 @@ const NewsCard = ({ e, loading }) => {
         )}
       </div>
       <div className="text-start mx-4 my-4 ">
-        <p className="text-xl font-bold font-segoe text-white">{loading ? <Skeleton width={200} /> : e?.title}</p>
-        <p className="basic text-xs hidden lg:flex my-4"> {loading ? <Skeleton count={2} /> : e?.content}</p>
+        <p className="text-xl font-bold font-segoe text-white">
+          {loading ? <Skeleton width={200} /> : e?.title}
+        </p>
+        <p className="basic text-xs hidden lg:flex my-4">
+          {" "}
+          {loading ? <Skeleton count={2} /> : e?.content}
+        </p>
         <a
           href={e?.url}
           className="my-4 bg-linear-to-b from-teal-200 to-teal-700 bg-clip-text text-transparent font-extrabold"
         >
           <span className="basic"></span>
-           {loading ? <Skeleton width={100} /> : e?.source?.name}
+          {loading ? <Skeleton width={100} /> : e?.source?.name}
         </a>
       </div>
     </div>

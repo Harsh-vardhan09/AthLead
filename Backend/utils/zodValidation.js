@@ -9,7 +9,7 @@ export const signupVal = z.object({
   gender: z.enum(["male", "female", "others"], {
     errorMap: () => ({ message: "Gender must be male, female, or other" }),
   }),
-  password: z.string().regex(/[a-zA-z0-9_\-\.\@\$]{7,16}/i),
+  password: z.string().regex(/[a-zA-z0-9- @ $]{7,16}/i),
   phone: z
     .string()
     .transform((val) => (val === "" ? undefined : val))

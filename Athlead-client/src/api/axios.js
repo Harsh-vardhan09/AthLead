@@ -11,7 +11,7 @@ api.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
-  
+
   return config;
 });
 
@@ -27,8 +27,8 @@ api.interceptors.response.use(
           {},
           { withCredentials: true },
         );
-        
-        const newAccessToken=result.data.accessToken;
+
+        const newAccessToken = result.data.accessToken;
         localStorage.setItem("accessToken", newAccessToken);
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         return api(originalRequest);

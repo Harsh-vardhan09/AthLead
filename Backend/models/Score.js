@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import { float32 } from "zod";
 
 const ScoreSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },

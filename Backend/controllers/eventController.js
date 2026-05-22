@@ -56,7 +56,6 @@ export const postEvent = async (req, res) => {
 };
 
 export const registerEvent = async (req, res) => {
-  const data = req.body;
   const { eventId } = req.params;
   const { email, fullname, phone, gender, DOB } = req.body;
   try {
@@ -81,7 +80,7 @@ export const registerEvent = async (req, res) => {
       });
     }
 
-    const register = await Participation.create({
+    await Participation.create({
       user: user._id,
       event: eventId,
       email,

@@ -5,32 +5,36 @@
 
 @import "tailwindcss";
 
-@theme{
-  --font-akkurat:akkurat,"sans-sarif";
+@theme {
+  --font-akkurat: akkurat, "sans-sarif";
 }
 
-@theme{
-  --font-segoe: Segoe UI, system-ui, sans-serif
+@theme {
+  --font-segoe: Segoe UI, system-ui, sans-serif;
 }
 
 @layer utilities {
   .bg-teal-radial {
-    background-image: radial-gradient(circle, rgba(20,184,166,0.18) 0%, transparent 70%);
+    background-image: radial-gradient(
+      circle,
+      rgba(20, 184, 166, 0.18) 0%,
+      transparent 70%
+    );
   }
 
   .basic {
     color: #64748b;
   }
 
-  .dark-bg{
+  .dark-bg {
     /* background-color:#0b131c */
-    background-color:#08121e
+    background-color: #08121e;
   }
 
-  .input{
-   @apply flex items-center justify-center h-10 w-full rounded-lg px-4 border  focus:outline-none focus:ring-0;
+  .input {
+    @apply flex items-center justify-center h-10 w-full rounded-lg px-4 border  focus:outline-none focus:ring-0;
   }
-  .label{
+  .label {
     @apply text-[12px] font-semibold text-slate-400 tracking-wide;
   }
   .input[type="number"] {
@@ -45,10 +49,10 @@
 
 @keyframes backforth {
   0% {
-    transform: translate(0,0);
+    transform: translate(0, 0);
   }
   100% {
-    transform: translate(300px,100px);
+    transform: translate(300px, 100px);
   }
 }
 

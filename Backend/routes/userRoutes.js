@@ -1,10 +1,14 @@
 import { Router } from "express";
-import { LoginAuth, logout, refesh, SingupAuth } from "../controllers/authController.js";
+import {
+  LoginAuth,
+  logout,
+  SingupAuth,
+} from "../controllers/authController.js";
 
-const router=Router()
+const router = Router();
 
-router.post('/signup',SingupAuth)
-router.post('/login',LoginAuth)
-router.post('/logout',logout)
+router.post("/signup", SingupAuth);
+router.post("/login", LoginAuth);
+router.post("/logout", logout);
 
-export default router
+export default router;

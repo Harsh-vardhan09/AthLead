@@ -1,7 +1,7 @@
 import { PlusCircle } from "lucide-react";
 import React from "react";
 import { useForm } from "react-hook-form";
-import { data, useNavigate } from "react-router";
+import {useNavigate } from "react-router";
 import { api } from "../api/axios";
 import toast from "react-hot-toast";
 
@@ -12,26 +12,26 @@ const EditForm = ({ setEditForm }) => {
     watch,
     formState: { errors },
   } = useForm();
-  const navigate=useNavigate()
+  const navigate = useNavigate();
 
   const profile = watch("profile_picture");
 
   const onSubmit = async (data) => {
-    const formData=new FormData();
-    formData.append('profile_picture',data.profile_picture[0])
-    formData.append('fullname',data.fullname)
-    formData.append('phone',data.phone)
-    formData.append('address',data.address)
-    formData.append('DOB',data.DOB)
+    const formData = new FormData();
+    formData.append("profile_picture", data.profile_picture[0]);
+    formData.append("fullname", data.fullname);
+    formData.append("phone", data.phone);
+    formData.append("address", data.address);
+    formData.append("DOB", data.DOB);
 
-    const res= await api.patch('/api/edit',formData)
+    const res = await api.patch("/api/edit", formData);
     console.log(res);
-    
-    if(res.data.success){
-        toast.success(res.data.message)
-        navigate('/dashboard')
-    }else{
-        toast.error(res.data.message)
+
+    if (res.data.success) {
+      toast.success(res.data.message);
+      navigate("/dashboard");
+    } else {
+      toast.error(res.data.message);
     }
   };
   return (
@@ -49,7 +49,6 @@ const EditForm = ({ setEditForm }) => {
         <form
           onSubmit={handleSubmit(onSubmit)}
           className="w-full flex flex-col  gap-2"
-
         >
           <div className="flex items-center justify-center">
             <div className="w-30 h-30   border border-[#1d9e75]/40 text-[#5dcaa5] flex items-center justify-center rounded-full">
@@ -57,9 +56,12 @@ const EditForm = ({ setEditForm }) => {
                 htmlFor="profile_picture"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                <PlusCircle size={50} className={`${profile?'hidden':''}`}/>
+                <PlusCircle
+                  size={50}
+                  className={`${profile ? "hidden" : ""}`}
+                />
                 <input
-                id="profile_picture"
+                  id="profile_picture"
                   type="file"
                   {...register("profile_picture")}
                   hidden

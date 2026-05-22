@@ -1,8 +1,7 @@
-import bcrypt, { compareSync, hashSync } from "bcrypt";
+import { compareSync, hashSync } from "bcrypt";
 import jwt from "jsonwebtoken";
 import { LoginVal, signupVal } from "../utils/zodValidation.js";
 import { User } from "../models/Users.js";
-import { success } from "zod";
 import { v2 as cloudinary } from "cloudinary";
 
 cloudinary.config({
@@ -27,7 +26,7 @@ export const SingupAuth = async (req, res) => {
   const hashedPassword = hashSync(password, 10);
 
   try {
-    const user = await User.create({
+    await User.create({
       fullname,
       email,
       phone,
@@ -148,7 +147,7 @@ export const editUser = async (req, res) => {
   try {
     const profileUrl = await cloudinary.uploader.upload(profilePicture);
 
-    const user = await User.findByIdAndUpdate(
+    await User.findByIdAndUpdate(
       req.user._id,
       {
         fullname,
@@ -192,7 +191,6 @@ export const getUser = async (req, res) => {
     res.json({
       success: false,
       message: error,
-      message,
     });
   }
 };

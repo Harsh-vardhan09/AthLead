@@ -12,7 +12,6 @@ import Layout from "./pages/Layout";
 import React from "react";
 const LazyEvents = React.lazy(() => import("./pages/Events"));
 import { Toaster } from "react-hot-toast";
-import { useState } from "react";
 import AppProvider from "./context/AppProvider";
 import ProtectedRoute from "./context/ProtectedRoute";
 import Score from "./pages/Score";

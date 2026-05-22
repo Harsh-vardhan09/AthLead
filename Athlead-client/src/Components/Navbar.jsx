@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { assets, navItems } from "../assets/assets";
 import { useLocation, useNavigate } from "react-router";
 import { CircleUser, X } from "lucide-react";
@@ -8,8 +8,8 @@ import toast from "react-hot-toast";
 import { api } from "../api/axios";
 import { useAuth } from "../context/AppProvider";
 
-const Navbar = ({ sidebar, setSidebar}) => {
-  const {loggedIn,setLoggedIn}=useAuth()
+const Navbar = ({ sidebar, setSidebar }) => {
+  const { loggedIn, setLoggedIn } = useAuth();
   const navigate = useNavigate();
 
   const location = useLocation();
@@ -31,7 +31,7 @@ const Navbar = ({ sidebar, setSidebar}) => {
     if (token) {
       setLoggedIn(true);
     }
-  }, []);
+  }, [setLoggedIn]);
 
   return (
     <>
@@ -69,7 +69,7 @@ const Navbar = ({ sidebar, setSidebar}) => {
               <>
                 <CircleUser
                   strokeWidth={1.75}
-                  onClick={()=>navigate("/dashboard")}
+                  onClick={() => navigate("/dashboard")}
                   className="h-6 w-12 xs:w-18 xs:h-8 ml-4 text-[#2dd4bf] hover:text-[#075f53] hover:ease-in-out transition-all"
                 />
                 <button

@@ -1,6 +1,12 @@
-import { Calendar, ChevronRight, Clock, LocateIcon, MapPin } from "lucide-react";
+import {
+  Calendar,
+  ChevronRight,
+  Clock,
+  LocateIcon,
+  MapPin,
+} from "lucide-react";
 import React, { useState } from "react";
-import { leaderboard, radarData } from "../assets/assets";
+import {  radarData } from "../assets/assets";
 import {
   LineChart,
   Line,
@@ -26,10 +32,9 @@ const Dashboard = () => {
   const [scores, setScores] = useState([]);
   const navigate = useNavigate();
   const [editForm, setEditForm] = useState(false);
-  const [user,setUser]=useState({});
-  const [rank,setRank]=useState([])
+  const [user, setUser] = useState({});
+  const [rank, setRank] = useState([]);
   useEffect(() => {
-
     const getScore = async () => {
       const scores = await api.get("/api/my-scores");
       const formattedScores = scores.data.scores.map((item) => ({
@@ -38,25 +43,22 @@ const Dashboard = () => {
       }));
       setScores(formattedScores);
       console.log(scores);
-      
     };
     getScore();
 
-    const getUser=async()=>{
-      const resUser=await api.get('/api/user/me');
+    const getUser = async () => {
+      const resUser = await api.get("/api/user/me");
       setUser(resUser.data.user);
       // console.log(resUser);
-    }
-    getUser()
+    };
+    getUser();
 
-    const getRank=async()=>{
-      const res=await api.get('/api/score/rank');
-      setRank(res.data.rank)
+    const getRank = async () => {
+      const res = await api.get("/api/score/rank");
+      setRank(res.data.rank);
       // console.log(res.data.rank);
-      
-    }
-    getRank()
-
+    };
+    getRank();
   }, []);
 
   return (
@@ -71,15 +73,16 @@ const Dashboard = () => {
             />
 
             <div className="flex flex-col items-start justify-center">
-              <h1 className="font-semibold font-segoe text-xl ">{user.fullname}</h1>
+              <h1 className="font-semibold font-segoe text-xl ">
+                {user.fullname}
+              </h1>
               <div className="flex  text-md basic gap-3">
-                
                 <p className="flex items-center">
                   <MapPin className="h-4 w-4 mr-1" /> {user.state}
                 </p>
                 <p className="flex items-center ">
                   <Calendar className="h-4 w-4 mr-1" />
-                  {dayjs(user.DOB).format('DD MMM ')}
+                  {dayjs(user.DOB).format("DD MMM ")}
                 </p>
               </div>
             </div>
@@ -116,7 +119,7 @@ const Dashboard = () => {
               </tr>
             </thead>
             <tbody>
-              {rank.map((p,i) => (
+              {rank.map((p, i) => (
                 <tr
                   key={p}
                   className={`border-b basic border-white/3 transition-colors ${p.isMe ? "bg-teal-500/3" : "hover:bg-white/2"}`}
@@ -126,11 +129,11 @@ const Dashboard = () => {
                       <div
                         className={`w-5 h-5 rounded-full flex items-center justify-center  text-[10px] font-black ${i === 1 ? "bg-amber-400/15 text-amber-400" : i ? "bg-slate-400/15 text-slate-400" : "bg-orange-800/15 text-orange-700"}`}
                       >
-                        {i+1}
+                        {i + 1}
                       </div>
                     ) : (
                       <span className="text-[11px] w-5 h-5 text-slate-600 pl-1">
-                        {i+1}
+                        {i + 1}
                       </span>
                     )}
                   </td>

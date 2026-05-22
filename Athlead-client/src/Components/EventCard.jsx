@@ -46,7 +46,7 @@ const EventCard = ({ e, setSelected, setIsOpen }) => {
         <div className="text-xs">
           <p className="flex gap-1 mb-2">
             <Clock className="text-teal-600 h-4 w-4" />
-            {e.time?e.time:'09:00 AM'}
+            {e.time ? e.time : "09:00 AM"}
           </p>
           <p className="flex gap-1">
             <Medal className="text-teal-600 h-4 w-4" />

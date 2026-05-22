@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { createContext,useContext } from "react";
+import { createContext, useContext } from "react";
 
 const appContext = createContext();
 
@@ -8,9 +8,10 @@ const AppProvider = ({ children }) => {
     !!localStorage.getItem("accessToken"),
   );
   return (
-  <appContext.Provider value={{loggedIn,setLoggedIn}}>
+    <appContext.Provider value={{ loggedIn, setLoggedIn }}>
       {children}
-  </appContext.Provider>)
+    </appContext.Provider>
+  );
 };
 
 export default AppProvider;

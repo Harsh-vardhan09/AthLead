@@ -13,17 +13,17 @@ const Events = () => {
   const [selected, setSelected] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
   const [events, setEvents] = useState([]);
-  const [loading,setLoading]=useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    setLoading(true)
+    setLoading(true);
     const getEvents = async () => {
       const res = await api.get("/api/events");
       setEvents(res.data.events);
-      setLoading(false)
+      setLoading(false);
 
-      if(!res.data.success){
-        toast.error(res.data.message)
+      if (!res.data.success) {
+        toast.error(res.data.message);
       }
     };
     getEvents();
@@ -62,13 +62,13 @@ const Events = () => {
         {/* events */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 my-8 w-full lg:px-20">
           {filtered.map((event) => (
-                <EventCard
-                  key={event._id}
-                  e={event}
-                  setSelected={setSelected}
-                  setIsOpen={setIsOpen}
-                />
-              ))}
+            <EventCard
+              key={event._id}
+              e={event}
+              setSelected={setSelected}
+              setIsOpen={setIsOpen}
+            />
+          ))}
         </div>
       </div>
       {isOpen && <EventDetails selected={selected} setIsOpen={setIsOpen} />}

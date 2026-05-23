@@ -51,9 +51,6 @@ git remote -v
 git checkout -b feature/your-feature-name
 ```
 
-
-## Common Commit Message Formats
-
 | Type      | Example                          |
 |-----------|----------------------------------|
 | Feature   | `feat: add user authentication` |
@@ -63,5 +60,3 @@ git checkout -b feature/your-feature-name
 | Refactor  | `refactor: simplify API service` |
 | Test      | `test: add unit tests for login` |
 | Chore     | `chore: update dependencies` |
-
----

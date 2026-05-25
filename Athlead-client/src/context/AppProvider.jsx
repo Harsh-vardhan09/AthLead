@@ -1,18 +1,17 @@
 import { useState } from "react";
-import { createContext, useContext } from "react";
-
-const appContext = createContext();
+import AppContext from "./AppContext";
 
 const AppProvider = ({ children }) => {
   const [loggedIn, setLoggedIn] = useState(
     !!localStorage.getItem("accessToken"),
   );
+
+  
   return (
-    <appContext.Provider value={{ loggedIn, setLoggedIn }}>
+    <AppContext.Provider value={{ loggedIn, setLoggedIn }}>
       {children}
-    </appContext.Provider>
+    </AppContext.Provider>
   );
 };
 
 export default AppProvider;
-export const useAuth = () => useContext(appContext);

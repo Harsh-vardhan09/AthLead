@@ -6,7 +6,7 @@ import { cn } from "../utility/cn";
 import { useEffect } from "react";
 import toast from "react-hot-toast";
 import { api } from "../api/axios";
-import { useAuth } from "../context/AppProvider";
+import { useAuth } from "../context/useAuth";
 
 const Navbar = ({ sidebar, setSidebar }) => {
   const { loggedIn, setLoggedIn } = useAuth();

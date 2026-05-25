@@ -82,7 +82,7 @@ const Signup = () => {
               {...register("email", {
                 required: true,
                 pattern: {
-                  value: /^[a-zA-Z0-9._%+-]+[@][a-zA-Z0-9.-]+[\.][a-zA-Z]{2,}$/,
+                  value: /^[a-zA-Z0-9._%+-]+[@][a-zA-Z0-9.-]+[.][a-zA-Z]{2,}$/,
                   message: "Wrong email format",
                 },
               })}
@@ -188,7 +188,7 @@ const Signup = () => {
                 {...register("password", {
                   required: true,
                   pattern: {
-                    value: /[a-zA-z0-9_\-\.\@\$]{7,16}/i,
+                    value: /[a-zA-z0-9_\-.@$]{7,16}/i,
                     message: "Need 7-16,special Character,uppercase",
                   },
                 })}

@@ -3,7 +3,7 @@ import { ArrowRight, PlayCircle, Section } from "lucide-react";
 import { faqs, features, sportsSupported } from "../assets/assets";
 import FaqItem from "../Components/FaqItem";
 import Footer from "../Components/Footer";
-import { useAuth } from "../context/AppProvider";
+import { useAuth } from "../context/useAuth";
 import { useNavigate } from "react-router";
 
 const Home = () => {

@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router";
 import { api } from "../api/axios";
 import toast from "react-hot-toast";
-import { useAuth } from "../context/AppProvider";
+import { useAuth } from "../context/useAuth";
 
 const Login = () => {
   const {

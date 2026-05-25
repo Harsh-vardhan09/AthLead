@@ -1,4 +1,4 @@
-name: monorepo CI
+name: CI checks for repo
 
 on:
   pull_request:
@@ -7,87 +7,24 @@ on:
       - main
 
 jobs:
-
-  frontend-format:
+  code-format:
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: Athlead-client
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+        - name: Checkout Code
+          uses: actions/checkout@v4
+        - uses: actions/setup-node@v4
+          with:
+            node-version: 20
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-          cache-dependency-path: Athlead-client/package-lock.json
+        - run: npm ci
+          working-directory: Athlead-client
 
-      - name: Install dependencies
-        run: npm ci
+        - run: npm ci
+          working-directory: Backend
 
-      - name: Run format
-        run: npm run format
+        - name: npm run format
+          run: npm run format
 
-  frontend-lint:
-    runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: Athlead-client
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-          cache-dependency-path: Athlead-client/package-lock.json
-
-      - run: npm ci
-
-      - run: npm run lint
-
-  backend-format:
-    runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: Backend
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-          cache-dependency-path: Backend/package-lock.json
-
-      - run: npm ci
-
-      - run: npm run format
-
-  backend-lint:
-    runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: Backend
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-          cache-dependency-path: Backend/package-lock.json
-
-      - run: npm ci
-
-      - run: npm run lint
+        - name: npm run lint
+          run: npm run lint

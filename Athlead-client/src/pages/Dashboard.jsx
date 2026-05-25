@@ -6,7 +6,7 @@ import {
   MapPin,
 } from "lucide-react";
 import React, { useState } from "react";
-import {  radarData } from "../assets/assets";
+import { radarData } from "../assets/assets";
 import {
   LineChart,
   Line,

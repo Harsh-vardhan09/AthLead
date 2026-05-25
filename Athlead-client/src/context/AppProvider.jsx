@@ -6,7 +6,6 @@ const AppProvider = ({ children }) => {
     !!localStorage.getItem("accessToken"),
   );
 
-  
   return (
     <AppContext.Provider value={{ loggedIn, setLoggedIn }}>
       {children}

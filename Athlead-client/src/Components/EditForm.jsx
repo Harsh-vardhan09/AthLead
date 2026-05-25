@@ -1,7 +1,7 @@
 import { PlusCircle } from "lucide-react";
 import React from "react";
 import { useForm } from "react-hook-form";
-import {useNavigate } from "react-router";
+import { useNavigate } from "react-router";
 import { api } from "../api/axios";
 import toast from "react-hot-toast";
 

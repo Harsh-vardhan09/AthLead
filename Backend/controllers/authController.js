@@ -28,7 +28,6 @@ export const SingupAuth = async (req, res) => {
   const normalizedEmail = normalizeEmail(email);
 
   try {
-
     const existingUser = await User.findOne({
       email: normalizedEmail,
     });
@@ -42,7 +41,7 @@ export const SingupAuth = async (req, res) => {
 
     await User.create({
       fullname,
-      email:normalizedEmail,
+      email: normalizedEmail,
       phone,
       gender,
       password: hashedPassword,

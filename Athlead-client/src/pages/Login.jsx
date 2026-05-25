@@ -17,7 +17,6 @@ const Login = () => {
 
   const navigate = useNavigate();
 
-
   const onSubmit = async (data) => {
     const res = await api.post("/api/auth/login", data);
 

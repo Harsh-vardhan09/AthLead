@@ -1,8 +1,8 @@
 ## Description
 explain what this pr does
 
-## Related Issue
-Closes #
+## Closes Issue # <input issue no assigned>
+
 
 ## Type of change
 
@@ -20,5 +20,5 @@ Closes #
 - [ ] I tested my changes
 - [ ] I ran npm run lint
 - [ ] I ran npm run build
-- [ ] I updated documentation
 - [ ] I ran npm run format
+- [ ] I updated documentation

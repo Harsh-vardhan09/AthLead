@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import { LoginVal, signupVal } from "../utils/zodValidation.js";
 import { User } from "../models/Users.js";
 import { v2 as cloudinary } from "cloudinary";
+import { normalizeEmail } from "../utils/normalizeEmail.js";
 
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
@@ -24,11 +25,24 @@ export const SingupAuth = async (req, res) => {
 
   const { fullname, email, phone, gender, password, DOB } = result.data;
   const hashedPassword = hashSync(password, 10);
+  const normalizedEmail = normalizeEmail(email);
 
   try {
+
+    const existingUser = await User.findOne({
+      email: normalizedEmail,
+    });
+
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: "User already exists",
+      });
+    }
+
     await User.create({
       fullname,
-      email,
+      email:normalizedEmail,
       phone,
       gender,
       password: hashedPassword,
@@ -58,8 +72,9 @@ export const LoginAuth = async (req, res) => {
   }
 
   const { email, password } = result.data;
+  const normalizedEmail = normalizeEmail(email);
   try {
-    const user = await User.findOne({ email: email });
+    const user = await User.findOne({ email: normalizedEmail });
     if (!user) {
       return res.json({
         success: false,

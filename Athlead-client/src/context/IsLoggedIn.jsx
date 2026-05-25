@@ -1,5 +1,5 @@
 import { Navigate} from "react-router";
-import { useAuth } from "./AppProvider";
+import { useAuth } from "./useAuth";
 import { Children } from "react";
 
 const IsLoggedIn = ({ children }) => {

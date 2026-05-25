@@ -13,14 +13,11 @@ const Events = () => {
   const [selected, setSelected] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
   const [events, setEvents] = useState([]);
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    setLoading(true);
     const getEvents = async () => {
       const res = await api.get("/api/events");
       setEvents(res.data.events);
-      setLoading(false);
 
       if (!res.data.success) {
         toast.error(res.data.message);

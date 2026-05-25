@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import Navbar from "../Components/Navbar";
 import { Outlet } from "react-router";
 import { Menu, X } from "lucide-react";
-import { useAuth } from "../context/AppProvider";
+import { useAuth } from "../context/useAuth";
 
 const Layout = () => {
   const [sidebar, setSidebar] = useState(false);

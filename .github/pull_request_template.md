@@ -13,7 +13,7 @@ Closes #
 
 ## Visual Previews
 
-<-add images for visual->
+<-add images for visual if changes in UI->
 
 ## Checklist
 
@@ -21,3 +21,4 @@ Closes #
 - [ ] I ran npm run lint
 - [ ] I ran npm run build
 - [ ] I updated documentation
+- [ ] I ran npm run format

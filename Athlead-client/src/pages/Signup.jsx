@@ -33,10 +33,12 @@ const Signup = () => {
         toast.success(res.data.message);
         navigate("/login");
       } else {
-        toast.error(res.data.message);
+        toast.error(res.data.message || "Signup failed. Please try again.");
       }
     } catch (err) {
-      toast.error(err?.response?.data?.message || "Signup failed. Please try again.");
+      toast.error(
+        err?.response?.data?.message || "Signup failed. Please try again.",
+      );
     }
   };
   return (

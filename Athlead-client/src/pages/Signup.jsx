@@ -20,22 +20,24 @@ const Signup = () => {
   const navigate = useNavigate();
 
   const onSubmit = async (data) => {
-    // Formatting Date from DD-MM-YYYY to YYYY-MM-DD
     const formattedData = { ...data };
     if (data.DOB) {
       const [day, month, year] = data.DOB.split("/");
       formattedData.DOB = `${year}-${month}-${day}`;
     }
 
-    const res = await api.post("/api/auth/signup", formattedData);
+    try {
+      const res = await api.post("/api/auth/signup", formattedData);
 
-    if (res.data.success) {
-      toast.success(res.data.message);
-    } else {
-      toast.error(res.data.message);
+      if (res.data.success) {
+        toast.success(res.data.message);
+        navigate("/login");
+      } else {
+        toast.error(res.data.message);
+      }
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Signup failed. Please try again.");
     }
-
-    navigate("/login");
   };
   return (
     <section className="dark-bg relative max-w-screen min-h-screen flex items-center justify-center bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[60px_60px] bg-repeat overflow-hidden">

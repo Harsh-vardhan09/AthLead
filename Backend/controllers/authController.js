@@ -119,25 +119,35 @@ export const refesh = async (req, res) => {
   try {
     if (!token) {
       return res.status(401).json({
+        success: false,
         message: "token not present",
       });
     }
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     if (!decoded) {
       return res.status(401).json({
+        success: false,
         message: "invalid token",
       });
     }
     const user = await User.findOne({ _id: decoded.id });
     // console.log(user);
 
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
     const newAccessToken = user.generateAccessToken();
 
-    res.json({
+    res.status(200).json({
+      success: true,
       accessToken: newAccessToken,
     });
   } catch (error) {
-    res.json({
+    res.status(401).json({
       success: false,
       message: error.message,
     });

@@ -3,7 +3,7 @@ import "dotenv/config";
 import cors from "cors";
 import { getNews } from "./controllers/newsController.js";
 import db from "./config/db.js";
-import { editUser, refesh } from "./controllers/authController.js";
+import { editUser, getUser, refesh } from "./controllers/authController.js";
 import passport from "passport";
 import cookieParser from "cookie-parser";
 import userRouter from "./routes/userRoutes.js";
@@ -74,6 +74,11 @@ app.patch(
   passport.authenticate("jwt", { session: false }),
   upload.single("profile_picture"),
   editUser,
+);
+app.get(
+  "/api/user/me",
+  passport.authenticate("jwt", { session: false }),
+  getUser,
 );
 app.get(
   "/api/score/rank",

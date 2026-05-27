@@ -137,7 +137,7 @@ export const refesh = async (req, res) => {
       accessToken: newAccessToken,
     });
   } catch (error) {
-    res.json({
+    res.status(401).json({
       success: false,
       message: error.message,
     });

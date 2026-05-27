@@ -33,8 +33,10 @@ api.interceptors.response.use(
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         return api(originalRequest);
       } catch (error) {
-        console.log(error);
+        localStorage.removeItem("accessToken");
+        return Promise.reject(error);
       }
     }
+    return Promise.reject(err);
   },
 );

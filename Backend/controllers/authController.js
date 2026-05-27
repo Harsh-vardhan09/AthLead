@@ -4,6 +4,7 @@ import { LoginVal, signupVal } from "../utils/zodValidation.js";
 import { User } from "../models/Users.js";
 import { v2 as cloudinary } from "cloudinary";
 import { normalizeEmail } from "../utils/normalizeEmail.js";
+import fs from "fs";
 
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
@@ -163,13 +164,18 @@ export const logout = (req, res) => {
 };
 
 export const editUser = async (req, res) => {
-  const profilePicture = req.file.path;
   const { fullname, phone, address, DOB } = req.body;
-  // console.log(req.user._id);
-  // console.log(DOB);
 
   try {
-    const profileUrl = await cloudinary.uploader.upload(profilePicture);
+    let imageUrl;
+
+    if (req.file) {
+      const profileUrl = await cloudinary.uploader.upload(req.file.path);
+      imageUrl = profileUrl.url;
+      fs.unlink(req.file.path, (err) => {
+        if (err) console.error("Failed to delete temp file:", err);
+      });
+    }
 
     await User.findByIdAndUpdate(
       req.user._id,
@@ -177,13 +183,11 @@ export const editUser = async (req, res) => {
         fullname,
         phone,
         state: address,
-        DOB: DOB,
-        image: profileUrl.url,
+        DOB,
+        ...(imageUrl && { image: imageUrl }),
       },
       { returnDocument: "after" },
     );
-
-    // console.log(user);
 
     res.json({
       success: true,
@@ -191,7 +195,7 @@ export const editUser = async (req, res) => {
     });
   } catch (error) {
     console.log(error);
-    res.json({
+    res.status(500).json({
       success: false,
       message: error.message,
     });

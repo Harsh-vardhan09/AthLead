@@ -19,9 +19,11 @@ const AppProvider = ({ children }) => {
       .then((res) => {
         if (res.data) setLoggedIn(true);
       })
-      .catch(() => {
-        localStorage.removeItem("accessToken");
-        setLoggedIn(false);
+      .catch((err) => {
+        if (err.response?.status === 401) {
+          localStorage.removeItem("accessToken");
+          setLoggedIn(false);
+        }
       })
       .finally(() => setLoading(false));
   }, []);

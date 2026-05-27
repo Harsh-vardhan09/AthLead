@@ -17,14 +17,27 @@ jobs:
           with:
             node-version: 20
 
-        - run: npm ci
+        - name: Frontend checks(build,lint,format)
+          run: npm ci
           working-directory: Athlead-client
 
-        - run: npm ci
+        - run: npm run format:check
+          working-directory: Athlead-client
+
+        - run: npm run lint
+          working-directory: Athlead-client
+
+        - run: npm run build
+          working-directory: Athlead-client
+
+        # BACKEND
+
+        - name: Backend Checks checks(build,lint,format)
+          run: npm ci
           working-directory: Backend
 
-        - name: npm run format
-          run: npm run format
+        - run: npm run format:check
+          working-directory: Backend
 
-        - name: npm run lint
-          run: npm run lint
+        - run: npm run lint
+          working-directory: Backend

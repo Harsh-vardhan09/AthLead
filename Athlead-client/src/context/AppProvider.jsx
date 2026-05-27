@@ -13,9 +13,7 @@ const AppProvider = ({ children }) => {
       return;
     }
     api
-      .get("/api/auth/me", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      .get("/api/auth/me")
       .then((res) => {
         if (res.data) setLoggedIn(true);
       })

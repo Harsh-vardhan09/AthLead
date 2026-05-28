@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router";
 import { api } from "../api/axios";
 import toast from "react-hot-toast";
+import { useAuth } from "../context/useAuth";
 
 const EditForm = ({ setEditForm }) => {
   const {
@@ -13,12 +14,15 @@ const EditForm = ({ setEditForm }) => {
     formState: { errors },
   } = useForm();
   const navigate = useNavigate();
+  const { setUser } = useAuth();
 
   const profile = watch("profile_picture");
 
   const onSubmit = async (data) => {
     const formData = new FormData();
-    formData.append("profile_picture", data.profile_picture[0]);
+    if (data.profile_picture && data.profile_picture[0]) {
+      formData.append("profile_picture", data.profile_picture[0]);
+    }
     formData.append("fullname", data.fullname);
     formData.append("phone", data.phone);
     formData.append("address", data.address);
@@ -28,7 +32,14 @@ const EditForm = ({ setEditForm }) => {
     console.log(res);
 
     if (res.data.success) {
+      try {
+        const updated = await api.get("/api/auth/me");
+        setUser(updated.data.user);
+      } catch {
+        // /me failed but edit succeeded, continue
+      }
       toast.success(res.data.message);
+      setEditForm(false);
       navigate("/dashboard");
     } else {
       toast.error(res.data.message);
@@ -92,9 +103,8 @@ const EditForm = ({ setEditForm }) => {
                 required: true,
                 maxLength: { value: 20, message: "Must be < 20 letters" },
               })}
-              className={`w-full bg-white/7 border rounded-xl px-3.5 py-2.5 text-sm text-white placeholder:text-white/25 outline-none focus:bg-[#1d9e75]/8 transition-all ${
-                errors.fullname ? "border-red-500/80" : "border-white/12"
-              }`}
+              className={`w-full bg-white/7 border rounded-xl px-3.5 py-2.5 text-sm text-white placeholder:text-white/25 outline-none focus:bg-[#1d9e75]/8 transition-all ${errors.fullname ? "border-red-500/80" : "border-white/12"
+                }`}
             />
             {errors.fullname && (
               <p className="text-xs text-red-400 mt-1">
@@ -115,9 +125,8 @@ const EditForm = ({ setEditForm }) => {
                   type="number"
                   placeholder="98765 43210"
                   {...register("phone", { required: true })}
-                  className={`flex-1 max-w-full bg-white/7 border rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-white/25 outline-none focus:bg-[#1d9e75]/8 transition-all ${
-                    errors.phone ? "border-red-500/80" : "border-white/12"
-                  }`}
+                  className={`flex-1 max-w-full bg-white/7 border rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-white/25 outline-none focus:bg-[#1d9e75]/8 transition-all ${errors.phone ? "border-red-500/80" : "border-white/12"
+                    }`}
                 />
               </div>
             </div>
@@ -130,9 +139,8 @@ const EditForm = ({ setEditForm }) => {
             <input
               type="date"
               {...register("DOB", { required: true })}
-              className={`w-full bg-white/7 border rounded-xl px-3.5 py-2.5 text-sm text-white outline-none focus:bg-[#1d9e75]/8 transition-all ${
-                errors.DOB ? "border-red-500/80" : "border-white/12"
-              }`}
+              className={`w-full bg-white/7 border rounded-xl px-3.5 py-2.5 text-sm text-white outline-none focus:bg-[#1d9e75]/8 transition-all ${errors.DOB ? "border-red-500/80" : "border-white/12"
+                }`}
             />
             {errors.DOB && (
               <p className="text-xs text-red-400 mt-1">{errors.DOB.message}</p>
@@ -149,9 +157,8 @@ const EditForm = ({ setEditForm }) => {
             <input
               type="text"
               {...register("address")}
-              className={`w-full bg-white/7 border rounded-xl px-3.5 py-2.5 text-sm text-white outline-none focus:bg-[#1d9e75]/8 transition-all ${
-                errors.DOB ? "border-red-500/80" : "border-white/12"
-              }`}
+              className={`w-full bg-white/7 border rounded-xl px-3.5 py-2.5 text-sm text-white outline-none focus:bg-[#1d9e75]/8 transition-all ${errors.address ? "border-red-500/80" : "border-white/12"
+                }`}
             />
           </div>
           <div>

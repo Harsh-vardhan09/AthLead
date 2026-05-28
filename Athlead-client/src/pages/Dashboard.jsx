@@ -25,6 +25,7 @@ import {
 import { useNavigate } from "react-router";
 import { useEffect } from "react";
 import { api } from "../api/axios";
+import { useAuth } from "../context/useAuth";
 import dayjs from "dayjs";
 import EditForm from "../Components/EditForm";
 
@@ -32,9 +33,14 @@ const Dashboard = () => {
   const [scores, setScores] = useState([]);
   const navigate = useNavigate();
   const [editForm, setEditForm] = useState(false);
-  const [user, setUser] = useState({});
+  const { user, loading, fetchUser } = useAuth();
   const [rank, setRank] = useState([]);
   useEffect(() => {
+    fetchUser();
+  }, []);
+
+  useEffect(() => {
+    if (!user) return;
     const getScore = async () => {
       const scores = await api.get("/api/my-scores");
       const formattedScores = scores.data.scores.map((item) => ({
@@ -46,20 +52,14 @@ const Dashboard = () => {
     };
     getScore();
 
-    const getUser = async () => {
-      const resUser = await api.get("/api/user/me");
-      setUser(resUser.data.user);
-      // console.log(resUser);
-    };
-    getUser();
-
     const getRank = async () => {
       const res = await api.get("/api/score/rank");
       setRank(res.data.rank);
-      // console.log(res.data.rank);
     };
     getRank();
-  }, []);
+  }, [user]);
+
+  if (loading) return null;
 
   return (
     <section className="dark-bg relative max-w-screen min-h-screen flex flex-col items-start justify-center">
@@ -67,22 +67,22 @@ const Dashboard = () => {
         <div className=" flex items-center justify-around gap-3 max-w-full bg-linear-to-br from-[#0f2027] via-[#1a3a4a] to-[#0f2027] border border-[#1d9e75]/40 text-start text-white rounded-2xl shadow-xl">
           <div className="flex gap-3">
             <img
-              src={user.image}
+              src={user?.image}
               alt=""
               className="w-25 h-25 rounded-full p-2"
             />
 
             <div className="flex flex-col items-start justify-center">
               <h1 className="font-semibold font-segoe text-xl ">
-                {user.fullname}
+                {user?.fullname}
               </h1>
               <div className="flex  text-md basic gap-3">
                 <p className="flex items-center">
-                  <MapPin className="h-4 w-4 mr-1" /> {user.state}
+                  <MapPin className="h-4 w-4 mr-1" /> {user?.state}
                 </p>
                 <p className="flex items-center ">
                   <Calendar className="h-4 w-4 mr-1" />
-                  {dayjs(user.DOB).format("DD MMM ")}
+                  {dayjs(user?.DOB).format("DD MMM ")}
                 </p>
               </div>
             </div>

@@ -36,10 +36,6 @@ const Dashboard = () => {
   const { user, loading, fetchUser } = useAuth();
   const [rank, setRank] = useState([]);
   useEffect(() => {
-    fetchUser();
-  }, []);
-
-  useEffect(() => {
     const initDashboard = async () => {
       let currentUser = user;
       if (!currentUser) {

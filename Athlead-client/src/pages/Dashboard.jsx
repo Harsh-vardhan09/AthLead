@@ -61,6 +61,24 @@ const Dashboard = () => {
 
   if (loading) return null;
 
+const getDisplayRankings = () => {
+  const topFive = rank.slice(0, 5);
+
+  const isMeInTopFive = topFive.some((p) => p.isMe);
+
+  if (isMeInTopFive || rank.length <= 5) {
+    return topFive;
+  }
+
+  const myData = rank.find((p) => p.isMe);
+
+  if (myData) {
+    return [...topFive, myData];
+  }
+
+  return topFive;
+};
+
   return (
     <section className="dark-bg relative max-w-screen min-h-screen flex flex-col items-start justify-center">
       <div className="grid grid-cols-1 md:grid-cols-2  mt-10 w-full gap-5 p-10">
@@ -119,9 +137,9 @@ const Dashboard = () => {
               </tr>
             </thead>
             <tbody>
-              {rank.map((p, i) => (
+              {getDisplayRankings().map((p, i) => (
                 <tr
-                  key={p}
+                  key={p.user?._id|| `athlete-${i}`}
                   className={`border-b basic border-white/3 transition-colors ${p.isMe ? "bg-teal-500/3" : "hover:bg-white/2"}`}
                 >
                   <td className="flex items-center justify-center">

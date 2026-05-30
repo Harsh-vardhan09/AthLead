@@ -14,7 +14,7 @@ const EditForm = ({ setEditForm }) => {
     formState: { errors },
   } = useForm();
   const navigate = useNavigate();
-  const { setUser } = useAuth();
+  const { setUser, user } = useAuth();
 
   const profile = watch("profile_picture");
 
@@ -69,7 +69,7 @@ const EditForm = ({ setEditForm }) => {
               >
                 <PlusCircle
                   size={50}
-                  className={`${profile ? "hidden" : ""}`}
+                  className={`${(profile && profile[0]) || user?.image ? "hidden" : ""}`}
                 />
                 <input
                   id="profile_picture"
@@ -83,7 +83,7 @@ const EditForm = ({ setEditForm }) => {
                   src={
                     profile && profile[0]
                       ? URL.createObjectURL(profile[0])
-                      : "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQw3k1c6JaNUexk2h38jFUHu4j3O73P8mgVkw&s"
+                      : user?.image || null
                   }
                   alt=""
                   className=" w-30 h-30 rounded-full object-cover mt-2"
@@ -103,8 +103,9 @@ const EditForm = ({ setEditForm }) => {
                 required: true,
                 maxLength: { value: 20, message: "Must be < 20 letters" },
               })}
-              className={`w-full bg-white/7 border rounded-xl px-3.5 py-2.5 text-sm text-white placeholder:text-white/25 outline-none focus:bg-[#1d9e75]/8 transition-all ${errors.fullname ? "border-red-500/80" : "border-white/12"
-                }`}
+              className={`w-full bg-white/7 border rounded-xl px-3.5 py-2.5 text-sm text-white placeholder:text-white/25 outline-none focus:bg-[#1d9e75]/8 transition-all ${
+                errors.fullname ? "border-red-500/80" : "border-white/12"
+              }`}
             />
             {errors.fullname && (
               <p className="text-xs text-red-400 mt-1">
@@ -125,8 +126,9 @@ const EditForm = ({ setEditForm }) => {
                   type="number"
                   placeholder="98765 43210"
                   {...register("phone", { required: true })}
-                  className={`flex-1 max-w-full bg-white/7 border rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-white/25 outline-none focus:bg-[#1d9e75]/8 transition-all ${errors.phone ? "border-red-500/80" : "border-white/12"
-                    }`}
+                  className={`flex-1 max-w-full bg-white/7 border rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-white/25 outline-none focus:bg-[#1d9e75]/8 transition-all ${
+                    errors.phone ? "border-red-500/80" : "border-white/12"
+                  }`}
                 />
               </div>
             </div>
@@ -139,8 +141,9 @@ const EditForm = ({ setEditForm }) => {
             <input
               type="date"
               {...register("DOB", { required: true })}
-              className={`w-full bg-white/7 border rounded-xl px-3.5 py-2.5 text-sm text-white outline-none focus:bg-[#1d9e75]/8 transition-all ${errors.DOB ? "border-red-500/80" : "border-white/12"
-                }`}
+              className={`w-full bg-white/7 border rounded-xl px-3.5 py-2.5 text-sm text-white outline-none focus:bg-[#1d9e75]/8 transition-all ${
+                errors.DOB ? "border-red-500/80" : "border-white/12"
+              }`}
             />
             {errors.DOB && (
               <p className="text-xs text-red-400 mt-1">{errors.DOB.message}</p>
@@ -157,8 +160,9 @@ const EditForm = ({ setEditForm }) => {
             <input
               type="text"
               {...register("address")}
-              className={`w-full bg-white/7 border rounded-xl px-3.5 py-2.5 text-sm text-white outline-none focus:bg-[#1d9e75]/8 transition-all ${errors.address ? "border-red-500/80" : "border-white/12"
-                }`}
+              className={`w-full bg-white/7 border rounded-xl px-3.5 py-2.5 text-sm text-white outline-none focus:bg-[#1d9e75]/8 transition-all ${
+                errors.address ? "border-red-500/80" : "border-white/12"
+              }`}
             />
           </div>
           <div>

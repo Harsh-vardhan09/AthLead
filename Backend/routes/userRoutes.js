@@ -2,11 +2,11 @@ import { Router } from "express";
 import {
   LoginAuth,
   logout,
-  SingupAuth,
   getUser,
   editUser,
   refesh,
 } from "../controllers/authController.js";
+import { sendOtp, resendOtp, verifyOtp, SingupAuth } from "../controllers/OtpController.js";
 import passport from "passport";
 import multer from "multer";
 
@@ -21,7 +21,13 @@ const upload = multer({
     }
   },
 });
+
 const router = Router();
+
+// OTP endpoints
+router.post("/send-otp",   sendOtp);
+router.post("/resend-otp", resendOtp);
+router.post("/verify-otp", verifyOtp);
 
 router.post("/signup", SingupAuth);
 router.post("/login", LoginAuth);

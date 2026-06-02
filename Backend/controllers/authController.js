@@ -1,6 +1,6 @@
-import { compareSync, hashSync } from "bcrypt";
+import { compareSync } from "bcrypt";
 import jwt from "jsonwebtoken";
-import { LoginVal, signupVal } from "../utils/zodValidation.js";
+import { LoginVal } from "../utils/zodValidation.js";
 import { User } from "../models/Users.js";
 import { v2 as cloudinary } from "cloudinary";
 import { normalizeEmail } from "../utils/normalizeEmail.js";
@@ -11,55 +11,6 @@ cloudinary.config({
   api_key: process.env.CLOUD_API_KEY,
   api_secret: process.env.CLOUD_SECRET,
 });
-
-//Signup auth
-export const SingupAuth = async (req, res) => {
-  const result = signupVal.safeParse(req.body);
-  console.log(req.body);
-  console.log(result);
-
-  if (!result.success) {
-    return res.json({
-      errors: result.error.format(),
-    });
-  }
-
-  const { fullname, email, phone, gender, password, DOB } = result.data;
-  const hashedPassword = hashSync(password, 10);
-  const normalizedEmail = normalizeEmail(email);
-
-  try {
-    const existingUser = await User.findOne({
-      email: normalizedEmail,
-    });
-
-    if (existingUser) {
-      return res.status(400).json({
-        success: false,
-        message: "User already exists",
-      });
-    }
-
-    await User.create({
-      fullname,
-      email: normalizedEmail,
-      phone,
-      gender,
-      password: hashedPassword,
-      DOB,
-    });
-
-    res.json({
-      success: true,
-      message: "Sign Up Successful",
-    });
-  } catch (error) {
-    res.json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
 
 //login Auth
 export const LoginAuth = async (req, res) => {

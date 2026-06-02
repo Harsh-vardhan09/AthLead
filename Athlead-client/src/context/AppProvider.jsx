@@ -1,13 +1,45 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import AppContext from "./AppContext";
+import { api } from "../api/axios";
 
 const AppProvider = ({ children }) => {
-  const [loggedIn, setLoggedIn] = useState(
-    !!localStorage.getItem("accessToken"),
-  );
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
+
+  const fetchUser = useCallback(async () => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      setLoggedIn(false);
+      setUser(null);
+      setLoading(false);
+      return;
+    }
+    try {
+      const res = await api.get("/api/auth/me");
+      if (res.data) {
+        setLoggedIn(true);
+        setUser(res.data.user);
+      }
+    } catch (err) {
+      if (err.response?.status === 401) {
+        localStorage.removeItem("accessToken");
+        setLoggedIn(false);
+        setUser(null);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchUser();
+  }, [fetchUser]);
 
   return (
-    <AppContext.Provider value={{ loggedIn, setLoggedIn }}>
+    <AppContext.Provider
+      value={{ loggedIn, setLoggedIn, loading, user, setUser, fetchUser }}
+    >
       {children}
     </AppContext.Provider>
   );

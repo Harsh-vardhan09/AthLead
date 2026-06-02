@@ -1,13 +1,11 @@
 import { Navigate } from "react-router";
 import { useAuth } from "./useAuth";
-import { Children } from "react";
 
 const IsLoggedIn = ({ children }) => {
-  const { loggedIn } = useAuth();
+  const { loggedIn, loading } = useAuth();
 
-  if (loggedIn) {
-    return <Navigate to={"/dashboard"} replace />;
-  }
+  if (loading) return null;
+  if (loggedIn) return <Navigate to="/dashboard" replace />;
   return children;
 };
 

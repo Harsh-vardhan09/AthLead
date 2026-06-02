@@ -21,6 +21,7 @@ const upload = multer({
     }
   },
 });
+
 const router = Router();
 
 // OTP endpoints

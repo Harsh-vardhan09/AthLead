@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router";
 import { api } from "../api/axios";
 import toast from "react-hot-toast";
+import { useAuth } from "../context/useAuth";
 
 const EditForm = ({ setEditForm }) => {
   const {
@@ -13,12 +14,15 @@ const EditForm = ({ setEditForm }) => {
     formState: { errors },
   } = useForm();
   const navigate = useNavigate();
+  const { setUser, user } = useAuth();
 
   const profile = watch("profile_picture");
 
   const onSubmit = async (data) => {
     const formData = new FormData();
-    formData.append("profile_picture", data.profile_picture[0]);
+    if (data.profile_picture && data.profile_picture[0]) {
+      formData.append("profile_picture", data.profile_picture[0]);
+    }
     formData.append("fullname", data.fullname);
     formData.append("phone", data.phone);
     formData.append("address", data.address);
@@ -28,7 +32,14 @@ const EditForm = ({ setEditForm }) => {
     console.log(res);
 
     if (res.data.success) {
+      try {
+        const updated = await api.get("/api/auth/me");
+        setUser(updated.data.user);
+      } catch {
+        // /me failed but edit succeeded, continue
+      }
       toast.success(res.data.message);
+      setEditForm(false);
       navigate("/dashboard");
     } else {
       toast.error(res.data.message);
@@ -58,7 +69,7 @@ const EditForm = ({ setEditForm }) => {
               >
                 <PlusCircle
                   size={50}
-                  className={`${profile ? "hidden" : ""}`}
+                  className={`${(profile && profile[0]) || user?.image ? "hidden" : ""}`}
                 />
                 <input
                   id="profile_picture"
@@ -72,7 +83,7 @@ const EditForm = ({ setEditForm }) => {
                   src={
                     profile && profile[0]
                       ? URL.createObjectURL(profile[0])
-                      : "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQw3k1c6JaNUexk2h38jFUHu4j3O73P8mgVkw&s"
+                      : user?.image || null
                   }
                   alt=""
                   className=" w-30 h-30 rounded-full object-cover mt-2"
@@ -150,7 +161,7 @@ const EditForm = ({ setEditForm }) => {
               type="text"
               {...register("address")}
               className={`w-full bg-white/7 border rounded-xl px-3.5 py-2.5 text-sm text-white outline-none focus:bg-[#1d9e75]/8 transition-all ${
-                errors.DOB ? "border-red-500/80" : "border-white/12"
+                errors.address ? "border-red-500/80" : "border-white/12"
               }`}
             />
           </div>

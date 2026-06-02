@@ -25,6 +25,7 @@ import {
 import { useNavigate } from "react-router";
 import { useEffect } from "react";
 import { api } from "../api/axios";
+import { useAuth } from "../context/useAuth";
 import dayjs from "dayjs";
 import EditForm from "../Components/EditForm";
 
@@ -32,57 +33,79 @@ const Dashboard = () => {
   const [scores, setScores] = useState([]);
   const navigate = useNavigate();
   const [editForm, setEditForm] = useState(false);
-  const [user, setUser] = useState({});
+  const { user, loading, fetchUser } = useAuth();
   const [rank, setRank] = useState([]);
   useEffect(() => {
-    const getScore = async () => {
-      const scores = await api.get("/api/my-scores");
-      const formattedScores = scores.data.scores.map((item) => ({
-        ...item,
-        date: dayjs(item.date).format("DD MMM YY"),
-      }));
-      setScores(formattedScores);
-      console.log(scores);
-    };
-    getScore();
+    const initDashboard = async () => {
+      let currentUser = user;
+      if (!currentUser) {
+        currentUser = await fetchUser();
+      }
 
-    const getUser = async () => {
-      const resUser = await api.get("/api/user/me");
-      setUser(resUser.data.user);
-      // console.log(resUser);
-    };
-    getUser();
+      if (currentUser) {
+        try {
+          const scoresRes = await api.get("/api/my-scores");
+          const formattedScores = scoresRes.data.scores.map((item) => ({
+            ...item,
+            date: dayjs(item.date).format("DD MMM YY"),
+          }));
+          setScores(formattedScores);
 
-    const getRank = async () => {
-      const res = await api.get("/api/score/rank");
-      setRank(res.data.rank);
-      // console.log(res.data.rank);
+          const rankRes = await api.get("/api/score/rank");
+          const rankWithIsMe = rankRes.data.rank.map((item, index) => ({
+            ...item,
+            originalRank: index + 1, 
+            isMe: item.user?._id === currentUser?._id || item.isMe, 
+          }));
+          setRank(rankWithIsMe);
+        } catch (error) {
+          console.error("Error loading dashboard data:", error);
+        }
+      }
     };
-    getRank();
-  }, []);
 
+    initDashboard();
+  }, [user, fetchUser]); 
+
+  if (loading) return null;
+
+const getDisplayRankings = () => {
+    const topFive = rank.slice(0, 5);
+    const isMeInTopFive = topFive.some((p) => p.isMe);
+
+    if (isMeInTopFive || rank.length <= 5) {
+      return topFive;
+    }
+
+    const myData = rank.find((p) => p.isMe);
+    if (myData) {
+      return [...topFive, myData];
+    }
+
+    return topFive;
+  };
   return (
     <section className="dark-bg relative max-w-screen min-h-screen flex flex-col items-start justify-center">
       <div className="grid grid-cols-1 md:grid-cols-2  mt-10 w-full gap-5 p-10">
         <div className=" flex items-center justify-around gap-3 max-w-full bg-linear-to-br from-[#0f2027] via-[#1a3a4a] to-[#0f2027] border border-[#1d9e75]/40 text-start text-white rounded-2xl shadow-xl">
           <div className="flex gap-3">
             <img
-              src={user.image}
+              src={user?.image}
               alt=""
               className="w-25 h-25 rounded-full p-2"
             />
 
             <div className="flex flex-col items-start justify-center">
               <h1 className="font-semibold font-segoe text-xl ">
-                {user.fullname}
+                {user?.fullname}
               </h1>
               <div className="flex  text-md basic gap-3">
                 <p className="flex items-center">
-                  <MapPin className="h-4 w-4 mr-1" /> {user.state}
+                  <MapPin className="h-4 w-4 mr-1" /> {user?.state}
                 </p>
                 <p className="flex items-center ">
                   <Calendar className="h-4 w-4 mr-1" />
-                  {dayjs(user.DOB).format("DD MMM ")}
+                  {dayjs(user?.DOB).format("DD MMM ")}
                 </p>
               </div>
             </div>
@@ -119,31 +142,36 @@ const Dashboard = () => {
               </tr>
             </thead>
             <tbody>
-              {rank.map((p, i) => (
+              {getDisplayRankings().map((p, i) => (
                 <tr
-                  key={p}
+                  key={p.user?._id || `athlete-${i}`}
                   className={`border-b basic border-white/3 transition-colors ${p.isMe ? "bg-teal-500/3" : "hover:bg-white/2"}`}
                 >
                   <td className="flex items-center justify-center">
-                    {i <= 3 ? (
+                    {/* Render visual styling based on true original rank instead of loop index */}
+                    {p.originalRank && p.originalRank <= 4 ? (
                       <div
-                        className={`w-5 h-5 rounded-full flex items-center justify-center  text-[10px] font-black ${i === 1 ? "bg-amber-400/15 text-amber-400" : i ? "bg-slate-400/15 text-slate-400" : "bg-orange-800/15 text-orange-700"}`}
+                        className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${
+                          p.originalRank === 2 ? "bg-amber-400/15 text-amber-400" : 
+                          p.originalRank === 3 ? "bg-slate-400/15 text-slate-400" : 
+                          p.originalRank === 1 ? "bg-orange-800/15 text-orange-700" : "bg-slate-400/15 text-slate-400"
+                        }`}
                       >
-                        {i + 1}
+                        {p.originalRank}
                       </div>
                     ) : (
                       <span className="text-[11px] w-5 h-5 text-slate-600 pl-1">
-                        {i + 1}
+                        {p.originalRank || "-"}
                       </span>
                     )}
                   </td>
                   <td
                     className={`mr-3 text-[13px] font-medium ${p.isMe ? "text-teal-300" : "text-slate-200"}`}
                   >
-                    {p.user.fullname}{" "}
+                    {p.user?.fullname}{" "}
                   </td>
                   <td className="text-sm pl-1">cycling</td>
-                  <td className="text-sm">{p.user.state}</td>
+                  <td className="text-sm">{p.user?.state}</td>
                   <td>{p.score}</td>
                   <td className="text-center">{p.trend}</td>
                 </tr>

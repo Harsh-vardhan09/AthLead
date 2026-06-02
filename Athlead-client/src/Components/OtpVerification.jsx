@@ -17,10 +17,10 @@ export const OTP_SESSION_KEY = "athlead_otp_session";
  * Never sends email to the backend — all calls use sessionId only.
  */
 const OtpVerification = ({ maskedEmail, onVerified, onBack }) => {
-  const [otpDigits,     setOtpDigits]     = useState(Array(6).fill(""));
-  const [loading,       setLoading]       = useState(false);
+  const [otpDigits, setOtpDigits] = useState(Array(6).fill(""));
+  const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
-  const [cooldown,      setCooldown]      = useState(60); // seconds until resend is allowed
+  const [cooldown, setCooldown] = useState(60); // seconds until resend is allowed
   const inputRefs = useRef([]);
 
   // ── Countdown timer ────────────────────────────────────────────────────────
@@ -54,10 +54,15 @@ const OtpVerification = ({ maskedEmail, onVerified, onBack }) => {
   };
 
   const handlePaste = (e) => {
-    const digits = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    const digits = e.clipboardData
+      .getData("text")
+      .replace(/\D/g, "")
+      .slice(0, 6);
     if (!digits) return;
     const next = Array(6).fill("");
-    digits.split("").forEach((ch, i) => { next[i] = ch; });
+    digits.split("").forEach((ch, i) => {
+      next[i] = ch;
+    });
     setOtpDigits(next);
     inputRefs.current[Math.min(digits.length, 5)]?.focus();
     e.preventDefault();
@@ -65,7 +70,7 @@ const OtpVerification = ({ maskedEmail, onVerified, onBack }) => {
 
   // ── Verify ─────────────────────────────────────────────────────────────────
   const handleVerify = async () => {
-    const otp       = otpDigits.join("");
+    const otp = otpDigits.join("");
     const sessionId = getSessionId();
 
     if (otp.length < 6) {
@@ -140,7 +145,6 @@ const OtpVerification = ({ maskedEmail, onVerified, onBack }) => {
 
   return (
     <div className="flex flex-col items-center gap-6 px-5 py-8 w-full">
-
       {/* Header */}
       <div className="text-center">
         <h3 className="text-white font-akkurat text-2xl font-extrabold">
@@ -170,9 +174,7 @@ const OtpVerification = ({ maskedEmail, onVerified, onBack }) => {
             className={[
               "w-11 h-13 text-center text-xl font-bold text-white rounded-xl border",
               "bg-white/5 focus:outline-none transition-all duration-150",
-              digit
-                ? "border-teal-400 bg-teal-400/10"
-                : "border-white/20",
+              digit ? "border-teal-400 bg-teal-400/10" : "border-white/20",
               "focus:border-teal-400 focus:bg-teal-400/10",
             ].join(" ")}
           />
@@ -217,8 +219,8 @@ const OtpVerification = ({ maskedEmail, onVerified, onBack }) => {
             {resendLoading
               ? "Sending…"
               : cooldown > 0
-              ? `Resend in ${cooldown}s`
-              : "Resend OTP"}
+                ? `Resend in ${cooldown}s`
+                : "Resend OTP"}
           </button>
         </p>
         {cooldown > 0 && (

@@ -6,7 +6,12 @@ import {
   editUser,
   refesh,
 } from "../controllers/authController.js";
-import { sendOtp, resendOtp, verifyOtp, SingupAuth } from "../controllers/OtpController.js";
+import {
+  sendOtp,
+  resendOtp,
+  verifyOtp,
+  SingupAuth,
+} from "../controllers/OtpController.js";
 import passport from "passport";
 import multer from "multer";
 
@@ -25,7 +30,7 @@ const upload = multer({
 const router = Router();
 
 // OTP endpoints
-router.post("/send-otp",   sendOtp);
+router.post("/send-otp", sendOtp);
 router.post("/resend-otp", resendOtp);
 router.post("/verify-otp", verifyOtp);
 
@@ -34,6 +39,7 @@ router.post("/login", LoginAuth);
 router.post("/logout", logout);
 router.post("/refresh", refesh);
 router.get("/me", passport.authenticate("jwt", { session: false }), getUser);
+
 router.patch(
   "/edit",
   passport.authenticate("jwt", { session: false }),

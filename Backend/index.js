@@ -9,15 +9,6 @@ import cookieParser from "cookie-parser";
 import userRouter from "./routes/userRoutes.js";
 import { findAllEvent, registerEvent } from "./controllers/eventController.js";
 import multer from "multer";
-import path from "path";
-import { fileURLToPath } from "node:url";
-import { dirname } from "node:path";
-
-// Get current file path (replaces __filename)
-const __filename = fileURLToPath(import.meta.url);
-
-// Get current directory path (replaces __dirname)
-const __dirname = dirname(__filename);
 
 db();
 
@@ -33,9 +24,6 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(passport.initialize());
-
-const frontendPath = path.resolve(__dirname, ".././Athlead-client/dist");
-app.use(express.static(frontendPath));
 
 import "./config/passport-config.js";
 import {
@@ -85,10 +73,6 @@ app.get(
   passport.authenticate("jwt", { session: false }),
   getRanking,
 );
-
-app.use((req, res) => {
-  res.sendFile(path.join(frontendPath, "index.html"));
-});
 
 app.listen(process.env.SERVER_PORT, () => {
   console.log(

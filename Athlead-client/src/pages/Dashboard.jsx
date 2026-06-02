@@ -54,8 +54,8 @@ const Dashboard = () => {
           const rankRes = await api.get("/api/score/rank");
           const rankWithIsMe = rankRes.data.rank.map((item, index) => ({
             ...item,
-            originalRank: index + 1, 
-            isMe: item.user?._id === currentUser?._id || item.isMe, 
+            originalRank: index + 1,
+            isMe: item.user?._id === currentUser?._id || item.isMe,
           }));
           setRank(rankWithIsMe);
         } catch (error) {
@@ -65,11 +65,11 @@ const Dashboard = () => {
     };
 
     initDashboard();
-  }, [user, fetchUser]); 
+  }, [user, fetchUser]);
 
   if (loading) return null;
 
-const getDisplayRankings = () => {
+  const getDisplayRankings = () => {
     const topFive = rank.slice(0, 5);
     const isMeInTopFive = topFive.some((p) => p.isMe);
 
@@ -152,9 +152,13 @@ const getDisplayRankings = () => {
                     {p.originalRank && p.originalRank <= 4 ? (
                       <div
                         className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${
-                          p.originalRank === 2 ? "bg-amber-400/15 text-amber-400" : 
-                          p.originalRank === 3 ? "bg-slate-400/15 text-slate-400" : 
-                          p.originalRank === 1 ? "bg-orange-800/15 text-orange-700" : "bg-slate-400/15 text-slate-400"
+                          p.originalRank === 2
+                            ? "bg-amber-400/15 text-amber-400"
+                            : p.originalRank === 3
+                              ? "bg-slate-400/15 text-slate-400"
+                              : p.originalRank === 1
+                                ? "bg-orange-800/15 text-orange-700"
+                                : "bg-slate-400/15 text-slate-400"
                         }`}
                       >
                         {p.originalRank}

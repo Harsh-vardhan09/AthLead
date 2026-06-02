@@ -5,11 +5,13 @@ import { useNavigate } from "react-router";
 import toast, { Toaster } from "react-hot-toast";
 import { api } from "../api/axios";
 import CalendarPicker from "../Components/CalendarPicker";
-import OtpVerification, { OTP_SESSION_KEY } from "../Components/OtpVerification.jsx";
+import OtpVerification, {
+  OTP_SESSION_KEY,
+} from "../Components/OtpVerification.jsx";
 
 // ── Step constants ────────────────────────────────────────────────────────────
-const STEP_FORM       = "form";
-const STEP_OTP        = "otp";
+const STEP_FORM = "form";
+const STEP_OTP = "otp";
 const STEP_SUBMITTING = "submitting";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -30,11 +32,11 @@ const Signup = () => {
     formState: { errors },
   } = useForm();
 
-  const [show,          setShow]          = useState(false);
+  const [show, setShow] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-  const [step,          setStep]          = useState(STEP_FORM);
-  const [maskedEmail,   setMaskedEmail]   = useState(""); // display only
-  const [sendingOtp,    setSendingOtp]    = useState(false);
+  const [step, setStep] = useState(STEP_FORM);
+  const [maskedEmail, setMaskedEmail] = useState(""); // display only
+  const [sendingOtp, setSendingOtp] = useState(false);
 
   const navigate = useNavigate();
 
@@ -88,7 +90,7 @@ const Signup = () => {
     try {
       const res = await api.post("/api/auth/signup", {
         ...formattedData,
-        sessionId,          // backend looks up email via this UUID
+        sessionId, // backend looks up email via this UUID
       });
 
       if (res.data.success) {
@@ -100,7 +102,9 @@ const Signup = () => {
         setStep(STEP_OTP);
       }
     } catch (err) {
-      toast.error(err?.response?.data?.message || "Signup failed. Please try again.");
+      toast.error(
+        err?.response?.data?.message || "Signup failed. Please try again.",
+      );
       setStep(STEP_OTP);
     }
   };
@@ -110,7 +114,6 @@ const Signup = () => {
     <section className="dark-bg relative max-w-screen min-h-screen flex items-center justify-center bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[60px_60px] bg-repeat overflow-hidden">
       <Toaster />
       <div className="h-2/3 max-w-96 w-full bg-[#08325b]/30 border border-[#47a2bf]/60 text-start text-white rounded-xl">
-
         {/* ── OTP screen (shown during otp + submitting steps) ──── */}
         {(step === STEP_OTP || step === STEP_SUBMITTING) && (
           <OtpVerification
@@ -158,7 +161,9 @@ const Signup = () => {
                   className={`input mb-4 ${errors.fullname ? "border-red-500/80" : "border-white/30"}`}
                 />
                 {errors.fullname && (
-                  <p className="text-sm text-red-700">{errors.fullname.message}</p>
+                  <p className="text-sm text-red-700">
+                    {errors.fullname.message}
+                  </p>
                 )}
               </div>
 
@@ -171,7 +176,8 @@ const Signup = () => {
                   {...register("email", {
                     required: true,
                     pattern: {
-                      value: /^[a-zA-Z0-9._%+-]+[@][a-zA-Z0-9.-]+[.][a-zA-Z]{2,}$/,
+                      value:
+                        /^[a-zA-Z0-9._%+-]+[@][a-zA-Z0-9.-]+[.][a-zA-Z]{2,}$/,
                       message: "Wrong email format",
                     },
                   })}
@@ -203,16 +209,22 @@ const Signup = () => {
                     {...register("DOB", {
                       required: "Date of Birth is Required",
                       pattern: {
-                        value: /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/,
+                        value:
+                          /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/,
                         message: "Use DD/MM/YYYY Format",
                       },
                       validate: {
                         notFuture: (value) => {
-                          const [day, month, year] = value.split("/").map(Number);
+                          const [day, month, year] = value
+                            .split("/")
+                            .map(Number);
                           const dob = new Date(year, month - 1, day);
                           const minDate = new Date();
                           minDate.setHours(0, 0, 0, 0);
-                          return dob < minDate || "Date of Birth should not be today or later";
+                          return (
+                            dob < minDate ||
+                            "Date of Birth should not be today or later"
+                          );
                         },
                       },
                     })}
@@ -260,7 +272,9 @@ const Signup = () => {
                   ))}
                 </div>
                 {errors.gender && (
-                  <p className="text-xs text-red-400 mt-1">{errors.gender.message}</p>
+                  <p className="text-xs text-red-400 mt-1">
+                    {errors.gender.message}
+                  </p>
                 )}
               </div>
 
@@ -289,7 +303,9 @@ const Signup = () => {
                   </div>
                 </fieldset>
                 {errors.password && (
-                  <p className="text-sm text-red-700">{errors.password.message}</p>
+                  <p className="text-sm text-red-700">
+                    {errors.password.message}
+                  </p>
                 )}
               </div>
 
@@ -314,6 +330,5 @@ const Signup = () => {
     </section>
   );
 };
-
 
 export default Signup;

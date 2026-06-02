@@ -7,7 +7,7 @@ import { hashSync } from "bcrypt";
 import { signupVal } from "../utils/zodValidation.js";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
-const MAX_ATTEMPTS      = 5;
+const MAX_ATTEMPTS = 5;
 const RESEND_COOLDOWN_MS = 60 * 1000; // 1 minute between resends
 
 /** Cryptographically secure 6-digit OTP. */
@@ -26,7 +26,9 @@ export const sendOtp = async (req, res) => {
   const { email } = req.body;
 
   if (!email) {
-    return res.status(400).json({ success: false, message: "Email is required" });
+    return res
+      .status(400)
+      .json({ success: false, message: "Email is required" });
   }
 
   const normalizedEmail = normalizeEmail(email);
@@ -35,15 +37,17 @@ export const sendOtp = async (req, res) => {
     // Block if an account with this email already exists
     const existingUser = await User.findOne({ email: normalizedEmail });
     if (existingUser) {
-      return res.status(400).json({ success: false, message: "Email already registered" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Email already registered" });
     }
 
     // Remove any stale sessions for this email before creating a fresh one
     await Otp.deleteMany({ email: normalizedEmail });
 
-    const sessionId  = generateSessionId();
-    const plainOtp   = generateOtp();
-    const otpDoc     = new Otp({ sessionId, email: normalizedEmail });
+    const sessionId = generateSessionId();
+    const plainOtp = generateOtp();
+    const otpDoc = new Otp({ sessionId, email: normalizedEmail });
     otpDoc.setOtp(plainOtp);
     await otpDoc.save();
 
@@ -54,11 +58,17 @@ export const sendOtp = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "OTP sent successfully",
-      sessionId,           // ← client saves this to localStorage
+      sessionId, // ← client saves this to localStorage
     });
   } catch (error) {
     console.error("sendOtp error:", error);
-    return res.status(500).json({ success: false, message: "Failed to send OTP" });
+    console.error("message:", error.message);
+    console.error("stack:", error.stack);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
 
@@ -72,7 +82,9 @@ export const resendOtp = async (req, res) => {
   const { sessionId } = req.body;
 
   if (!sessionId) {
-    return res.status(400).json({ success: false, message: "Session ID is required" });
+    return res
+      .status(400)
+      .json({ success: false, message: "Session ID is required" });
   }
 
   try {
@@ -103,10 +115,14 @@ export const resendOtp = async (req, res) => {
 
     await sendOtpEmail(otpDoc.email, plainOtp);
 
-    return res.status(200).json({ success: true, message: "OTP resent successfully" });
+    return res
+      .status(200)
+      .json({ success: true, message: "OTP resent successfully" });
   } catch (error) {
     console.error("resendOtp error:", error);
-    return res.status(500).json({ success: false, message: "Failed to resend OTP" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Failed to resend OTP" });
   }
 };
 
@@ -119,7 +135,9 @@ export const verifyOtp = async (req, res) => {
   const { sessionId, otp } = req.body;
 
   if (!sessionId || !otp) {
-    return res.status(400).json({ success: false, message: "Session ID and OTP are required" });
+    return res
+      .status(400)
+      .json({ success: false, message: "Session ID and OTP are required" });
   }
 
   try {
@@ -138,7 +156,7 @@ export const verifyOtp = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "OTP expired. Please request a new one.",
-        expired: true,        // client can use this flag to auto-trigger resend UI
+        expired: true, // client can use this flag to auto-trigger resend UI
       });
     }
 
@@ -169,10 +187,14 @@ export const verifyOtp = async (req, res) => {
     otpDoc.verified = true;
     await otpDoc.save();
 
-    return res.status(200).json({ success: true, message: "Email verified successfully" });
+    return res
+      .status(200)
+      .json({ success: true, message: "Email verified successfully" });
   } catch (error) {
     console.error("verifyOtp error:", error);
-    return res.status(500).json({ success: false, message: "OTP verification failed" });
+    return res
+      .status(500)
+      .json({ success: false, message: "OTP verification failed" });
   }
 };
 
@@ -186,7 +208,9 @@ export const SingupAuth = async (req, res) => {
   const { sessionId, ...rest } = req.body;
 
   if (!sessionId) {
-    return res.status(400).json({ success: false, message: "Session ID is required" });
+    return res
+      .status(400)
+      .json({ success: false, message: "Session ID is required" });
   }
 
   try {
@@ -201,7 +225,7 @@ export const SingupAuth = async (req, res) => {
 
     // Merge the session email into the body for Zod validation
     const payload = { ...rest, email: otpDoc.email };
-    const result  = signupVal.safeParse(payload);
+    const result = signupVal.safeParse(payload);
 
     if (!result.success) {
       return res.status(400).json({ errors: result.error.format() });
@@ -211,17 +235,28 @@ export const SingupAuth = async (req, res) => {
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ success: false, message: "User already exists" });
+      return res
+        .status(400)
+        .json({ success: false, message: "User already exists" });
     }
 
     const hashedPassword = hashSync(password, 10);
 
-    await User.create({ fullname, email, phone, gender, password: hashedPassword, DOB });
+    await User.create({
+      fullname,
+      email,
+      phone,
+      gender,
+      password: hashedPassword,
+      DOB,
+    });
 
     // Clean up the OTP session — it's been consumed
     await otpDoc.deleteOne();
 
-    return res.status(201).json({ success: true, message: "Sign Up Successful" });
+    return res
+      .status(201)
+      .json({ success: true, message: "Sign Up Successful" });
   } catch (error) {
     console.error("SingupAuth error:", error);
     return res.status(500).json({ success: false, message: error.message });

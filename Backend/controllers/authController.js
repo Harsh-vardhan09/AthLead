@@ -1,64 +1,16 @@
-import { compareSync, hashSync } from "bcrypt";
+import { compareSync } from "bcrypt";
 import jwt from "jsonwebtoken";
-import { LoginVal, signupVal } from "../utils/zodValidation.js";
+import { LoginVal } from "../utils/zodValidation.js";
 import { User } from "../models/Users.js";
 import { v2 as cloudinary } from "cloudinary";
 import { normalizeEmail } from "../utils/normalizeEmail.js";
+import fs from "fs";
 
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
   api_key: process.env.CLOUD_API_KEY,
   api_secret: process.env.CLOUD_SECRET,
 });
-
-//Signup auth
-export const SingupAuth = async (req, res) => {
-  const result = signupVal.safeParse(req.body);
-  console.log(req.body);
-  console.log(result);
-
-  if (!result.success) {
-    return res.json({
-      errors: result.error.format(),
-    });
-  }
-
-  const { fullname, email, phone, gender, password, DOB } = result.data;
-  const hashedPassword = hashSync(password, 10);
-  const normalizedEmail = normalizeEmail(email);
-
-  try {
-    const existingUser = await User.findOne({
-      email: normalizedEmail,
-    });
-
-    if (existingUser) {
-      return res.status(400).json({
-        success: false,
-        message: "User already exists",
-      });
-    }
-
-    await User.create({
-      fullname,
-      email: normalizedEmail,
-      phone,
-      gender,
-      password: hashedPassword,
-      DOB,
-    });
-
-    res.json({
-      success: true,
-      message: "Sign Up Successful",
-    });
-  } catch (error) {
-    res.json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
 
 //login Auth
 export const LoginAuth = async (req, res) => {
@@ -119,25 +71,35 @@ export const refesh = async (req, res) => {
   try {
     if (!token) {
       return res.status(401).json({
+        success: false,
         message: "token not present",
       });
     }
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     if (!decoded) {
       return res.status(401).json({
+        success: false,
         message: "invalid token",
       });
     }
     const user = await User.findOne({ _id: decoded.id });
     // console.log(user);
 
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
     const newAccessToken = user.generateAccessToken();
 
-    res.json({
+    res.status(200).json({
+      success: true,
       accessToken: newAccessToken,
     });
   } catch (error) {
-    res.json({
+    res.status(401).json({
       success: false,
       message: error.message,
     });
@@ -153,13 +115,18 @@ export const logout = (req, res) => {
 };
 
 export const editUser = async (req, res) => {
-  const profilePicture = req.file.path;
   const { fullname, phone, address, DOB } = req.body;
-  // console.log(req.user._id);
-  // console.log(DOB);
 
   try {
-    const profileUrl = await cloudinary.uploader.upload(profilePicture);
+    let imageUrl;
+
+    if (req.file) {
+      const profileUrl = await cloudinary.uploader.upload(req.file.path);
+      imageUrl = profileUrl.url;
+      fs.unlink(req.file.path, (err) => {
+        if (err) console.error("Failed to delete temp file:", err);
+      });
+    }
 
     await User.findByIdAndUpdate(
       req.user._id,
@@ -167,13 +134,11 @@ export const editUser = async (req, res) => {
         fullname,
         phone,
         state: address,
-        DOB: DOB,
-        image: profileUrl.url,
+        DOB,
+        ...(imageUrl && { image: imageUrl }),
       },
       { returnDocument: "after" },
     );
-
-    // console.log(user);
 
     res.json({
       success: true,
@@ -181,7 +146,7 @@ export const editUser = async (req, res) => {
     });
   } catch (error) {
     console.log(error);
-    res.json({
+    res.status(500).json({
       success: false,
       message: error.message,
     });

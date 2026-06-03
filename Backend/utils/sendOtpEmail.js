@@ -14,6 +14,7 @@ export const sendOtpEmail = async (to, otp) => {
   const response = await axios.post(
     process.env.EMAIL_ADD,
     {
+      from:'Athlead<NoReply>',
       to: to,
       subject: "Your AthLead Verification OTP",
       html: `

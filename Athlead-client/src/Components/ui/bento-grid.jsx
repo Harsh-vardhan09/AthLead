@@ -1,3 +1,4 @@
+import { ExternalLink } from "lucide-react";
 import { cn } from "../../utility/cn.js";
 
 export const BentoGrid = ({
@@ -20,7 +21,8 @@ export const BentoGridItem = ({
   title,
   description,
   header,
-  image
+  image,
+  link
 }) => {
   return (
     <div
@@ -29,15 +31,14 @@ export const BentoGridItem = ({
         className
       )}>
       {header}
-      <div className="transition duration-200 group-hover/bento:translate-z-2">
-        <img src={image} alt="" className="rounded-lg w-full h-48"/>
+      <div className=" relative transition duration-200 group-hover/bento:translate-z-2">
+        <img src={image} alt="" className="rounded-lg w-full h-48" />
         <div
           className="mt-2 mb-2 font-sans text-xs font-bold text-neutral-200">
           {title}
         </div>
-        <div
-          className="font-sans text-xs font-normal text-neutral-300">
-          {description}
+        <div onClick={()=>window.open(link, "_blank")} className="absolute top-3 left-6 font-sans text-xs font-normal text-neutral-300 opacity-0 transition-opacity group-hover/bento:opacity-100">
+          <ExternalLink />
         </div>
       </div>
     </div>

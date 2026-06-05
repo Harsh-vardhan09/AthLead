@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 import NewsCard from "../Components/NewsCard";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
+import { BentoGridDemo } from "../Components/Bento";
 
 const Announcement = () => {
   const [news, setNews] = useState([]);
@@ -48,13 +49,14 @@ const Announcement = () => {
         </p>
       </div>
 
-      <div className="grid grid-col-1 max-w-4xl w-full items-center justify-start gap-5">
+      <BentoGridDemo items={news} isLoading={isLoading}/>
+      {/* <div className="grid grid-col-1 max-w-4xl w-full items-center justify-start gap-5">
         {isLoading
           ? Array(5)
               .fill(0)
               .map((_, i) => <NewsCard key={i} loading={isLoading} />)
           : news.map((e, i) => <NewsCard e={e} key={i} />)}
-      </div>
+      </div> */}
     </section>
   );
 };

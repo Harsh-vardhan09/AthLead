@@ -5,7 +5,7 @@ dotenv.config();
 
 const seed = async () => {
   try {
-    await mongoose.connect();
+    await mongoose.connect(process.env.MONGODB_URI);
 
     await Event.deleteMany(); // optional: clears old data
 

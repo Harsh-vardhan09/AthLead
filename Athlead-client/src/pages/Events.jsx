@@ -19,7 +19,9 @@ const Events = () => {
       const res = await api.get("/api/events");
       setEvents(res.data.events);
 
-      if (!res.data.success) {
+      console.log(res.data);
+      
+      if (res.data.status!==400) {
         toast.error(res.data.message);
       }
     };

@@ -5,7 +5,7 @@ dotenv.config();
 
 const seed = async () => {
   try {
-    await mongoose.connect();
+    await mongoose.connect(process.env.MONGODB_URI);
 
     await Event.deleteMany(); // optional: clears old data
 
@@ -18,6 +18,7 @@ const seed = async () => {
         prize: 300000,
         location: "Delhi",
         date: "2026-11-05",
+        time: "09:00 AM",
         tags: "national",
       },
       {
@@ -28,6 +29,7 @@ const seed = async () => {
         prize: 500000,
         location: "Mumbai",
         date: "2026-12-10",
+        time: "08:00 AM",
         tags: "Freestyle",
       },
       {
@@ -38,6 +40,7 @@ const seed = async () => {
         prize: 100000,
         location: "Bangalore",
         date: "2026-10-20",
+        time: "10:00 AM",
         tags: "singles",
       },
       {
@@ -48,6 +51,7 @@ const seed = async () => {
         prize: 200000,
         location: "Kolkata",
         date: "2026-09-15",
+        time: "07:30 AM",
         tags: "doubles",
       },
     ];

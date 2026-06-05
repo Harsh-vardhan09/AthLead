@@ -2,9 +2,17 @@ import React from "react";
 import { sportIcon } from "../assets/assets";
 import { Calendar, Clock, MapPin, Medal } from "lucide-react";
 import { useNavigate } from "react-router";
+import { formatEventTime } from "../utils/formatEventTime";
 
 const EventDetails = ({ selected, setIsOpen }) => {
   const navigate = useNavigate();
+  const formattedDate = new Date(selected.date).toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+  const eventTime = formatEventTime(selected.time);
+
   return (
     <section
       onClick={() => setIsOpen(false)}
@@ -25,7 +33,7 @@ const EventDetails = ({ selected, setIsOpen }) => {
             </p>
           </div>
           <div>
-            <p className="basic text-sm">{selected.desc}</p>
+            <p className="basic text-sm">{selected.description}</p>
           </div>
 
           <div className=" basic flex  justify-around gap-5  ">
@@ -35,7 +43,7 @@ const EventDetails = ({ selected, setIsOpen }) => {
                   <Calendar className="text-teal-600 h-4 w-4 mr-1" />
                   Date
                 </p>
-                <p className="text-md text-white font-bold">{selected.date}</p>
+                <p className="text-md text-white font-bold">{formattedDate}</p>
               </div>
               <div className="flex flex-col gap-1 items-start bg-white/5 border border-teal-200/10   w-auto lg:w-50  h-12 justify-center rounded-xl  p-3">
                 <p className="flex">
@@ -53,7 +61,7 @@ const EventDetails = ({ selected, setIsOpen }) => {
                   <Clock className="text-teal-600 h-4 w-4 mr-1" />
                   Time
                 </p>
-                <p className="text-md text-white font-bold">{selected.time}</p>
+                <p className="text-md text-white font-bold">{eventTime}</p>
               </div>
               <div className="flex flex-col gap-1 items-start bg-white/5 border border-teal-200/10   w-auto lg:w-50  h-12 justify-center rounded-xl  p-3">
                 <p className="flex">

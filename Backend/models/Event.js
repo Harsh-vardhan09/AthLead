@@ -9,6 +9,7 @@ const EventSchema = new mongoose.Schema(
     prize: { type: Number, required: true },
     location: { type: String, required: true },
     date: { type: Date, required: true },
+    time: { type: String, required: true, trim: true },
     tags: {
       type: [String],
       enum: ["Freestyle", "national", "Youth", "singles", "doubles"], // Allowed values

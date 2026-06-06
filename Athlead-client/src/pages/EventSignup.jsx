@@ -79,49 +79,29 @@ const EventSignup = () => {
             )}
           </div>
 
-          <div className="grid md:grid-cols-2 gap-3 grid-cols-1">
-            <div>
-              <label className="block text-[11px] font-medium text-white/50 uppercase tracking-widest mb-1.5">
-                Email
-              </label>
-              <input
-                type="email"
-                placeholder="you@email.com"
-                {...register("email", {
-                  required: true,
-                  pattern: {
-                    value:
-                      /^[a-zA-Z0-9._%+-]+[@][a-zA-Z0-9.-]+[.][a-zA-Z]{2,}$/,
-                    message: "Wrong email format",
-                  },
-                })}
-                className={`w-full bg-white/7 border rounded-xl px-3.5 py-2.5 text-sm text-white placeholder:text-white/25 outline-none focus:bg-[#1d9e75]/8 transition-all ${
-                  errors.email ? "border-red-500/80" : "border-white/12"
-                }`}
-              />
-              {errors.email && (
-                <p className="text-xs text-red-400 mt-1">
-                  {errors.email.message}
-                </p>
-              )}
-            </div>
-            <div className="w-full">
-              <label className="block text-[11px] font-medium text-white/50 uppercase tracking-widest mb-1.5">
-                Date of Birth
-              </label>
-              <input
-                type="date"
-                {...register("DOB", { required: true })}
-                className={`w-full bg-white/7 border rounded-xl px-3.5 py-2.5 text-sm text-white outline-none focus:bg-[#1d9e75]/8 transition-all ${
-                  errors.DOB ? "border-red-500/80" : "border-white/12"
-                }`}
-              />
-              {errors.DOB && (
-                <p className="text-xs text-red-400 mt-1">
-                  {errors.DOB.message}
-                </p>
-              )}
-            </div>
+          <div>
+            <label className="block text-[11px] font-medium text-white/50 uppercase tracking-widest mb-1.5">
+              Email
+            </label>
+            <input
+              type="email"
+              placeholder="you@email.com"
+              {...register("email", {
+                required: true,
+                pattern: {
+                  value: /^[a-zA-Z0-9._%+-]+[@][a-zA-Z0-9.-]+[.][a-zA-Z]{2,}$/,
+                  message: "Wrong email format",
+                },
+              })}
+              className={`w-full bg-white/7 border rounded-xl px-3.5 py-2.5 text-sm text-white placeholder:text-white/25 outline-none focus:bg-[#1d9e75]/8 transition-all ${
+                errors.email ? "border-red-500/80" : "border-white/12"
+              }`}
+            />
+            {errors.email && (
+              <p className="text-xs text-red-400 mt-1">
+                {errors.email.message}
+              </p>
+            )}
           </div>
 
           <div className="grid grid-cols-1 gap-3 ">

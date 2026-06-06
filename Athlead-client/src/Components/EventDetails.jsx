@@ -67,7 +67,7 @@ const EventDetails = ({ selected, setIsOpen }) => {
         </div>
         <div className="flex items-center justify-center max-w-3xl">
           <button
-            onClick={() => navigate("/events/:eventId")}
+            onClick={() => navigate(`/events/${selected._id}`)}
             className="text-center bg-linear-to-br from-cyan-400 to-cyan-600 w-full rounded-xl h-10 max-w-120 hover:from-cyan-600 hover:to-cyan-800 mx-4"
           >
             Register Now

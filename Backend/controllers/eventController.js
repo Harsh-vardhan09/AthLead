@@ -57,14 +57,24 @@ export const postEvent = async (req, res) => {
 
 export const registerEvent = async (req, res) => {
   const { eventId } = req.params;
-  const { email, fullname, phone, gender, DOB } = req.body;
+  const { email, fullname, phone, gender } = req.body;
   try {
-    const user = await User.findOne({ email });
+    const user = await User.findById(req.user._id);
 
     if (!user) {
       return res.json({
         success: false,
-        message: "No user exist with this email",
+        message: "User not found. Please log in again.",
+      });
+    }
+
+    const DOB = user.DOB;
+
+    if (!DOB) {
+      return res.json({
+        success: false,
+        message:
+          "Date of birth is missing from your profile. Please update your profile before registering.",
       });
     }
 
@@ -83,7 +93,7 @@ export const registerEvent = async (req, res) => {
     await Participation.create({
       user: user._id,
       event: eventId,
-      email,
+      email: email || user.email,
       fullname,
       phone,
       gender,

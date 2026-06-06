@@ -21,8 +21,17 @@ export const findAllEvent = async (req, res) => {
 export const postEvent = async (req, res) => {
   const { data } = req.body;
 
-  const { title, level, location, prize, description, sport, date, tags } =
-    data;
+  const {
+    title,
+    level,
+    location,
+    prize,
+    description,
+    sport,
+    date,
+    time,
+    tags,
+  } = data;
 
   const eventDate = new Date(date);
 
@@ -38,6 +47,7 @@ export const postEvent = async (req, res) => {
       description,
       sport,
       date,
+      time,
       tags,
       deleteAt,
     });

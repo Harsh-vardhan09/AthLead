@@ -1,10 +1,12 @@
 import React from "react";
 import { sportIcon } from "../assets/assets";
-import { Calendar, Clock, Locate, MapPin, Medal, Watch } from "lucide-react";
+import { Calendar, Clock, MapPin, Medal } from "lucide-react";
 import { useNavigate } from "react-router";
+import { formatEventTime } from "../utils/formatEventTime";
 
 const EventCard = ({ e, setSelected, setIsOpen }) => {
   const navigate = useNavigate();
+  const eventTime = formatEventTime(e.time);
   const formattedDate = new Date(e.date).toLocaleDateString("en-IN", {
     day: "numeric",
     month: "short",
@@ -46,7 +48,7 @@ const EventCard = ({ e, setSelected, setIsOpen }) => {
         <div className="text-xs">
           <p className="flex gap-1 mb-2">
             <Clock className="text-teal-600 h-4 w-4" />
-            {e.time ? e.time : "09:00 AM"}
+            {eventTime}
           </p>
           <p className="flex gap-1">
             <Medal className="text-teal-600 h-4 w-4" />

@@ -1,33 +1,46 @@
 import React, { useEffect, useState } from "react";
 import { api } from "../api/axios";
 import toast from "react-hot-toast";
-import NewsCard from "../Components/NewsCard";
-import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import { BentoGridDemo } from "../Components/Bento";
 
 const Announcement = () => {
   const [news, setNews] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(false);
+
   const getNews = async () => {
     try {
       setIsLoading(true);
+      setError(false);
+
       const { data } = await api.get("/api/news");
-      // console.log(data);
 
       if (data.success) {
-        setNews(data.message);
+        setNews(data.message || []);
+      } else {
+        setNews([]);
       }
     } catch (error) {
       toast.error(error.message);
+      setError(true);
+      setNews([]);
+    } finally {
+      setIsLoading(false);
     }
   };
+
   useEffect(() => {
-    getNews()
-      .then(() => setIsLoading(false))
-      .catch(() => setIsLoading(false));
+    getNews();
   }, []);
 
+  if (error) {
+    return (
+      <section className="flex items-center justify-center min-h-screen text-red-400">
+        Something went wrong while loading news
+      </section>
+    );
+  }
   if (!isLoading && news.length === 0) {
     return (
       <section className="relative min-h-screen flex flex-col items-center justify-center mt-10 mx-6">
@@ -49,7 +62,7 @@ const Announcement = () => {
         </p>
       </div>
 
-      <BentoGridDemo items={news} isLoading={isLoading}/>
+      <BentoGridDemo items={news} isLoading={isLoading} />
       {/* <div className="grid grid-col-1 max-w-4xl w-full items-center justify-start gap-5">
         {isLoading
           ? Array(5)

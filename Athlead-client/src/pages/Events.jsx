@@ -13,11 +13,11 @@ const Events = () => {
   const [selected, setSelected] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
   const [events, setEvents] = useState([]);
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const getEvents = async () => {
-      setIsLoading(true)
+      setIsLoading(true);
       const res = await api.get("/api/events");
       setEvents(res.data.events);
       setIsLoading(false);
@@ -36,13 +36,14 @@ const Events = () => {
       e.title.toLowerCase().includes(search.toLowerCase()),
   );
 
-  if (isLoading) return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 my-8 w-full lg:px-20">
-      {Array.from({ length: 6 }).map((_, i) => (
-        <EventCardSkeleton key={i} />
-      ))}
-    </div>
-  )
+  if (isLoading)
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 my-8 w-full lg:px-20">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <EventCardSkeleton key={i} />
+        ))}
+      </div>
+    );
   return (
     <section className=" relative min-h-screen w-full flex flex-col p-5 gap-5">
       <div className="flex flex-col items-center justify-start min-h-screen w-full">

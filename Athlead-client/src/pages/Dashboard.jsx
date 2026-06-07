@@ -36,39 +36,37 @@ const Dashboard = () => {
   const [rank, setRank] = useState([]);
 
   useEffect(() => {
-  const initDashboard = async () => {
-    if (!user) return;
+    const initDashboard = async () => {
+      if (!user) return;
 
-    // console.log('user:', user)
+      try {
+        const scoresRes = await api.get("/api/my-scores");
 
-    try {
-      const scoresRes = await api.get("/api/my-scores");
+        const formattedScores = scoresRes.data.scores.map((item) => ({
+          ...item,
+          date: dayjs(item.date).format("DD MMM YY"),
+        }));
 
-      const formattedScores = scoresRes.data.scores.map((item) => ({
-        ...item,
-        date: dayjs(item.date).format("DD MMM YY"),
-      }));
+        setScores(formattedScores);
 
-      setScores(formattedScores);
+        const rankRes = await api.get("/api/score/rank");
 
-      const rankRes = await api.get("/api/score/rank");
+        const rankWithIsMe = rankRes.data.rank.map((item, index) => ({
+          ...item,
+          originalRank: index + 1,
+          isMe: item.user?._id === user?._id || item.isMe,
+        }));
 
-      const rankWithIsMe = rankRes.data.rank.map((item, index) => ({
-        ...item,
-        originalRank: index + 1,
-        isMe: item.user?._id === user?._id || item.isMe,
-      }));
+        setRank(rankWithIsMe);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setDashboardLoading(false);
+      }
+    };
 
-      setRank(rankWithIsMe);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setDashboardLoading(false);
-    }
-  };
-
-  initDashboard();
-}, [user]);
+    initDashboard();
+  }, [user]);
 
   // if (loading) return null;
 

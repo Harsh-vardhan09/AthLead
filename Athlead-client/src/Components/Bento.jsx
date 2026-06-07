@@ -7,9 +7,7 @@ export function BentoGridDemo({ items, isLoading }) {
     return (
       <BentoGrid className="w-4xl mx-auto my-6">
         {Array.from({ length: 8 }).map((_, i) => (
-          <Skeleton
-            key={i}
-          />
+          <Skeleton key={i} />
         ))}
       </BentoGrid>
     );

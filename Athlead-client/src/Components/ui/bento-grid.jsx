@@ -23,7 +23,12 @@ export const BentoGridItem = ({ className, title, image, link }) => {
       )}
     >
       {/* IMAGE */}
-      <img src={image} alt={`Preview image for ${title}`} className="w-full h-auto" loading="lazy" />
+      <img
+        src={image}
+        alt={`Preview image for ${title}`}
+        className="w-full h-auto"
+        loading="lazy"
+      />
 
       {/* TITLE */}
       <div className="p-3 text-white text-sm font-bold">{title}</div>

@@ -5,7 +5,7 @@ import { BentoGrid, BentoGridItem } from "./ui/bento-grid.jsx";
 export function BentoGridDemo({ items, isLoading }) {
   if (isLoading)
     return (
-      <BentoGrid className="w-4xl mx-auto my-6">
+      <BentoGrid className="w-max-w-4xl mx-auto my-6">
         {Array.from({ length: 8 }).map((_, i) => (
           <Skeleton key={i} />
         ))}

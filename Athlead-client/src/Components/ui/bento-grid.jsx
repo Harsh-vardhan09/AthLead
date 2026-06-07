@@ -1,45 +1,48 @@
 import { ExternalLink } from "lucide-react";
 import { cn } from "../../utility/cn.js";
 
-export const BentoGrid = ({
-  className,
-  children
-}) => {
+export const BentoGrid = ({ className, children }) => {
   return (
     <div
       className={cn(
-        "mx-auto grid max-w-7xl grid-cols-1 gap-6 md:auto-rows-[18rem] md:grid-cols-3",
-        className
-      )}>
+        "mx-auto max-w-7xl columns-1 md:columns-3 gap-6 space-y-6",
+        className,
+      )}
+    >
       {children}
     </div>
   );
 };
 
-export const BentoGridItem = ({
-  className,
-  title,
-  header,
-  image,
-  link
-}) => {
+export const BentoGridItem = ({ className, title, image, link }) => {
   return (
     <div
       className={cn(
-        "group/bento shadow-input row-span-1 flex flex-col justify-between space-y-4 rounded-xl bg-linear-to-br from-[#0f2027] via-[#1a3a4a] to-[#0f2027]  border border-[rgba(6,182,212,0.2)] hover:shadow-[0_0_60px_rgba(6,182,212,0.10)] p-4 transition duration-200 ",
-        className
-      )}>
-      {header}
-      <div className=" relative transition duration-200 group-hover/bento:translate-z-2">
-        <img src={image} alt="" className="rounded-lg w-full h-48" />
-        <div
-          className="mt-2 mb-2 font-sans text-xs font-bold text-neutral-200">
-          {title}
-        </div>
-        <div onClick={()=>window.open(link, "_blank")} className="absolute top-3 left-6 font-sans text-xs font-normal text-neutral-300 opacity-0 transition-opacity group-hover/bento:opacity-100">
-          <ExternalLink />
-        </div>
-      </div>
+        "break-inside-avoid mb-6 rounded-xl overflow-hidden shadow-md bg-[#0f2027] group relative",
+        className,
+      )}
+    >
+      {/* IMAGE */}
+      <img
+        src={image}
+        alt={`Preview image for ${title}`}
+        className="w-full h-auto"
+        loading="lazy"
+      />
+
+      {/* TITLE */}
+      <div className="p-3 text-white text-sm font-bold">{title}</div>
+
+      {/* LINK ICON */}
+      {link && (
+        <button
+          type="button"
+          onClick={() => window.open(link, "_blank", "noopener,noreferrer")}
+          className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer bg-black/40 p-2 rounded-md"
+        >
+          <ExternalLink size={16} className="text-white" />
+        </button>
+      )}
     </div>
   );
 };

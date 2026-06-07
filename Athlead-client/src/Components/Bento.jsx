@@ -9,7 +9,6 @@ export function BentoGridDemo({ items, isLoading }) {
         {Array.from({ length: 8 }).map((_, i) => (
           <Skeleton
             key={i}
-            className={i === 3 || i === 6 ? "md:col-span-2" : ""}
           />
         ))}
       </BentoGrid>
@@ -20,10 +19,8 @@ export function BentoGridDemo({ items, isLoading }) {
         <BentoGridItem
           key={i}
           title={item.title}
-          header={item.header}
           image={item.image}
           link={item.url}
-          className={i === 3 || i === 6 ? "md:col-span-2" : ""}
         />
       ))}
     </BentoGrid>

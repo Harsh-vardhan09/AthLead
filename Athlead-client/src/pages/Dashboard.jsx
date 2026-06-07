@@ -24,7 +24,7 @@ import {
   ProfileSkeleton,
   LeaderboardSkeleton,
   ChartSkeleton,
-} from "../components/DashboardSkeleton";
+} from "../Components/DashboardSkeleton";
 
 const Dashboard = () => {
   const [dashboardLoading, setDashboardLoading] = useState(true);
@@ -32,48 +32,43 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [editForm, setEditForm] = useState(false);
   // const { user, loading, fetchUser } = useAuth();
-  const { user, fetchUser } = useAuth();
-
+  const { user } = useAuth();
   const [rank, setRank] = useState([]);
 
   useEffect(() => {
-    const initDashboard = async () => {
-      try {
-        let currentUser = user;
+  const initDashboard = async () => {
+    if (!user) return;
 
-        if (!currentUser) {
-          currentUser = await fetchUser();
-        }
+    // console.log('user:', user)
 
-        if (currentUser) {
-          const scoresRes = await api.get("/api/my-scores");
+    try {
+      const scoresRes = await api.get("/api/my-scores");
 
-          const formattedScores = scoresRes.data.scores.map((item) => ({
-            ...item,
-            date: dayjs(item.date).format("DD MMM YY"),
-          }));
+      const formattedScores = scoresRes.data.scores.map((item) => ({
+        ...item,
+        date: dayjs(item.date).format("DD MMM YY"),
+      }));
 
-          setScores(formattedScores);
+      setScores(formattedScores);
 
-          const rankRes = await api.get("/api/score/rank");
+      const rankRes = await api.get("/api/score/rank");
 
-          const rankWithIsMe = rankRes.data.rank.map((item, index) => ({
-            ...item,
-            originalRank: index + 1,
-            isMe: item.user?._id === currentUser?._id || item.isMe,
-          }));
+      const rankWithIsMe = rankRes.data.rank.map((item, index) => ({
+        ...item,
+        originalRank: index + 1,
+        isMe: item.user?._id === user?._id || item.isMe,
+      }));
 
-          setRank(rankWithIsMe);
-        }
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setDashboardLoading(false);
-      }
-    };
+      setRank(rankWithIsMe);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setDashboardLoading(false);
+    }
+  };
 
-    initDashboard();
-  }, [user, fetchUser]);
+  initDashboard();
+}, [user]);
 
   // if (loading) return null;
 

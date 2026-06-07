@@ -23,7 +23,7 @@ export const BentoGridItem = ({ className, title, image, link }) => {
       )}
     >
       {/* IMAGE */}
-      <img src={image} alt={title} className="w-full h-auto" loading="lazy" />
+      <img src={image} alt={`Preview image for ${title}`} className="w-full h-auto" loading="lazy" />
 
       {/* TITLE */}
       <div className="p-3 text-white text-sm font-bold">{title}</div>
@@ -32,7 +32,7 @@ export const BentoGridItem = ({ className, title, image, link }) => {
       {link && (
         <button
           type="button"
-          onClick={() => window.open(link, "_blank")}
+          onClick={() => window.open(link, "_blank", "noopener,noreferrer")}
           className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer bg-black/40 p-2 rounded-md"
         >
           <ExternalLink size={16} className="text-white" />

@@ -13,18 +13,22 @@ const Events = () => {
   const [selected, setSelected] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
   const [events, setEvents] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const getEvents = async () => {
       setIsLoading(true);
-      const res = await api.get("/api/events");
-      setEvents(res.data.events);
-      setIsLoading(false);
-      console.log(res.data);
+      try {
+        const res = await api.get("/api/events");
+        setEvents(res.data.events);
+        setIsLoading(false);
 
-      if (res.data.status !== 400) {
-        toast.error(res.data.message);
+        if (res.data.status !== 400) {
+          toast.error(res.data.message);
+        }
+      } catch (error) {
+        console.log(error);
+        setIsLoading(false);
       }
     };
     getEvents();

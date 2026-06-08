@@ -88,6 +88,8 @@ const Dashboard = () => {
 
     return topFive;
   };
+  console.log(getDisplayRankings());
+
   return (
     <section className="dark-bg relative max-w-screen min-h-screen flex flex-col items-start justify-center">
       <div className="grid grid-cols-1 md:grid-cols-2 w-full gap-5 p-10">
@@ -190,7 +192,7 @@ const Dashboard = () => {
                     <td
                       className={`mr-3 text-[13px] font-medium ${p.isMe ? "text-teal-300" : "text-slate-200"}`}
                     >
-                      {p.user?.name}{" "}
+                      {p.user?.fullname?.split(" ")[0]}{" "}
                     </td>
                     <td className="text-sm pl-1">cycling</td>
                     <td className="text-sm">{p.user?.state}</td>

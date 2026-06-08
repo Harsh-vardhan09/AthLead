@@ -30,6 +30,59 @@ export default function Score() {
 
   const navigate = useNavigate();
 
+  const fieldMetadata = {
+    sport: {
+      label: "Sport",
+      placeholder: "e.g. cycling, running, swimming",
+      helper: "Primary sport or athletic discipline. Enter the sport name.",
+    },
+    training_years: {
+      label: "Training Years",
+      placeholder: "e.g. 5",
+      helper: "Total years of structured athletic training. Typical range: 0–40 years.",
+    },
+    vo2_max: {
+      label: "VO₂ Max",
+      placeholder: "e.g. 45",
+      helper: "Maximum oxygen uptake in ml/kg/min. Typical range: 20–85.",
+    },
+    hrv: {
+      label: "HRV",
+      placeholder: "e.g. 65",
+      helper: "Heart Rate Variability measured in milliseconds (ms). Typical range: 20–120.",
+    },
+    lactate_threshold: {
+      label: "Lactate Threshold",
+      placeholder: "e.g. 8",
+      helper: "Lactate threshold in mmol/L (blood lactate concentration). Typical range: 1–15 mmol/L.",
+    },
+    stride_length: {
+      label: "Stride Length",
+      placeholder: "e.g. 1.4",
+      helper: "Average distance covered per step in meters. Typical range: 0.5–3.5 m.",
+    },
+    cadence: {
+      label: "Cadence",
+      placeholder: "e.g. 180",
+      helper: "Number of steps per minute during movement. Typical range: 50–220 spm.",
+    },
+    force_application: {
+      label: "Force Application",
+      placeholder: "e.g. 250",
+      helper: "Estimated force generated during movement in Newtons (N). Typical range: 100–500 N.",
+    },
+    performance_score: {
+      label: "Performance Score",
+      placeholder: "e.g. 75",
+      helper: "Overall performance assessment score from 0–100.",
+    },
+    adaptability_score: {
+      label: "Adaptability Score",
+      placeholder: "e.g. 80",
+      helper: "Ability to adapt to training and recovery demands. Range: 0–100.",
+    },
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -61,15 +114,25 @@ export default function Score() {
           onSubmit={handleSubmit}
           className=" bg-linear-to-br from-[#0f2027] via-[#1a3a4a] to-[#811985] border border-[#1d9e75]/40 text-start flex-1 p-6 rounded-2xl shadow-lg"
         >
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-1 lg:grid-cols-2">
-            <input
-              type="text"
-              name="sport"
-              placeholder="Sport"
-              value={formData.sport}
-              onChange={handleChange}
-              className="p-2 rounded bg-gray-700 text-white w-full"
-            />
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-1 lg:grid-cols-2">
+            <div>
+              <label htmlFor="sport" className="block text-sm font-semibold mb-1">
+                {fieldMetadata.sport.label}
+              </label>
+              <input
+                id="sport"
+                type="text"
+                name="sport"
+                placeholder={fieldMetadata.sport.placeholder}
+                value={formData.sport}
+                onChange={handleChange}
+                aria-describedby="sport-helper"
+                className="p-2 rounded bg-gray-700 text-white w-full focus:outline-none focus:ring-2 focus:ring-teal-500 transition"
+              />
+              <p id="sport-helper" className="text-xs text-gray-400 mt-1">
+                {fieldMetadata.sport.helper}
+              </p>
+            </div>
 
             {[
               "training_years",
@@ -82,15 +145,24 @@ export default function Score() {
               "performance_score",
               "adaptability_score",
             ].map((field) => (
-              <input
-                key={field}
-                type="number"
-                name={field}
-                placeholder={field.replace("_", " ")}
-                value={formData[field]}
-                onChange={handleChange}
-                className="p-2 rounded bg-gray-700 text-white w-full"
-              />
+              <div key={field}>
+                <label htmlFor={field} className="block text-sm font-semibold mb-1">
+                  {fieldMetadata[field].label}
+                </label>
+                <input
+                  id={field}
+                  type="number"
+                  name={field}
+                  placeholder={fieldMetadata[field].placeholder}
+                  value={formData[field]}
+                  onChange={handleChange}
+                  aria-describedby={`${field}-helper`}
+                  className="p-2 rounded bg-gray-700 text-white w-full focus:outline-none focus:ring-2 focus:ring-teal-500 transition"
+                />
+                <p id={`${field}-helper`} className="text-xs text-gray-400 mt-1">
+                  {fieldMetadata[field].helper}
+                </p>
+              </div>
             ))}
           </div>
           <div className="p-6 flex items-center justify-center">

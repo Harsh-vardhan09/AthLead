@@ -18,15 +18,37 @@ const Events = () => {
   useEffect(() => {
     const getEvents = async () => {
       setIsLoading(true);
-      const res = await api.get("/api/events");
-      setEvents(res.data.events);
-      setIsLoading(false);
-      console.log(res.data);
 
-      if (res.data.status !== 400) {
-        toast.error(res.data.message);
+      try {
+        const res = await api.get("/api/events");
+
+        console.log("response:", res);
+
+        if (!res.data.success) {
+          console.error("Events API Error:", res.data.message);
+
+          toast.error(res.data.message || "Failed to fetch events");
+
+          setEvents([]);
+          return;
+        }
+
+        setEvents(res.data.events || []);
+      } catch (error) {
+        console.error("Events Fetch Error:", error);
+
+        toast.error(
+          error.response?.data?.message ||
+            error.message ||
+            "Failed to fetch events",
+        );
+
+        setEvents([]);
+      } finally {
+        setIsLoading(false);
       }
     };
+
     getEvents();
   }, []);
 

@@ -17,7 +17,6 @@ import {
 import { useNavigate } from "react-router";
 import { useEffect } from "react";
 import { api } from "../api/axios";
-import { useAuth } from "../context/useAuth";
 import dayjs from "dayjs";
 import EditForm from "../Components/EditForm";
 import {
@@ -31,17 +30,40 @@ const Dashboard = () => {
   const [scores, setScores] = useState([]);
   const navigate = useNavigate();
   const [editForm, setEditForm] = useState(false);
-  // const { user, loading, fetchUser } = useAuth();
-  const { user } = useAuth();
   const [rank, setRank] = useState([]);
+  const [user, setUser] = useState(null);
 
+  // Get user data
   useEffect(() => {
-    if (!user) {
-      setDashboardLoading(false);
-      return;
-    }
+    const fetchUser = async () => {
+      const token = localStorage.getItem("accessToken");
 
-    const initDashboard = async () => {
+      if (!token) {
+        setUser(null);
+        setDashboardLoading(false);
+        return;
+      }
+
+      try {
+        const res = await api.get("/api/auth/me");
+        setUser(res.data.user);
+      } catch (err) {
+        localStorage.removeItem("accessToken");
+        setUser(null);
+        console.log(err);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
+  // Fetches dashboard data after user is loaded
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      if (!user) return;
+
+      setDashboardLoading(true);
+
       try {
         const scoresRes = await api.get("/api/my-scores");
 
@@ -57,21 +79,21 @@ const Dashboard = () => {
         const rankWithIsMe = rankRes.data.rank.map((item, index) => ({
           ...item,
           originalRank: index + 1,
-          isMe: item.user?._id === user?._id || item.isMe,
+          isMe: item.user?._id === user?._id,
         }));
 
         setRank(rankWithIsMe);
       } catch (error) {
         console.error(error);
+        setScores([]);
+        setRank([]);
       } finally {
         setDashboardLoading(false);
       }
     };
 
-    initDashboard();
+    fetchDashboardData();
   }, [user]);
-
-  // if (loading) return null;
 
   const getDisplayRankings = () => {
     const topFive = rank.slice(0, 5);

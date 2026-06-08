@@ -49,7 +49,7 @@ const Announcement = () => {
         </p>
       </div>
 
-      <BentoGridDemo items={news} isLoading={isLoading}/>
+      <BentoGridDemo items={news} isLoading={isLoading} />
       {/* <div className="grid grid-col-1 max-w-4xl w-full items-center justify-start gap-5">
         {isLoading
           ? Array(5)

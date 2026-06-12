@@ -12,6 +12,7 @@ import {
   verifyOtp,
   SingupAuth,
 } from "../controllers/OtpController.js";
+import { getMyEvents } from "../controllers/eventController.js";
 import passport from "passport";
 import multer from "multer";
 
@@ -39,6 +40,11 @@ router.post("/login", LoginAuth);
 router.post("/logout", logout);
 router.post("/refresh", refesh);
 router.get("/me", passport.authenticate("jwt", { session: false }), getUser);
+router.get(
+  "/my-events",
+  passport.authenticate("jwt", { session: false }),
+  getMyEvents,
+);
 
 router.patch(
   "/edit",

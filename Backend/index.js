@@ -7,7 +7,11 @@ import { editUser, getUser, refesh } from "./controllers/authController.js";
 import passport from "passport";
 import cookieParser from "cookie-parser";
 import userRouter from "./routes/userRoutes.js";
-import { findAllEvent, registerEvent } from "./controllers/eventController.js";
+import {
+  findAllEvent,
+  getMyEvents,
+  registerEvent,
+} from "./controllers/eventController.js";
 import multer from "multer";
 
 db();
@@ -40,6 +44,11 @@ app.get("/api/news", getNews);
 app.post("/api/refresh", refesh);
 
 app.get("/api/events", findAllEvent);
+app.get(
+  "/api/my-events",
+  passport.authenticate("jwt", { session: false }),
+  getMyEvents,
+);
 app.post(
   "/api/events/:eventId/register",
   passport.authenticate("jwt", { session: false }),

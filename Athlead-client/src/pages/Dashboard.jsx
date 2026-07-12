@@ -26,6 +26,14 @@ import {
   ChartSkeleton,
 } from "../Components/DashboardSkeleton";
 
+const placeholderScores = [
+  { date: "Day 1", score: 50 },
+  { date: "Day 2", score: 50 },
+  { date: "Day 3", score: 50 },
+  { date: "Day 4", score: 50 },
+  { date: "Day 5", score: 50 },
+];
+
 const Dashboard = () => {
   const [dashboardLoading, setDashboardLoading] = useState(true);
   const [scores, setScores] = useState([]);
@@ -266,13 +274,33 @@ const Dashboard = () => {
         <div className="col-span-2  py-10  px-3 bg-linear-to-br from-[#0f2027] via-[#1a3a4a] to-[#0f2027] border border-[#1d9e75]/40 text-start text-white rounded-2xl shadow-xl">
           {dashboardLoading ? (
             <ChartSkeleton />
-          ) : scores.length === 0 ? (
-            <div className="h-[250px] flex items-center justify-center text-gray-400">
-              No score history yet
-            </div>
-          ) : (
-            <ResponsiveContainer width="100%" height={250}>
-              <LineChart data={scores}>
+          ) : scores.length === 0 || true ? (
+  <div className="relative h-[250px]">
+    <ResponsiveContainer width="100%" height="100%">
+      <LineChart data={placeholderScores}>
+        <XAxis dataKey="date" className="text-xs" stroke="#444" />
+        <YAxis className="text-xs" stroke="#444" />
+        <Line
+          type="monotone"
+          dataKey="score"
+          stroke="#6366f1"
+          strokeWidth={2}
+          strokeDasharray="5 5"
+          strokeOpacity={0.3}
+          dot={false}
+        />
+      </LineChart>
+    </ResponsiveContainer>
+    <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4 bg-black/20 rounded-xl">
+      <p className="text-gray-300 font-medium">No performance data available yet.</p>
+      <p className="text-gray-500 text-sm mt-1">
+        Data will appear here once sufficient activity has been recorded.
+      </p>
+    </div>
+  </div>
+) : (
+  <ResponsiveContainer width="100%" height={250}>
+    <LineChart data={scores}>
                 <XAxis dataKey="date" className="text-xs" stroke="#888" />
                 <YAxis className="text-xs" stroke="#888" />
                 <Tooltip

@@ -274,7 +274,7 @@ const Dashboard = () => {
         <div className="col-span-2  py-10  px-3 bg-linear-to-br from-[#0f2027] via-[#1a3a4a] to-[#0f2027] border border-[#1d9e75]/40 text-start text-white rounded-2xl shadow-xl">
           {dashboardLoading ? (
             <ChartSkeleton />
-          ) : scores.length === 0 || true ? (
+          ) : scores.length === 0 ? (
   <div className="relative h-[250px]">
     <ResponsiveContainer width="100%" height="100%">
       <LineChart data={placeholderScores}>

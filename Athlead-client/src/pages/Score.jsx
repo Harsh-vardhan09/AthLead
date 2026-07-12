@@ -1,14 +1,5 @@
 import React, { useState } from "react";
 import toast from "react-hot-toast";
-import {
-  RadarChart,
-  Radar,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
-  ResponsiveContainer,
-  Tooltip,
-} from "recharts";
 import { api } from "../api/axios";
 import { useNavigate } from "react-router";
 
@@ -28,78 +19,156 @@ export default function Score() {
     adaptability_score: "",
   });
 
+  // Track validation errors locally to display inline messages
+  const [errors, setErrors] = useState({});
+
   const navigate = useNavigate();
 
   const fieldMetadata = {
     sport: {
       label: "Sport",
       placeholder: "e.g. cycling, running, swimming",
-      helper: "Primary sport or athletic discipline. Enter the sport name.",
+      helper: "Primary sport or athletic discipline.",
+      required: true,
     },
     training_years: {
-      label: "Training Years",
+      label: "Training Years (0–40)",
       placeholder: "e.g. 5",
-      helper: "Total years of structured athletic training. Typical range: 0–40 years.",
+      helper: "Total years of structured athletic training.",
+      min: 0,
+      max: 40,
+      required: true,
     },
     vo2_max: {
-      label: "VO₂ Max",
+      label: "VO₂ Max (10–90)",
       placeholder: "e.g. 45",
-      helper: "Maximum oxygen uptake in ml/kg/min. Typical range: 20–85.",
+      helper: "Maximum oxygen uptake in ml/kg/min.",
+      min: 10,
+      max: 90,
+      required: true,
     },
     hrv: {
-      label: "HRV",
+      label: "HRV (0–200)",
       placeholder: "e.g. 65",
-      helper: "Heart Rate Variability measured in milliseconds (ms). Typical range: 20–120.",
+      helper: "Heart Rate Variability measured in milliseconds (ms).",
+      min: 0,
+      max: 200,
+      required: true,
     },
     lactate_threshold: {
-      label: "Lactate Threshold",
+      label: "Lactate Threshold (1–30)",
       placeholder: "e.g. 8",
-      helper: "Lactate threshold in mmol/L (blood lactate concentration). Typical range: 1–15 mmol/L.",
+      helper: "Lactate threshold in mmol/L.",
+      min: 1,
+      max: 30,
+      required: true,
     },
     stride_length: {
-      label: "Stride Length",
+      label: "Stride Length (0.5–3.5)",
       placeholder: "e.g. 1.4",
-      helper: "Average distance covered per step in meters. Typical range: 0.5–3.5 m.",
+      helper: "Average distance covered per step in meters.",
+      min: 0.5,
+      max: 3.5,
+      required: true,
     },
     cadence: {
-      label: "Cadence",
+      label: "Cadence (50–220)",
       placeholder: "e.g. 180",
-      helper: "Number of steps per minute during movement. Typical range: 50–220 spm.",
+      helper: "Number of steps per minute during movement.",
+      min: 50,
+      max: 220,
+      required: true,
     },
     force_application: {
-      label: "Force Application",
+      label: "Force Application (1–500)",
       placeholder: "e.g. 250",
-      helper: "Estimated force generated during movement in Newtons (N). Typical range: 100–500 N.",
+      helper: "Estimated force generated during movement in Newtons (N).",
+      min: 1,
+      max: 500,
+      required: true,
     },
     performance_score: {
-      label: "Performance Score",
+      label: "Performance Score (0–100)",
       placeholder: "e.g. 75",
-      helper: "Overall performance assessment score from 0–100.",
+      helper: "Overall performance assessment score.",
+      min: 0,
+      max: 100,
+      required: true,
     },
     adaptability_score: {
-      label: "Adaptability Score",
+      label: "Adaptability Score (0–100)",
       placeholder: "e.g. 80",
-      helper: "Ability to adapt to training and recovery demands. Range: 0–100.",
+      helper: "Ability to adapt to training and recovery demands.",
+      min: 0,
+      max: 100,
+      required: true,
     },
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    
+    // Clear field specific error when user changes value
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: "" }));
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    let isValid = true;
+
+    for (const key of Object.keys(fieldMetadata)) {
+      const meta = fieldMetadata[key];
+      const val = formData[key];
+
+      if (meta.required && (!val || val.trim() === "")) {
+        newErrors[key] = "This field is required.";
+        isValid = false;
+        continue;
+      }
+
+      if (key !== "sport") {
+        const numVal = parseFloat(val);
+        if (isNaN(numVal)) {
+          newErrors[key] = "Must be a valid number.";
+          isValid = false;
+        } else {
+          if (meta.min !== undefined && numVal < meta.min) {
+            newErrors[key] = `Value must be at least ${meta.min}.`;
+            isValid = false;
+          }
+          if (meta.max !== undefined && numVal > meta.max) {
+            newErrors[key] = `Value cannot exceed ${meta.max}.`;
+            isValid = false;
+          }
+        }
+      }
+    }
+
+    setErrors(newErrors);
+    return isValid;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(formData);
 
-    const res = await api.post("/api/score", formData);
-    console.log(res);
+    if (!validateForm()) {
+      toast.error("Please fix the errors before submitting.");
+      return;
+    }
 
-    if (res.data.success) {
-      toast.success(res.data.message);
-      navigate("/dashboard");
-    } else {
-      toast.error(res.data.message);
+    try {
+      const res = await api.post("/api/score", formData);
+      if (res.data.success) {
+        toast.success(res.data.message);
+        navigate("/dashboard");
+      } else {
+        toast.error(res.data.message);
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Something went wrong.");
     }
   };
 
@@ -113,6 +182,7 @@ export default function Score() {
         <form
           onSubmit={handleSubmit}
           className=" bg-linear-to-br from-[#0f2027] via-[#1a3a4a] to-[#811985] border border-[#1d9e75]/40 text-start flex-1 p-6 rounded-2xl shadow-lg"
+          noValidate // Let custom state validation handle it uniformly
         >
           <div className="grid grid-cols-1 gap-6 md:grid-cols-1 lg:grid-cols-2">
             <div>
@@ -126,12 +196,17 @@ export default function Score() {
                 placeholder={fieldMetadata.sport.placeholder}
                 value={formData.sport}
                 onChange={handleChange}
-                aria-describedby="sport-helper"
-                className="p-2 rounded bg-gray-700 text-white w-full focus:outline-none focus:ring-2 focus:ring-teal-500 transition"
+                className={`p-2 rounded bg-gray-700 text-white w-full focus:outline-none focus:ring-2 transition ${
+                  errors.sport ? "border border-red-500 focus:ring-red-500" : "focus:ring-teal-500"
+                }`}
               />
-              <p id="sport-helper" className="text-xs text-gray-400 mt-1">
-                {fieldMetadata.sport.helper}
-              </p>
+              {errors.sport ? (
+                <p className="text-xs text-red-400 mt-1 font-medium">{errors.sport}</p>
+              ) : (
+                <p id="sport-helper" className="text-xs text-gray-400 mt-1">
+                  {fieldMetadata.sport.helper}
+                </p>
+              )}
             </div>
 
             {[
@@ -153,15 +228,23 @@ export default function Score() {
                   id={field}
                   type="number"
                   name={field}
+                  step="any"
+                  min={fieldMetadata[field].min}
+                  max={fieldMetadata[field].max}
                   placeholder={fieldMetadata[field].placeholder}
                   value={formData[field]}
                   onChange={handleChange}
-                  aria-describedby={`${field}-helper`}
-                  className="p-2 rounded bg-gray-700 text-white w-full focus:outline-none focus:ring-2 focus:ring-teal-500 transition"
+                  className={`p-2 rounded bg-gray-700 text-white w-full focus:outline-none focus:ring-2 transition ${
+                    errors[field] ? "border border-red-500 focus:ring-red-500" : "focus:ring-teal-500"
+                  }`}
                 />
-                <p id={`${field}-helper`} className="text-xs text-gray-400 mt-1">
-                  {fieldMetadata[field].helper}
-                </p>
+                {errors[field] ? (
+                  <p className="text-xs text-red-400 mt-1 font-medium">{errors[field]}</p>
+                ) : (
+                  <p id={`${field}-helper`} className="text-xs text-gray-400 mt-1">
+                    {fieldMetadata[field].helper}
+                  </p>
+                )}
               </div>
             ))}
           </div>

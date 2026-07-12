@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { api } from "../api/axios";
-import toast from "react-hot-toast";
 import NewsCard from "../Components/NewsCard";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
@@ -22,7 +21,7 @@ const Announcement = () => {
       } else {
         setNews(localAnnouncements);
       }
-    } catch (error) {
+    } catch {
       console.warn("API unavailable, using local announcements fallback");
       setNews(localAnnouncements);
     }
@@ -49,9 +48,9 @@ const Announcement = () => {
   // Apply search + category filter together
   const filteredNews = useMemo(() => {
     return news.filter((item) => {
-      const matchesSearch = item.title
-        ?.toLowerCase()
-        .includes(searchQuery.toLowerCase());
+      const matchesSearch =
+        !searchQuery ||
+        item.title?.toLowerCase().includes(searchQuery.toLowerCase());
 
       const matchesCategory =
         activeCategory === "All" ||
@@ -91,6 +90,7 @@ const Announcement = () => {
         <div className="w-full max-w-4xl flex flex-col gap-4 mb-6">
           <input
             type="text"
+            aria-label="Search announcements by title"
             placeholder="Search announcements by title..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -102,6 +102,7 @@ const Announcement = () => {
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
+                aria-pressed={activeCategory === cat}
                 className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
                   activeCategory === cat
                     ? "bg-teal-500 text-black border-teal-500"

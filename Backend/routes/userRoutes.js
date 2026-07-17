@@ -36,7 +36,7 @@ router.post("/verify-otp", verifyOtp);
 
 router.post("/signup", SingupAuth);
 router.post("/login", LoginAuth);
-router.post("/logout", logout);
+router.post("/logout", passport.authenticate("jwt", { session: false }), logout);
 router.post("/refresh", refesh);
 router.get("/me", passport.authenticate("jwt", { session: false }), getUser);
 

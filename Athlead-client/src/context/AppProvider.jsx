@@ -22,11 +22,9 @@ const AppProvider = ({ children }) => {
         setUser(res.data.user);
       }
     } catch (err) {
-      if (err.response?.status === 401) {
-        localStorage.removeItem("accessToken");
-        setLoggedIn(false);
-        setUser(null);
-      }
+      localStorage.removeItem("accessToken");
+      setLoggedIn(false);
+      setUser(null);
     } finally {
       setLoading(false);
     }

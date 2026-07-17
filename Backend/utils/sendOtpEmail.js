@@ -12,10 +12,10 @@ nodemailer.createTransport({
 
 export const sendOtpEmail = async (to, otp) => {
   try {
-    const response = await axios.post(
+    await axios.post(
       process.env.EMAIL_ADD,
       {
-        from:'Athlead<NoReply>',
+        from: "Athlead<NoReply>",
         to: to,
         subject: "Your AthLead Verification OTP",
         html: `
@@ -38,9 +38,7 @@ export const sendOtpEmail = async (to, otp) => {
     );
   } catch (error) {
     console.log(error);
-    
   }
-
 };
 
 // console.log("EMAIL SENT");

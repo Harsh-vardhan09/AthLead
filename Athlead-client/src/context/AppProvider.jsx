@@ -25,6 +25,7 @@ const AppProvider = ({ children }) => {
       localStorage.removeItem("accessToken");
       setLoggedIn(false);
       setUser(null);
+      console.log(err);
     } finally {
       setLoading(false);
     }

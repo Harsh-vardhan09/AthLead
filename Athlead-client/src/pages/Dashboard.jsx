@@ -275,34 +275,37 @@ const Dashboard = () => {
           {dashboardLoading ? (
             <ChartSkeleton />
           ) : scores.length === 0 ? (
-  <div className="relative h-[250px]">
-  <div aria-hidden="true">
-    <ResponsiveContainer width="100%" height="100%">
-      <LineChart data={placeholderScores}>
-        <XAxis dataKey="date" className="text-xs" stroke="#444" />
-        <YAxis className="text-xs" stroke="#444" />
-        <Line
-          type="monotone"
-          dataKey="score"
-          stroke="#6366f1"
-          strokeWidth={2}
-          strokeDasharray="5 5"
-          strokeOpacity={0.3}
-          dot={false}
-        />
-      </LineChart>
-    </ResponsiveContainer>
-  </div>
-  <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4 bg-black/20 rounded-xl">
-    <p className="text-gray-300 font-medium">No performance data available yet.</p>
-    <p className="text-gray-500 text-sm mt-1">
-      Data will appear here once sufficient activity has been recorded.
-    </p>
-  </div>
-</div>
-) : (
-  <ResponsiveContainer width="100%" height={250}>
-    <LineChart data={scores}>
+            <div className="relative h-[250px]">
+              <div aria-hidden="true">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={placeholderScores}>
+                    <XAxis dataKey="date" className="text-xs" stroke="#444" />
+                    <YAxis className="text-xs" stroke="#444" />
+                    <Line
+                      type="monotone"
+                      dataKey="score"
+                      stroke="#6366f1"
+                      strokeWidth={2}
+                      strokeDasharray="5 5"
+                      strokeOpacity={0.3}
+                      dot={false}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4 bg-black/20 rounded-xl">
+                <p className="text-gray-300 font-medium">
+                  No performance data available yet.
+                </p>
+                <p className="text-gray-500 text-sm mt-1">
+                  Data will appear here once sufficient activity has been
+                  recorded.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={250}>
+              <LineChart data={scores}>
                 <XAxis dataKey="date" className="text-xs" stroke="#888" />
                 <YAxis className="text-xs" stroke="#888" />
                 <Tooltip

@@ -128,23 +128,25 @@ export const getMyEvents = async (req, res) => {
       user: req.user._id,
     }).populate("event", "title sport date location");
 
-    const registrations = participations.map((participation) => ({
-      _id: participation._id,
-      status: "Registered",
-      event: participation.event
-        ? {
-            _id: participation.event._id,
-            name: participation.event.title,
-            sport: participation.event.sport,
-            date: participation.event.date,
-            location: participation.event.location,
-          }
-        : null,
-    })).sort((a, b) => {
-      const aDate = a.event?.date ? new Date(a.event.date).getTime() : 0;
-      const bDate = b.event?.date ? new Date(b.event.date).getTime() : 0;
-      return aDate - bDate;
-    });
+    const registrations = participations
+      .map((participation) => ({
+        _id: participation._id,
+        status: "Registered",
+        event: participation.event
+          ? {
+              _id: participation.event._id,
+              name: participation.event.title,
+              sport: participation.event.sport,
+              date: participation.event.date,
+              location: participation.event.location,
+            }
+          : null,
+      }))
+      .sort((a, b) => {
+        const aDate = a.event?.date ? new Date(a.event.date).getTime() : 0;
+        const bDate = b.event?.date ? new Date(b.event.date).getTime() : 0;
+        return aDate - bDate;
+      });
 
     res.json(registrations);
   } catch (error) {

@@ -108,7 +108,7 @@ export default function Score() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    
+
     // Clear field specific error when user changes value
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: "" }));
@@ -186,7 +186,10 @@ export default function Score() {
         >
           <div className="grid grid-cols-1 gap-6 md:grid-cols-1 lg:grid-cols-2">
             <div>
-              <label htmlFor="sport" className="block text-sm font-semibold mb-1">
+              <label
+                htmlFor="sport"
+                className="block text-sm font-semibold mb-1"
+              >
                 {fieldMetadata.sport.label}
               </label>
               <input
@@ -197,11 +200,15 @@ export default function Score() {
                 value={formData.sport}
                 onChange={handleChange}
                 className={`p-2 rounded bg-gray-700 text-white w-full focus:outline-none focus:ring-2 transition ${
-                  errors.sport ? "border border-red-500 focus:ring-red-500" : "focus:ring-teal-500"
+                  errors.sport
+                    ? "border border-red-500 focus:ring-red-500"
+                    : "focus:ring-teal-500"
                 }`}
               />
               {errors.sport ? (
-                <p className="text-xs text-red-400 mt-1 font-medium">{errors.sport}</p>
+                <p className="text-xs text-red-400 mt-1 font-medium">
+                  {errors.sport}
+                </p>
               ) : (
                 <p id="sport-helper" className="text-xs text-gray-400 mt-1">
                   {fieldMetadata.sport.helper}
@@ -221,7 +228,10 @@ export default function Score() {
               "adaptability_score",
             ].map((field) => (
               <div key={field}>
-                <label htmlFor={field} className="block text-sm font-semibold mb-1">
+                <label
+                  htmlFor={field}
+                  className="block text-sm font-semibold mb-1"
+                >
                   {fieldMetadata[field].label}
                 </label>
                 <input
@@ -235,13 +245,20 @@ export default function Score() {
                   value={formData[field]}
                   onChange={handleChange}
                   className={`p-2 rounded bg-gray-700 text-white w-full focus:outline-none focus:ring-2 transition ${
-                    errors[field] ? "border border-red-500 focus:ring-red-500" : "focus:ring-teal-500"
+                    errors[field]
+                      ? "border border-red-500 focus:ring-red-500"
+                      : "focus:ring-teal-500"
                   }`}
                 />
                 {errors[field] ? (
-                  <p className="text-xs text-red-400 mt-1 font-medium">{errors[field]}</p>
+                  <p className="text-xs text-red-400 mt-1 font-medium">
+                    {errors[field]}
+                  </p>
                 ) : (
-                  <p id={`${field}-helper`} className="text-xs text-gray-400 mt-1">
+                  <p
+                    id={`${field}-helper`}
+                    className="text-xs text-gray-400 mt-1"
+                  >
                     {fieldMetadata[field].helper}
                   </p>
                 )}

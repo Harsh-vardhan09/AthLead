@@ -1,5 +1,6 @@
-import { PlusCircle } from "lucide-react";
-import React from "react";
+import { PlusCircle, Calendar } from "lucide-react";
+import React, { useState } from "react";
+import CalendarPicker from "../Components/CalendarPicker";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router";
 import { api } from "../api/axios";
@@ -11,13 +12,14 @@ const EditForm = ({ setEditForm }) => {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
   } = useForm();
   const navigate = useNavigate();
   const { setUser, user } = useAuth();
 
   const profile = watch("profile_picture");
-
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const onSubmit = async (data) => {
     const formData = new FormData();
     if (data.profile_picture && data.profile_picture[0]) {
@@ -134,17 +136,40 @@ const EditForm = ({ setEditForm }) => {
             </div>
           </div>
 
-          <div className="w-full">
+          <div className="w-full relative">
             <label className="block text-[11px] font-medium text-white/50 uppercase tracking-widest mb-1.5">
               Date of Birth
             </label>
-            <input
-              type="date"
-              {...register("DOB", { required: true })}
-              className={`w-full bg-white/7 border rounded-xl px-3.5 py-2.5 text-sm text-white outline-none focus:bg-[#1d9e75]/8 transition-all ${
-                errors.DOB ? "border-red-500/80" : "border-white/12"
-              }`}
-            />
+
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="DD/MM/YYYY"
+                {...register("DOB", {
+                  required: "Date of Birth is required",
+                })}
+                readOnly
+                className={`w-full bg-white/7 border rounded-xl px-3.5 py-2.5 pr-10 text-sm text-white outline-none focus:bg-[#1d9e75]/8 transition-all ${
+                  errors.DOB ? "border-red-500/80" : "border-white/12"
+                }`}
+              />
+
+              <Calendar
+                className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-white/60 hover:text-[#5dcaa5]"
+                onClick={() => setIsCalendarOpen(!isCalendarOpen)}
+              />
+
+              {isCalendarOpen && (
+                <CalendarPicker
+                  selectedDate={watch("DOB")}
+                  onSelect={(formatted) => {
+                    setValue("DOB", formatted);
+                  }}
+                  onClose={() => setIsCalendarOpen(false)}
+                />
+              )}
+            </div>
+
             {errors.DOB && (
               <p className="text-xs text-red-400 mt-1">{errors.DOB.message}</p>
             )}

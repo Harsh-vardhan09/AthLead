@@ -1,5 +1,6 @@
-import { PlusCircle } from "lucide-react";
-import React from "react";
+import { PlusCircle, Calendar } from "lucide-react";
+import React, { useState } from "react";
+import CalendarPicker from "../Components/CalendarPicker";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router";
 import { api } from "../api/axios";
@@ -11,13 +12,14 @@ const EditForm = ({ setEditForm }) => {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
   } = useForm();
   const navigate = useNavigate();
   const { setUser, user } = useAuth();
 
   const profile = watch("profile_picture");
-
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const onSubmit = async (data) => {
     const formData = new FormData();
     if (data.profile_picture && data.profile_picture[0]) {
@@ -26,7 +28,11 @@ const EditForm = ({ setEditForm }) => {
     formData.append("fullname", data.fullname);
     formData.append("phone", data.phone);
     formData.append("address", data.address);
-    formData.append("DOB", data.DOB);
+    const formattedDOB = data.DOB
+      ? data.DOB.split("/").reverse().join("-")
+      : "";
+
+    formData.append("DOB", formattedDOB);
 
     const res = await api.patch("/api/edit", formData);
     console.log(res);
@@ -103,9 +109,8 @@ const EditForm = ({ setEditForm }) => {
                 required: true,
                 maxLength: { value: 20, message: "Must be < 20 letters" },
               })}
-              className={`w-full bg-white/7 border rounded-xl px-3.5 py-2.5 text-sm text-white placeholder:text-white/25 outline-none focus:bg-[#1d9e75]/8 transition-all ${
-                errors.fullname ? "border-red-500/80" : "border-white/12"
-              }`}
+              className={`w-full bg-white/7 border rounded-xl px-3.5 py-2.5 text-sm text-white placeholder:text-white/25 outline-none focus:bg-[#1d9e75]/8 transition-all ${errors.fullname ? "border-red-500/80" : "border-white/12"
+                }`}
             />
             {errors.fullname && (
               <p className="text-xs text-red-400 mt-1">
@@ -126,25 +131,62 @@ const EditForm = ({ setEditForm }) => {
                   type="number"
                   placeholder="98765 43210"
                   {...register("phone", { required: true })}
-                  className={`flex-1 max-w-full bg-white/7 border rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-white/25 outline-none focus:bg-[#1d9e75]/8 transition-all ${
-                    errors.phone ? "border-red-500/80" : "border-white/12"
-                  }`}
+                  className={`flex-1 max-w-full bg-white/7 border rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-white/25 outline-none focus:bg-[#1d9e75]/8 transition-all ${errors.phone ? "border-red-500/80" : "border-white/12"
+                    }`}
                 />
               </div>
             </div>
           </div>
 
-          <div className="w-full">
-            <label className="block text-[11px] font-medium text-white/50 uppercase tracking-widest mb-1.5">
+          <div className="w-full relative">
+            <label
+              htmlFor="DOB"
+              className="block text-[11px] font-medium text-white/50 uppercase tracking-widest mb-1.5"
+            >
               Date of Birth
             </label>
-            <input
-              type="date"
-              {...register("DOB", { required: true })}
-              className={`w-full bg-white/7 border rounded-xl px-3.5 py-2.5 text-sm text-white outline-none focus:bg-[#1d9e75]/8 transition-all ${
-                errors.DOB ? "border-red-500/80" : "border-white/12"
-              }`}
-            />
+
+            <div className="relative">
+              <input
+                id="DOB"
+                type="text"
+                placeholder="DD/MM/YYYY"
+                {...register("DOB", {
+                  required: "Date of Birth is required",
+                })}
+                readOnly
+                className={`w-full bg-white/7 border rounded-xl px-3.5 py-2.5 pr-10 text-sm text-white outline-none focus:bg-[#1d9e75]/8 transition-all ${errors.DOB ? "border-red-500/80" : "border-white/12"
+                  }`}
+              />
+
+              <button
+                type="button"
+                aria-label="Open date picker"
+                aria-expanded={isCalendarOpen}
+                onClick={() => setIsCalendarOpen(!isCalendarOpen)}
+                className="absolute right-3 top-1/2 -translate-y-1/2"
+              >
+                <Calendar
+                  aria-hidden="true"
+                  className="cursor-pointer text-white/60 hover:text-[#5dcaa5]"
+                />
+              </button>
+
+              {isCalendarOpen && (
+                <CalendarPicker
+                  selectedDate={watch("DOB")}
+                  onSelect={(formatted) => {
+                    setValue("DOB", formatted, {
+                      shouldValidate: true,
+                      shouldDirty: true,
+                      shouldTouch: true,
+                    });
+                  }}
+                  onClose={() => setIsCalendarOpen(false)}
+                />
+              )}
+            </div>
+
             {errors.DOB && (
               <p className="text-xs text-red-400 mt-1">{errors.DOB.message}</p>
             )}
@@ -160,9 +202,8 @@ const EditForm = ({ setEditForm }) => {
             <input
               type="text"
               {...register("address")}
-              className={`w-full bg-white/7 border rounded-xl px-3.5 py-2.5 text-sm text-white outline-none focus:bg-[#1d9e75]/8 transition-all ${
-                errors.address ? "border-red-500/80" : "border-white/12"
-              }`}
+              className={`w-full bg-white/7 border rounded-xl px-3.5 py-2.5 text-sm text-white outline-none focus:bg-[#1d9e75]/8 transition-all ${errors.address ? "border-red-500/80" : "border-white/12"
+                }`}
             />
           </div>
           <div>

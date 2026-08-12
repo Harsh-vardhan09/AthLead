@@ -284,6 +284,15 @@ const Dashboard = () => {
           <div className="flex items-start justify-center">
             {dashboardLoading ? (
               <ChartSkeleton />
+            ) : radarChartData.length === 0 ? (
+              <div className="min-h-[300px] flex flex-col items-center justify-center text-center px-6">
+                <p className="text-gray-300 font-medium">
+                  No score generated yet.
+                </p>
+                <p className="text-gray-500 text-sm mt-1">
+                  Generate a score to view your performance metrics.
+                </p>
+              </div>
             ) : (
               <RadarChart
                 style={{

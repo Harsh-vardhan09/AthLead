@@ -3,6 +3,8 @@ import toast from "react-hot-toast";
 import { api } from "../api/axios";
 import { useNavigate } from "react-router";
 
+const SCORE_STORAGE_KEY = "athlead_score_data";
+
 export default function Score() {
   const [formData, setFormData] = useState({
     sport: "cycling",
@@ -162,6 +164,22 @@ export default function Score() {
     try {
       const res = await api.post("/api/score", formData);
       if (res.data.success) {
+        const scoreData = {
+          vo2_max: Number(formData.vo2_max),
+          hrv: Number(formData.hrv),
+          lactate_threshold: Number(formData.lactate_threshold),
+          stride_length: Number(formData.stride_length),
+          cadence: Number(formData.cadence),
+          force_application: Number(formData.force_application),
+          performance_score: Number(formData.performance_score),
+          adaptability_score: Number(formData.adaptability_score),
+        };
+
+        localStorage.setItem(
+          SCORE_STORAGE_KEY,
+          JSON.stringify(scoreData),
+        );
+
         toast.success(res.data.message);
         navigate("/dashboard");
       } else {

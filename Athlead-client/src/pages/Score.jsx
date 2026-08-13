@@ -2,8 +2,7 @@ import React, { useState } from "react";
 import toast from "react-hot-toast";
 import { api } from "../api/axios";
 import { useNavigate } from "react-router";
-
-const SCORE_STORAGE_KEY = "athlead_score_data";
+import { useAuth } from "../context/useAuth";
 
 export default function Score() {
   const [formData, setFormData] = useState({
@@ -25,6 +24,7 @@ export default function Score() {
   const [errors, setErrors] = useState({});
 
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const fieldMetadata = {
     sport: {
@@ -175,10 +175,11 @@ export default function Score() {
           adaptability_score: Number(formData.adaptability_score),
         };
 
-        localStorage.setItem(
-          SCORE_STORAGE_KEY,
-          JSON.stringify(scoreData),
-        );
+        if (user?._id) {
+          const scoreStorageKey = `athlead_score_data:${user._id}`;
+
+          localStorage.setItem(scoreStorageKey, JSON.stringify(scoreData));
+        }
 
         toast.success(res.data.message);
         navigate("/dashboard");

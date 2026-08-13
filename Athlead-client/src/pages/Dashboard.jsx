@@ -25,8 +25,6 @@ import {
   ChartSkeleton,
 } from "../Components/DashboardSkeleton";
 
-const SCORE_STORAGE_KEY = "athlead_score_data";
-
 const placeholderScores = [
   { date: "Day 1", score: 50 },
   { date: "Day 2", score: 50 },
@@ -47,7 +45,14 @@ const Dashboard = () => {
   const [registeredEvents, setRegisteredEvents] = useState([]);
 
   useEffect(() => {
-    const storedScore = localStorage.getItem(SCORE_STORAGE_KEY);
+    setRadarChartData([]);
+
+    if (!user?._id) {
+      return;
+    }
+
+    const scoreStorageKey = `athlead_score_data:${user._id}`;
+    const storedScore = localStorage.getItem(scoreStorageKey);
 
     if (!storedScore) {
       return;
@@ -97,7 +102,7 @@ const Dashboard = () => {
     } catch (error) {
       console.error("Failed to parse stored score data:", error);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     if (!user) {

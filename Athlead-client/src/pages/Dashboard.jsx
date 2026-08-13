@@ -1,6 +1,5 @@
 import { ArrowRight, Calendar, MapPin, Trophy } from "lucide-react";
 import React, { useState } from "react";
-import { radarData } from "../assets/assets";
 import {
   LineChart,
   Line,
@@ -37,12 +36,73 @@ const placeholderScores = [
 const Dashboard = () => {
   const [dashboardLoading, setDashboardLoading] = useState(true);
   const [scores, setScores] = useState([]);
+  const [radarChartData, setRadarChartData] = useState([]);
   const navigate = useNavigate();
   const [editForm, setEditForm] = useState(false);
   // const { user, loading, fetchUser } = useAuth();
   const { user } = useAuth();
   const [rank, setRank] = useState([]);
   const [registeredEvents, setRegisteredEvents] = useState([]);
+
+  useEffect(() => {
+    setRadarChartData([]);
+
+    if (!user?._id) {
+      return;
+    }
+
+    const scoreStorageKey = `athlead_score_data:${user._id}`;
+    const storedScore = localStorage.getItem(scoreStorageKey);
+
+    if (!storedScore) {
+      return;
+    }
+
+    try {
+      const scoreData = JSON.parse(storedScore);
+
+      if (!scoreData || typeof scoreData !== "object") {
+        return;
+      }
+
+      setRadarChartData([
+        {
+          metric: "VO2 Max",
+          value: scoreData.vo2_max,
+        },
+        {
+          metric: "HRV",
+          value: scoreData.hrv,
+        },
+        {
+          metric: "Lactate Threshold",
+          value: scoreData.lactate_threshold,
+        },
+        {
+          metric: "Stride Length",
+          value: scoreData.stride_length,
+        },
+        {
+          metric: "Cadence",
+          value: scoreData.cadence,
+        },
+        {
+          metric: "Force Application",
+          value: scoreData.force_application,
+        },
+        {
+          metric: "Performance Score",
+          value: scoreData.performance_score,
+        },
+        {
+          metric: "Adaptability Score",
+          value: scoreData.adaptability_score,
+        },
+      ]);
+    } catch (error) {
+      console.error("Failed to parse stored score data:", error);
+    }
+  }, [user]);
 
   useEffect(() => {
     if (!user) {
@@ -229,6 +289,15 @@ const Dashboard = () => {
           <div className="flex items-start justify-center">
             {dashboardLoading ? (
               <ChartSkeleton />
+            ) : radarChartData.length === 0 ? (
+              <div className="min-h-[300px] flex flex-col items-center justify-center text-center px-6">
+                <p className="text-gray-300 font-medium">
+                  No score generated yet.
+                </p>
+                <p className="text-gray-500 text-sm mt-1">
+                  Generate a score to view your performance metrics.
+                </p>
+              </div>
             ) : (
               <RadarChart
                 style={{
@@ -240,7 +309,7 @@ const Dashboard = () => {
                 }}
                 responsive
                 outerRadius="80%"
-                data={radarData}
+                data={radarChartData}
                 margin={{
                   top: 20,
                   left: 20,

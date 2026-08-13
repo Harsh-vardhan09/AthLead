@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import toast from "react-hot-toast";
 import { api } from "../api/axios";
 import { useNavigate } from "react-router";
+import { useAuth } from "../context/useAuth";
 
 export default function Score() {
   const [formData, setFormData] = useState({
@@ -23,6 +24,7 @@ export default function Score() {
   const [errors, setErrors] = useState({});
 
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const fieldMetadata = {
     sport: {
@@ -162,6 +164,23 @@ export default function Score() {
     try {
       const res = await api.post("/api/score", formData);
       if (res.data.success) {
+        const scoreData = {
+          vo2_max: Number(formData.vo2_max),
+          hrv: Number(formData.hrv),
+          lactate_threshold: Number(formData.lactate_threshold),
+          stride_length: Number(formData.stride_length),
+          cadence: Number(formData.cadence),
+          force_application: Number(formData.force_application),
+          performance_score: Number(formData.performance_score),
+          adaptability_score: Number(formData.adaptability_score),
+        };
+
+        if (user?._id) {
+          const scoreStorageKey = `athlead_score_data:${user._id}`;
+
+          localStorage.setItem(scoreStorageKey, JSON.stringify(scoreData));
+        }
+
         toast.success(res.data.message);
         navigate("/dashboard");
       } else {

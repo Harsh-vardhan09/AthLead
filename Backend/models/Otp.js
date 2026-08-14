@@ -58,6 +58,12 @@ const OtpSchema = new mongoose.Schema({
     default: Date.now,
   },
 
+  // Hard cap on resends per session to prevent email-budget exhaustion
+  resendCount: {
+    type: Number,
+    default: 0,
+  },
+
   // TTL index: MongoDB auto-deletes the document 10 minutes after creation.
   // This is a hard backstop — the app-level expiresAt (5 min) is the user-facing limit.
   createdAt: {

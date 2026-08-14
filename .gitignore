@@ -25,6 +25,7 @@ Thumbs.db
 # ======================
 # React / Frontend (Vite)
 # ======================
+node_modules/
 AthLead-client/node_modules/
 AthLead-client/dist/
 AthLead-client/build/
@@ -57,4 +58,3 @@ AthLead-ML-model/*.pt
 
 # Same as Above but to match the content of Folder
 .VSCodeCounter
-

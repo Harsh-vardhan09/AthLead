@@ -8,6 +8,7 @@ import { signupVal } from "../utils/zodValidation.js";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const MAX_ATTEMPTS = 5;
+const MAX_RESENDS = 3;
 const RESEND_COOLDOWN_MS = 60 * 1000; // 1 minute between resends
 
 /** Cryptographically secure 6-digit OTP. */
@@ -107,10 +108,19 @@ export const resendOtp = async (req, res) => {
       });
     }
 
+    // Per-session resend cap — prevents email-budget exhaustion via session replay
+    if (otpDoc.resendCount >= MAX_RESENDS) {
+      return res.status(429).json({
+        success: false,
+        message: "Maximum resend limit reached. Please start a new OTP request.",
+      });
+    }
+
     // Generate a new OTP and overwrite the hash in the same document.
     // The sessionId stays the same — client does not need to update localStorage.
     const plainOtp = generateOtp();
     otpDoc.setOtp(plainOtp); // also resets attempts and bumps lastSentAt
+    otpDoc.resendCount += 1;
     await otpDoc.save();
 
     await sendOtpEmail(otpDoc.email, plainOtp);

@@ -22,6 +22,14 @@ const otpLimiter = rateLimit({
   message: { error: "Too many requests, please try again later." },
 });
 
+// Per-recipient cap: prevents IP-rotating attackers from spamming one email address
+const otpEmailLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  keyGenerator: (req) => (req.body.email ?? "").toLowerCase().trim(),
+  message: { error: "Too many OTP requests for this address. Try again later." },
+});
+
 const upload = multer({
   dest: "uploads/",
   limits: { fileSize: 5 * 1024 * 1024 },
@@ -37,7 +45,7 @@ const upload = multer({
 const router = Router();
 
 // OTP endpoints
-router.post("/send-otp", otpLimiter, sendOtp);
+router.post("/send-otp", otpEmailLimiter, otpLimiter, sendOtp);
 router.post("/resend-otp", otpLimiter, resendOtp);
 router.post("/verify-otp", otpLimiter, verifyOtp);
 

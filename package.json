@@ -4,7 +4,9 @@
   "description": "***Athlead is an AI-powered sports talent discovery & ranking platform built for SIH 2025 — Ministry of Youth Affairs & Sports, Government of India***",
   "main": "index.js",
   "scripts": {
+    "prepare": "husky",
     "format": "npm run format --prefix Athlead-client && npm run format --prefix Backend",
+    "format:check": "npm run format:check --prefix Athlead-client && npm run format:check --prefix Backend",
     "lint": "npm run lint --prefix Athlead-client && npm run lint --prefix Backend"
   },
   "repository": {
@@ -18,5 +20,8 @@
   "bugs": {
     "url": "https://github.com/Harsh-vardhan09/AthLead/issues"
   },
-  "homepage": "https://github.com/Harsh-vardhan09/AthLead#readme"
+  "homepage": "https://github.com/Harsh-vardhan09/AthLead#readme",
+  "devDependencies": {
+    "husky": "^9.1.7"
+  }
 }

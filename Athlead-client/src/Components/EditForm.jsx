@@ -109,8 +109,9 @@ const EditForm = ({ setEditForm }) => {
                 required: true,
                 maxLength: { value: 20, message: "Must be < 20 letters" },
               })}
-              className={`w-full bg-white/7 border rounded-xl px-3.5 py-2.5 text-sm text-white placeholder:text-white/25 outline-none focus:bg-[#1d9e75]/8 transition-all ${errors.fullname ? "border-red-500/80" : "border-white/12"
-                }`}
+              className={`w-full bg-white/7 border rounded-xl px-3.5 py-2.5 text-sm text-white placeholder:text-white/25 outline-none focus:bg-[#1d9e75]/8 transition-all ${
+                errors.fullname ? "border-red-500/80" : "border-white/12"
+              }`}
             />
             {errors.fullname && (
               <p className="text-xs text-red-400 mt-1">
@@ -131,8 +132,9 @@ const EditForm = ({ setEditForm }) => {
                   type="number"
                   placeholder="98765 43210"
                   {...register("phone", { required: true })}
-                  className={`flex-1 max-w-full bg-white/7 border rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-white/25 outline-none focus:bg-[#1d9e75]/8 transition-all ${errors.phone ? "border-red-500/80" : "border-white/12"
-                    }`}
+                  className={`flex-1 max-w-full bg-white/7 border rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-white/25 outline-none focus:bg-[#1d9e75]/8 transition-all ${
+                    errors.phone ? "border-red-500/80" : "border-white/12"
+                  }`}
                 />
               </div>
             </div>
@@ -155,8 +157,9 @@ const EditForm = ({ setEditForm }) => {
                   required: "Date of Birth is required",
                 })}
                 readOnly
-                className={`w-full bg-white/7 border rounded-xl px-3.5 py-2.5 pr-10 text-sm text-white outline-none focus:bg-[#1d9e75]/8 transition-all ${errors.DOB ? "border-red-500/80" : "border-white/12"
-                  }`}
+                className={`w-full bg-white/7 border rounded-xl px-3.5 py-2.5 pr-10 text-sm text-white outline-none focus:bg-[#1d9e75]/8 transition-all ${
+                  errors.DOB ? "border-red-500/80" : "border-white/12"
+                }`}
               />
 
               <button
@@ -202,8 +205,9 @@ const EditForm = ({ setEditForm }) => {
             <input
               type="text"
               {...register("address")}
-              className={`w-full bg-white/7 border rounded-xl px-3.5 py-2.5 text-sm text-white outline-none focus:bg-[#1d9e75]/8 transition-all ${errors.address ? "border-red-500/80" : "border-white/12"
-                }`}
+              className={`w-full bg-white/7 border rounded-xl px-3.5 py-2.5 text-sm text-white outline-none focus:bg-[#1d9e75]/8 transition-all ${
+                errors.address ? "border-red-500/80" : "border-white/12"
+              }`}
             />
           </div>
           <div>

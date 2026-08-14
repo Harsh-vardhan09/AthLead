@@ -37,6 +37,17 @@ git clone https://github.com/Harsh-vardhan09/AthLead.git
 cd AthLead
 ```
 
+Install the repository-level development tools:
+
+```bash
+npm install
+```
+
+This command also configures the Husky pre-commit hook. The hook checks
+frontend and backend formatting and linting before each commit. Install the
+application-specific dependencies in the frontend and backend setup steps
+below.
+
 ---
 
 

@@ -1,4 +1,5 @@
 import { Router } from "express";
+import rateLimit from "express-rate-limit";
 import {
   LoginAuth,
   logout,
@@ -15,6 +16,12 @@ import {
 import passport from "passport";
 import multer from "multer";
 
+const otpLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { error: "Too many requests, please try again later." },
+});
+
 const upload = multer({
   dest: "uploads/",
   limits: { fileSize: 5 * 1024 * 1024 },
@@ -30,9 +37,9 @@ const upload = multer({
 const router = Router();
 
 // OTP endpoints
-router.post("/send-otp", sendOtp);
-router.post("/resend-otp", resendOtp);
-router.post("/verify-otp", verifyOtp);
+router.post("/send-otp", otpLimiter, sendOtp);
+router.post("/resend-otp", otpLimiter, resendOtp);
+router.post("/verify-otp", otpLimiter, verifyOtp);
 
 router.post("/signup", SingupAuth);
 router.post("/login", LoginAuth);

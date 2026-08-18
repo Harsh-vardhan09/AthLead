@@ -39,6 +39,9 @@ import {
 
 const upload = multer({ dest: "uploads/" });
 
+app.get("/health", (req, res) => {
+  res.status(200).json({status : "ok"});
+})
 app.use("/api/auth", userRouter);
 
 app.get("/api/news", getNews);

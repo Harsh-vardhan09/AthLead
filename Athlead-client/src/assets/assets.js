@@ -198,6 +198,7 @@ export const announcements = [
     author: "Ministry of Youth Affairs & Sports",
     tags: ["Policy", "ML Update"],
     image: null,
+    url: "/news/ml-scoring-framework-v2",
     pinned: true,
   },
   {
@@ -211,6 +212,7 @@ export const announcements = [
     author: "Sports News Desk",
     tags: ["Hockey", "Achievement"],
     image: "hockey",
+    url: "/news/asia-cup-hockey-india",
     pinned: false,
   },
   {
@@ -224,6 +226,7 @@ export const announcements = [
     author: "Olympic Committee India",
     tags: ["Olympics", "Registration"],
     image: null,
+    url: "/events?type=olympics",
     pinned: true,
   },
   {
@@ -237,6 +240,7 @@ export const announcements = [
     author: "Tech Team — PlayerAI",
     tags: ["Tech News", "AI"],
     image: null,
+    url: "/news/ml-model-accuracy-update",
     pinned: false,
   },
   {
@@ -250,6 +254,7 @@ export const announcements = [
     author: "Ministry of Youth Affairs & Sports",
     tags: ["Awards", "Recognition"],
     image: null,
+    url: "/news/national-sports-awards-2024",
     pinned: false,
   },
   {
@@ -263,6 +268,7 @@ export const announcements = [
     author: "Ministry of Youth Affairs & Sports",
     tags: ["Policy", "Guideline"],
     image: null,
+    url: "/news/age-category-guidelines",
     pinned: false,
   },
 ];

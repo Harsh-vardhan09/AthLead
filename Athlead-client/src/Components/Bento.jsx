@@ -23,6 +23,7 @@ export function BentoGridDemo({ items, isLoading }) {
           header={item.header}
           image={item.image}
           link={item.url}
+          type={item.type || "announcement"}
           className={i === 3 || i === 6 ? "md:col-span-2" : ""}
         />
       ))}

@@ -21,6 +21,7 @@ Thumbs.db
 .env
 .env.local
 .env.*.local
+!.env.example
 
 # ======================
 # React / Frontend (Vite)

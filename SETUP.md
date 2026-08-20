@@ -1,5 +1,15 @@
 # SETUP.md
+### Environment Configuration
 
+1. Copy the backend example environment file:
+
+cp Backend/.env.example Backend/.env
+
+2. Copy the frontend example environment file:
+
+cp Athlead-client/.env.example Athlead-client/.env
+
+3. Open both `.env` files and replace the placeholder values with your own local credentials and API keys.
 
 ## Local Development Setup
 

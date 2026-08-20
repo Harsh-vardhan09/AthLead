@@ -13,16 +13,19 @@ const Login = () => {
     formState: { errors },
   } = useForm();
   const [show, setShow] = useState(false);
-  const { setLoggedIn } = useAuth();
+  const { setLoggedIn, fetchUser } = useAuth();
 
   const navigate = useNavigate();
 
   const onSubmit = async (data) => {
     const res = await api.post("/api/auth/login", data);
 
-    localStorage.setItem("accessToken", res.data.accessToken);
-    setLoggedIn(true);
     if (res.data.success) {
+      localStorage.setItem("accessToken", res.data.accessToken);
+
+      setLoggedIn(true);
+      await fetchUser();
+
       toast.success(res.data.message);
       navigate("/dashboard");
     } else {

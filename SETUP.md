@@ -67,7 +67,17 @@ AthLead/
 
 ## Environment Variables
 
-Create a `.env` file inside the `Backend` directory.
+Create a `.env` file inside the `Backend` directory. `.env.example` files are provided for both the backend and frontend as a starting point.
+
+1. Copy `Backend/.env.example` to `Backend/.env`
+2. Copy `Athlead-client/.env.example` to `Athlead-client/.env`
+3. Replace placeholder values with your local credentials
+
+```bash
+cp Backend/.env.example Backend/.env
+cp Athlead-client/.env.example Athlead-client/.env
+```
+
 > The values shown below are examples. Replace them with your actual credentials and configuration.
 
 Example:

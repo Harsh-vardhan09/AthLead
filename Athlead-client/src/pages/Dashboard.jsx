@@ -43,6 +43,17 @@ const Dashboard = () => {
   const { user } = useAuth();
   const [rank, setRank] = useState([]);
   const [registeredEvents, setRegisteredEvents] = useState([]);
+  const [compactCharts, setCompactCharts] = useState(
+    () => window.matchMedia("(max-width: 639px)").matches,
+  );
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 639px)");
+    const updateChartSize = (event) => setCompactCharts(event.matches);
+
+    mediaQuery.addEventListener("change", updateChartSize);
+    return () => mediaQuery.removeEventListener("change", updateChartSize);
+  }, []);
 
   useEffect(() => {
     setRadarChartData([]);
@@ -284,13 +295,13 @@ const Dashboard = () => {
           </table>
         </div>
       </div>
-      <div className="w-full grid grid-cols-1 lg:grid-cols-3 px-10 mb-5 gap-5">
-        <div className=" bg-linear-to-br from-[#0f2027] via-[#1a3a4a] to-[#0f2027] border border-[#1d9e75]/40 text-start text-white rounded-xl shadow-xl">
-          <div className="flex items-start justify-center">
+      <div className="w-full grid grid-cols-1 lg:grid-cols-2 px-4 sm:px-10 mb-5 gap-5">
+        <div className="min-h-[360px] flex flex-col bg-linear-to-br from-[#0f2027] via-[#1a3a4a] to-[#0f2027] border border-[#1d9e75]/40 text-start text-white rounded-xl shadow-xl">
+          <div className="min-h-[300px] flex-1 flex items-center justify-center p-3 sm:p-5">
             {dashboardLoading ? (
               <ChartSkeleton />
             ) : radarChartData.length === 0 ? (
-              <div className="min-h-[300px] flex flex-col items-center justify-center text-center px-6">
+              <div className="h-full min-h-[300px] flex flex-col items-center justify-center text-center px-6">
                 <p className="text-gray-300 font-medium">
                   No score generated yet.
                 </p>
@@ -299,38 +310,31 @@ const Dashboard = () => {
                 </p>
               </div>
             ) : (
-              <RadarChart
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  maxWidth: "500px",
-                  maxHeight: "80vh",
-                  aspectRatio: 1,
-                }}
-                responsive
-                outerRadius="80%"
-                data={radarChartData}
-                margin={{
-                  top: 20,
-                  left: 20,
-                  right: 20,
-                  bottom: 20,
-                }}
-              >
-                <PolarGrid />
-                <PolarAngleAxis dataKey="metric" />
-                <PolarRadiusAxis />
-                <Radar
-                  name="aarsh"
-                  dataKey="value"
-                  stroke="#8884d8"
-                  fill="#8884d8"
-                  fillOpacity={0.6}
-                />
-              </RadarChart>
+              <ResponsiveContainer width="100%" height={300}>
+                <RadarChart
+                  outerRadius={compactCharts ? "52%" : "72%"}
+                  data={radarChartData}
+                  margin={{
+                    top: 20,
+                    left: 30,
+                    right: 30,
+                    bottom: 20,
+                  }}
+                >
+                  <PolarGrid />
+                  <PolarAngleAxis dataKey="metric" />
+                  <PolarRadiusAxis />
+                  <Radar
+                    name="aarsh"
+                    dataKey="value"
+                    stroke="#8884d8"
+                    fill="#8884d8"
+                    fillOpacity={0.6}
+                  />
+                </RadarChart>
+              </ResponsiveContainer>
             )}
           </div>
-          <div></div>
           <div className="flex items-center justify-center">
             <button
               onClick={() => navigate("/score")}
@@ -340,11 +344,11 @@ const Dashboard = () => {
             </button>
           </div>
         </div>
-        <div className="col-span-2  py-10  px-3 bg-linear-to-br from-[#0f2027] via-[#1a3a4a] to-[#0f2027] border border-[#1d9e75]/40 text-start text-white rounded-2xl shadow-xl">
+        <div className="min-h-[360px] flex items-center py-5 px-3 sm:p-5 bg-linear-to-br from-[#0f2027] via-[#1a3a4a] to-[#0f2027] border border-[#1d9e75]/40 text-start text-white rounded-2xl shadow-xl">
           {dashboardLoading ? (
             <ChartSkeleton />
           ) : scores.length === 0 ? (
-            <div className="relative h-[250px]">
+            <div className="relative h-[300px] w-full">
               <div aria-hidden="true">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={placeholderScores}>
@@ -373,7 +377,7 @@ const Dashboard = () => {
               </div>
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height={250}>
+            <ResponsiveContainer width="100%" height={300}>
               <LineChart data={scores}>
                 <XAxis dataKey="date" className="text-xs" stroke="#888" />
                 <YAxis className="text-xs" stroke="#888" />

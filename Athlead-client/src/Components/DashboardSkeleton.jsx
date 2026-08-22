@@ -25,8 +25,8 @@ export const LeaderboardSkeleton = () => (
   </>
 );
 
-export const ChartSkeleton = () => (
-  <div className="h-62.5 flex items-center justify-center">
+export const ChartSkeleton = ({ className = "h-62.5" }) => (
+  <div className={`${className} flex items-center justify-center`}>
     <Skeleton className="w-full h-full rounded-xl" />
   </div>
 );

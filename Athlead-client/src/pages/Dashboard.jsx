@@ -299,7 +299,7 @@ const Dashboard = () => {
         <div className="min-h-[360px] flex flex-col bg-linear-to-br from-[#0f2027] via-[#1a3a4a] to-[#0f2027] border border-[#1d9e75]/40 text-start text-white rounded-xl shadow-xl">
           <div className="min-h-[300px] flex-1 flex items-center justify-center p-3 sm:p-5">
             {dashboardLoading ? (
-              <ChartSkeleton />
+              <ChartSkeleton className="w-full h-[300px]" />
             ) : radarChartData.length === 0 ? (
               <div className="h-full min-h-[300px] flex flex-col items-center justify-center text-center px-6">
                 <p className="text-gray-300 font-medium">
@@ -346,7 +346,7 @@ const Dashboard = () => {
         </div>
         <div className="min-h-[360px] flex items-center py-5 px-3 sm:p-5 bg-linear-to-br from-[#0f2027] via-[#1a3a4a] to-[#0f2027] border border-[#1d9e75]/40 text-start text-white rounded-2xl shadow-xl">
           {dashboardLoading ? (
-            <ChartSkeleton />
+            <ChartSkeleton className="w-full h-[300px]" />
           ) : scores.length === 0 ? (
             <div className="relative h-[300px] w-full">
               <div aria-hidden="true">

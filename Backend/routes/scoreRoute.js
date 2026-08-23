@@ -1,5 +1,9 @@
 import { Router } from "express";
-import { getRanking, getScore, setScore } from "../controllers/scoreController";
+import {
+  getRanking,
+  getScore,
+  setScore,
+} from "../controllers/scoreController.js";
 import passport from "passport";
 
 const router = Router();

@@ -24,10 +24,16 @@ const Login = () => {
       localStorage.setItem("accessToken", res.data.accessToken);
 
       setLoggedIn(true);
-      await fetchUser();
+      const user = await fetchUser();
 
       toast.success(res.data.message);
-      navigate("/dashboard");
+      console.log(user);
+
+      if (user.role === "ADMIN") {
+        navigate("/admin/dashboard");
+      } else {
+        navigate("/dashboard");
+      }
     } else {
       toast.error(res.data.message);
     }

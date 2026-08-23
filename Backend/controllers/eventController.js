@@ -120,6 +120,7 @@ export const updateEvent = async (req, res) => {
     res.json({
       success: true,
       message: "Event updated successfully",
+      event: event,
     });
   } catch (error) {
     console.log(error);

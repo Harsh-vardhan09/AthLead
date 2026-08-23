@@ -17,6 +17,11 @@ import ProtectedRoute from "./context/ProtectedRoute";
 import Score from "./pages/Score";
 import EventCardSkeleton from "./Components/EventCardSkelton";
 import IsLoggedIn from "./context/IsLoggedIn";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminLayout from "./pages/admin/AdminLayout";
+import AllEvents from "./pages/admin/AllEvents";
+import CreateEvent from "./pages/admin/CreateEvent";
+import Athlete from "./pages/admin/Athlete";
 
 const App = () => {
   return (
@@ -75,6 +80,12 @@ const App = () => {
               </ProtectedRoute>
             }
           />
+        </Route>
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="events" element={<AllEvents />} />
+          <Route path="event/new" element={<CreateEvent />} />
+          <Route path="athlete" element={<Athlete />} />
         </Route>
       </Routes>
     </AppProvider>

@@ -20,6 +20,7 @@ const AppProvider = ({ children }) => {
       if (res.data) {
         setLoggedIn(true);
         setUser(res.data.user);
+        return res.data.user;
       }
     } catch (err) {
       localStorage.removeItem("accessToken");

@@ -81,10 +81,38 @@ const App = () => {
             }
           />
         </Route>
-        <Route path="/admin" element={<AdminLayout />}>
-          <Route path="dashboard" element={<AdminDashboard />} />
-          <Route path="events" element={<AllEvents />} />
-          <Route path="event/new" element={<CreateEvent />} />
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute>
+              <AdminLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route
+            path="dashboard"
+            element={
+              <ProtectedRoute>
+                <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="events"
+            element={
+              <ProtectedRoute>
+                <AllEvents />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="event/new"
+            element={
+              <ProtectedRoute>
+                <CreateEvent />
+              </ProtectedRoute>
+            }
+          />
           <Route path="athlete" element={<Athlete />} />
         </Route>
       </Routes>

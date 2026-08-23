@@ -18,7 +18,9 @@ export const findAllEvent = async (req, res) => {
   }
 };
 
-export const postEvent = async (req, res) => {
+
+//create event
+export const createEvent = async (req, res) => {
   const { data } = req.body;
 
   const {
@@ -65,6 +67,13 @@ export const postEvent = async (req, res) => {
   }
 };
 
+export const deleteEvent = async (req, res) => {}
+
+
+export const updateEvent = async (req, res) => {}
+
+
+//User register to event
 export const registerEvent = async (req, res) => {
   const { eventId } = req.params;
   const { email, fullname, phone, gender } = req.body;
@@ -122,6 +131,8 @@ export const registerEvent = async (req, res) => {
   }
 };
 
+
+// Get events registered by the user
 export const getMyEvents = async (req, res) => {
   try {
     const participations = await Participation.find({

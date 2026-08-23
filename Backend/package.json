@@ -27,6 +27,7 @@
     "express": "^5.2.1",
     "express-rate-limit": "^7.5.0",
     "jsonwebtoken": "^9.0.3",
+    "migrate-mongo": "^14.0.7",
     "mongodb": "^7.5.0",
     "mongoose": "^9.7.4",
     "multer": "^2.1.1",

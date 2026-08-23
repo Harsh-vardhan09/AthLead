@@ -18,7 +18,6 @@ export const findAllEvent = async (req, res) => {
   }
 };
 
-
 //create event
 export const createEvent = async (req, res) => {
   const { data } = req.body;
@@ -67,11 +66,55 @@ export const createEvent = async (req, res) => {
   }
 };
 
-export const deleteEvent = async (req, res) => {}
+export const deleteEvent = async (req, res) => {
+  const { eventId } = req.params;
 
+  try {
+    const event = await Event.findByIdAndDelete(eventId);
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        message: "Event not found",
+      });
+    }
+    res.json({
+      success: true,
+      message: "Event deleted successfully",
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
 
-export const updateEvent = async (req, res) => {}
+export const updateEvent = async (req, res) => {
+  const { eventId } = req.params;
+  const { data } = req.body;
 
+  try {
+    const event = await Event.findByIdAndUpdate(eventId, data, { new: true });
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        message: "Event not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Event updated successfully",
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
 
 //User register to event
 export const registerEvent = async (req, res) => {
@@ -130,7 +173,6 @@ export const registerEvent = async (req, res) => {
     });
   }
 };
-
 
 // Get events registered by the user
 export const getMyEvents = async (req, res) => {

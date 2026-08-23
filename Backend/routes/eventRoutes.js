@@ -4,8 +4,11 @@ import {
   deleteEvent,
   findAllEvent,
   getMyEvents,
+  registerEvent,
   updateEvent,
 } from "../controllers/eventController";
+import { requireAdmin } from "../middleware/middleware";
+import passport from "passport";
 
 const router = Router();
 

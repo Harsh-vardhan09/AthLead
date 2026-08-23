@@ -61,13 +61,11 @@ router.post(
 router.post("/refresh", refesh);
 router.get("/me", passport.authenticate("jwt", { session: false }), getUser);
 
-
 router.patch(
   "/edit",
   passport.authenticate("jwt", { session: false }),
   upload.single("profile_picture"),
   editUser,
 );
-
 
 export default router;

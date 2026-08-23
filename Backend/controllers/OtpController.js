@@ -112,7 +112,8 @@ export const resendOtp = async (req, res) => {
     if (otpDoc.resendCount >= MAX_RESENDS) {
       return res.status(429).json({
         success: false,
-        message: "Maximum resend limit reached. Please start a new OTP request.",
+        message:
+          "Maximum resend limit reached. Please start a new OTP request.",
       });
     }
 

@@ -94,8 +94,22 @@ export const updateEvent = async (req, res) => {
   const { eventId } = req.params;
   const { data } = req.body;
 
+  const eventDate = new Date(data.date);
+
+  const deleteAt = new Date(eventDate);
+  deleteAt.setDate(deleteAt.getDate() - 3);
+
   try {
-    const event = await Event.findByIdAndUpdate(eventId, data, { new: true });
+    const event = await Event.findByIdAndUpdate(
+      eventId,
+      {
+        ...data,
+        deleteAt,
+      },
+      {
+        new: true,
+      },
+    );
     if (!event) {
       return res.status(404).json({
         success: false,

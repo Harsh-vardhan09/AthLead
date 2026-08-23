@@ -14,7 +14,14 @@ export const BentoGrid = ({ className, children }) => {
   );
 };
 
-export const BentoGridItem = ({ className, title, header, image, link, type = "announcement" }) => {
+export const BentoGridItem = ({
+  className,
+  title,
+  header,
+  image,
+  link,
+  type = "announcement",
+}) => {
   const handleOpenLink = () => {
     if (link) {
       window.open(link, "_blank");
@@ -42,9 +49,7 @@ export const BentoGridItem = ({ className, title, header, image, link, type = "a
         <div className="mt-2 mb-2 font-sans text-xs font-bold text-neutral-200">
           {title}
         </div>
-        <div
-          className="absolute top-3 left-6 font-sans text-xs font-normal text-neutral-300 opacity-0 transition-opacity group-hover/bento:opacity-100 pointer-events-none"
-        >
+        <div className="absolute top-3 left-6 font-sans text-xs font-normal text-neutral-300 opacity-0 transition-opacity group-hover/bento:opacity-100 pointer-events-none">
           <ExternalLink />
         </div>
       </div>

@@ -27,7 +27,9 @@ const otpEmailLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 5,
   keyGenerator: (req) => (req.body.email ?? "").toLowerCase().trim(),
-  message: { error: "Too many OTP requests for this address. Try again later." },
+  message: {
+    error: "Too many OTP requests for this address. Try again later.",
+  },
 });
 
 const upload = multer({

@@ -18,7 +18,8 @@ export const findAllEvent = async (req, res) => {
   }
 };
 
-export const postEvent = async (req, res) => {
+//create event
+export const createEvent = async (req, res) => {
   const { data } = req.body;
 
   const {
@@ -65,6 +66,71 @@ export const postEvent = async (req, res) => {
   }
 };
 
+export const deleteEvent = async (req, res) => {
+  const { eventId } = req.params;
+
+  try {
+    const event = await Event.findByIdAndDelete(eventId);
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        message: "Event not found",
+      });
+    }
+    res.json({
+      success: true,
+      message: "Event deleted successfully",
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+export const updateEvent = async (req, res) => {
+  const { eventId } = req.params;
+  const { data } = req.body;
+
+  const eventDate = new Date(data.date);
+
+  const deleteAt = new Date(eventDate);
+  deleteAt.setDate(deleteAt.getDate() - 3);
+
+  try {
+    const event = await Event.findByIdAndUpdate(
+      eventId,
+      {
+        ...data,
+        deleteAt,
+      },
+      {
+        new: true,
+      },
+    );
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        message: "Event not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Event updated successfully",
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+//User register to event
 export const registerEvent = async (req, res) => {
   const { eventId } = req.params;
   const { email, fullname, phone, gender } = req.body;
@@ -122,6 +188,7 @@ export const registerEvent = async (req, res) => {
   }
 };
 
+// Get events registered by the user
 export const getMyEvents = async (req, res) => {
   try {
     const participations = await Participation.find({

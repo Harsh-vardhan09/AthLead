@@ -20,7 +20,7 @@ const UserSchema = new mongoose.Schema(
         "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQw3k1c6JaNUexk2h38jFUHu4j3O73P8mgVkw&s",
     },
     state: { type: String },
-    role: { type: String, enum: ["user", "admin"], default: "user" },
+    role: { type: String, enum: ["USER", "ADMIN"], default: "USER" },
     DOB: { type: Date },
   },
   { timestamps: true },

@@ -6,8 +6,8 @@ import {
   getMyEvents,
   registerEvent,
   updateEvent,
-} from "../controllers/eventController";
-import { requireAdmin } from "../middleware/middleware";
+} from "../controllers/eventController.js";
+import { requireAdmin } from "../middleware/middleware.js";
 import passport from "passport";
 
 const router = Router();

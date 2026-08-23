@@ -20,6 +20,10 @@ const AppProvider = ({ children }) => {
       if (res.data) {
         setLoggedIn(true);
         setUser(res.data.user);
+        if (!res.data.user) {
+          return res.json({ message: "User not found" });
+        }
+        return res.data.user;
       }
     } catch (err) {
       localStorage.removeItem("accessToken");

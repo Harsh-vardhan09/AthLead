@@ -12,6 +12,13 @@ export const navItems = [
   { name: "Announcements", path: "/news" },
 ];
 
+export const adminNavItems = [
+  { name: "Dashboard", path: "/admin/dashboard" },
+  { name: "All Events", path: "/admin/events" },
+  { name: "Create Event", path: "/admin/event/new" },
+  { name: "Athletes", path: "/admin/athlete" },
+];
+
 export const features = [
   {
     Icon: Brain,

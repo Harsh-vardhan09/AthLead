@@ -158,8 +158,9 @@ export const getUser = async (req, res) => {
 
   try {
     const user = await User.findOne({ _id: userId }).select(
-      "-password -createdAt -updatedAt -role -email",
+      "-password -createdAt -updatedAt -email",
     );
+    console.log(user);
 
     res.json({
       success: true,

@@ -7,6 +7,7 @@ import { useEffect } from "react";
 import toast from "react-hot-toast";
 import { api } from "../api/axios";
 import { useAuth } from "../context/useAuth";
+import Sidebar from "./Sidebar";
 
 const Navbar = ({ sidebar, setSidebar }) => {
   const { loggedIn, setLoggedIn } = useAuth();
@@ -92,53 +93,7 @@ const Navbar = ({ sidebar, setSidebar }) => {
       </nav>
 
       {/* sidebar */}
-      <div
-        className={`fixed top-0 left-0 h-full w-64 bg-black/40 z-30 transform transition-transform duration-300 
-        ${sidebar ? "translate-x-0" : "-translate-x-full"}`}
-      >
-        <div className="flex p-4">
-          <div className="flex flex-col justify-start gap-8">
-            <div className="flex items-center justify-around ">
-              <div
-                onClick={() => {
-                  navigate("/");
-                  setSidebar(false);
-                }}
-                className="font-bold "
-              >
-                <img src={assets.Logo} className="h-15 w-40   " />
-              </div>
-
-              <X
-                className="h-7 w-7 cursor-pointer text-white ml-15"
-                onClick={() => setSidebar(false)}
-              />
-            </div>
-
-            <ul className="flex flex-col gap-10">
-              {navItems.map((item) => (
-                <li
-                  key={item.name}
-                  onClick={() => {
-                    navigate(item.path);
-                    setSidebar(false);
-                  }}
-                  className="cursor-pointer text-[#64748b] hover:text-[#a7b0bd] text-lg"
-                >
-                  {item.name}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      {sidebar && (
-        <div
-          onClick={() => setSidebar(false)}
-          className="fixed inset-0 bg-black/50 z-20"
-        />
-      )}
+      <Sidebar setSidebar={setSidebar} navItems={navItems} sidebar={sidebar} />
     </>
   );
 };

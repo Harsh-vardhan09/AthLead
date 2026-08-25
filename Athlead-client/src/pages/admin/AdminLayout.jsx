@@ -12,6 +12,7 @@ const AdminLayout = () => {
       <div className="dark-bg">
         <Sidebar
           pinned
+          showLogout
           sidebar={sidebar}
           setSidebar={setSidebar}
           navItems={adminNavItems}

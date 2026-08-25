@@ -1,4 +1,5 @@
 import { api } from "@/api/axios";
+import { formatDate } from "@/utils/dateFormatter";
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import {
@@ -132,7 +133,7 @@ const AllEvents = () => {
             <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-600">
               <span className="flex items-center gap-1.5">
                 <Calendar size={14} className="text-slate-400" />
-                {new Date(event.date).toLocaleDateString()}
+                {formatDate(event.date, "D MMM YYYY")}
               </span>
               <span className="flex items-center gap-1.5">
                 <Clock size={14} className="text-slate-400" />

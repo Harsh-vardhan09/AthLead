@@ -3,15 +3,12 @@ import { sportIcon } from "../assets/assets";
 import { Calendar, Clock, MapPin, Medal } from "lucide-react";
 import { useNavigate } from "react-router";
 import { formatEventTime } from "../utils/formatEventTime";
+import { formatDate } from "../utils/dateFormatter";
 
 const EventCard = ({ e, setSelected, setIsOpen }) => {
   const navigate = useNavigate();
   const eventTime = formatEventTime(e.time);
-  const formattedDate = new Date(e.date).toLocaleDateString("en-IN", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+  const formattedDate = formatDate(e.date, "D MMM YYYY");
   return (
     <div
       key={e.id}

@@ -1,16 +1,32 @@
-import { X } from "lucide-react";
+import { LogOut, X } from "lucide-react";
 import { assets } from "../assets/assets";
 import { useNavigate } from "react-router";
 import { cn } from "../utility/cn";
 import React from "react";
+import toast from "react-hot-toast";
+import { api } from "../api/axios";
+import { useAuth } from "../context/useAuth";
 
 // pinned: stays visible on lg+ (admin layout); otherwise it's a drawer only.
-const Sidebar = ({ sidebar, setSidebar, navItems, pinned }) => {
+// showLogout: renders a logout button pinned to the bottom (admin sidebar only).
+const Sidebar = ({ sidebar, setSidebar, navItems, pinned, showLogout }) => {
   const navigate = useNavigate();
+  const { setLoggedIn } = useAuth();
 
   const go = (path) => {
     navigate(path);
     setSidebar(false);
+  };
+
+  const logout = async () => {
+    const res = await api.post("/api/auth/logout", {});
+    if (res.data.success) {
+      localStorage.removeItem("accessToken");
+      setLoggedIn(false);
+      setSidebar(false);
+      navigate("/login");
+      toast.success(res.data.message);
+    }
   };
 
   return (
@@ -23,7 +39,7 @@ const Sidebar = ({ sidebar, setSidebar, navItems, pinned }) => {
             "lg:sticky lg:top-0 lg:h-screen lg:shrink-0 lg:translate-x-0",
         )}
       >
-        <div className="flex flex-col justify-start gap-8 p-4">
+        <div className="flex flex-col justify-start gap-8 p-4 h-full">
           <div className="flex items-center justify-around">
             <div onClick={() => go("/")} className="font-bold cursor-pointer">
               <img src={assets.Logo} className="h-15 w-40" />
@@ -49,6 +65,16 @@ const Sidebar = ({ sidebar, setSidebar, navItems, pinned }) => {
               </li>
             ))}
           </ul>
+
+          {showLogout && (
+            <button
+              onClick={logout}
+              className="mt-auto flex items-center gap-2 cursor-pointer text-[#64748b] hover:text-[#a7b0bd] text-lg"
+            >
+              <LogOut className="h-5 w-5" />
+              Logout
+            </button>
+          )}
         </div>
       </aside>
 

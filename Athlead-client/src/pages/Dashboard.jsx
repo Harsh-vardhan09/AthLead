@@ -127,7 +127,7 @@ const Dashboard = () => {
 
         const formattedScores = (scoresRes.data.scores || []).map((item) => ({
           ...item,
-          date: dayjs(item.date).format("DD MMM YY"),
+          date: dayjs(item.createdAt || item.date).format("DD MMM YY"),
         }));
 
         setScores(formattedScores);

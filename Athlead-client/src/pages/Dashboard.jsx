@@ -17,7 +17,7 @@ import { useNavigate } from "react-router";
 import { useEffect } from "react";
 import { api } from "../api/axios";
 import { useAuth } from "../context/useAuth";
-import dayjs from "dayjs";
+import { formatDate } from "../utils/dateFormatter";
 import EditForm from "../Components/EditForm";
 import {
   ProfileSkeleton,
@@ -127,7 +127,7 @@ const Dashboard = () => {
 
         const formattedScores = (scoresRes.data.scores || []).map((item) => ({
           ...item,
-          date: dayjs(item.createdAt || item.date).format("DD MMM YY"),
+          date: formatDate(item.date, "DD MMM YY"),
         }));
 
         setScores(formattedScores);
@@ -204,7 +204,7 @@ const Dashboard = () => {
 
                     <p className="flex items-center">
                       <Calendar className="h-4 w-4 mr-1" />
-                      {dayjs(user?.DOB).format("DD MMM")}
+                      {formatDate(user?.DOB, "DD MMM")}
                     </p>
                   </div>
                 </div>
@@ -446,7 +446,7 @@ const Dashboard = () => {
               {registeredEvents.map((registration) => {
                 const event = registration.event || {};
                 const formattedDate = event.date
-                  ? dayjs(event.date).format("MMM D, YYYY")
+                  ? formatDate(event.date)
                   : "Date TBD";
 
                 return (

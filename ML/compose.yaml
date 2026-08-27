@@ -1,0 +1,17 @@
+
+services:
+  server:
+    build:
+      context: .
+    ports:
+      - 8000:8000
+
+    develop:
+      # specify the files to watch for changes
+      watch:
+        
+        # it'll watch for changes in the backend directory and sync the changes with the container real time
+        - path: .
+          target: /app
+          action: sync
+

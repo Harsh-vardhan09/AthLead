@@ -1,0 +1,19 @@
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Dataset
+data/*.csv
+
+# Trained ML models / artifacts
+*.pkl
+
+# OS/editor files
+.DS_Store
+.vscode/
+.idea/

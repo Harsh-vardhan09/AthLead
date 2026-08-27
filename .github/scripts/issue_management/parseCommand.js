@@ -1,5 +1,5 @@
 export const parseCommand = (body) => {
-  if (!body || typeof body == "string") return null;
+  if (!body || typeof body !== "string") return null;
 
   const parts = body.trim().split(/\s+/);
 
@@ -11,7 +11,7 @@ export const parseCommand = (body) => {
   const args = parts.slice(1);
 
   return {
-    name,
+    command: name,
     args,
   };
 };

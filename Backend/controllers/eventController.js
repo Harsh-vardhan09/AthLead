@@ -6,13 +6,15 @@ export const findAllEvent = async (req, res) => {
     const events = await Event.find({});
     // console.log(events);
 
-    res.json({
-      status: 400,
+    res.status(200).json({
+      success: true,
+      status: 200,
       events,
     });
   } catch (error) {
-    res.json({
+    res.status(500).json({
       success: false,
+      status: 500,
       message: error.message,
     });
   }

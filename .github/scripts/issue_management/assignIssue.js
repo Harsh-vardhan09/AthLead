@@ -1,11 +1,10 @@
 export const handleAssign = async ({
   context,
   issueNumber,
-  assignees,
+  username,
   hasWriteAccess,
 }) => {
   const { owner, repo } = context.repo;
-  const issueNumber = context.payload.issue.number;
   const issueState = context.payload.issue.state;
   const commenter = context.payload.comment.user.login;
 
@@ -40,7 +39,7 @@ export const handleAssign = async ({
     return;
   }
 
- await github.rest.issues.addAssignees({
+  await github.rest.issues.addAssignees({
     owner,
     repo,
     issue_number: issueNumber,
@@ -51,6 +50,6 @@ export const handleAssign = async ({
     owner,
     repo,
     issue_number: issueNumber,
-    body: `✅ Successfully assigned issue to @${username}\n\n> 💡 Please read [CONTRIBUTION.md](../../../CONTRIBUTION.md) and Star the repo. Good luck! 🚀`,
+    body: `✅ Successfully assigned issue to @${username}\n\n> 💡 Please read [CONTRIBUTION.md](./../blob/main/CONTRIBUTION.md) and Star the repo. Good luck! 🚀`,
   });
 };

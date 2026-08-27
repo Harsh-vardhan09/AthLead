@@ -7,7 +7,7 @@ on:
 jobs:
   assign:
     # Only run for comments on issues, not PRs
-    if: ${{ !github.event.issue.pull_request && startsWith(github.event.comment.body, '/assign') }}
+    if: ${{ !github.event.issue.pull_request && startsWith(github.event.comment.body, '/') }}
     runs-on: ubuntu-latest
 
     permissions:
@@ -25,4 +25,4 @@ jobs:
           script: |
              const { handler } = await import(`${process.env.GITHUB_WORKSPACE}/.github/scripts/issue_management/main.js`);
 
-             await handler({ github, context, core });
+             await handler(github, context, core );

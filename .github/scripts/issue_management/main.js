@@ -1,4 +1,5 @@
-import { handleAssign} from "./assignIssue.js";
+import { handleAssign } from "./assignIssue.js";
+import { handleClaim } from "./handleClaim.js";
 import { parseCommand } from "./parseCommand.js";
 import { hasWriteAccess } from "./permission.js";
 
@@ -27,30 +28,17 @@ export const handler = async (github, context, core) => {
         await handleAssign({
           github,
           context,
+          issueNumber,
           username: parsed.username,
           hasWriteAccess: writerAccess,
         });
         break;
-    //   case "unassign":
-    //     await handleUnassign({
-    //       github,
-    //       context,
-    //       username: parsed.username,
-    //       hasWriteAccess: writerAccess,
-    //     });
-    //     break;
+      case "claim":
+        await handleClaim({ github, context });
+        break;
     }
   } catch (error) {
     core.error(`Error processing command /${parsed.command}: ${error.message}`);
-    try {
-      await github.rest.issues.createComment({
-        owner,
-        repo,
-        issue_number: issueNumber,
-        body: `⚠️ An unexpected error occurred while processing your command. Please try again or contact a maintainer.`,
-      });
-    } catch (_) {}
     core.setFailed(error.message);
   }
 };
-

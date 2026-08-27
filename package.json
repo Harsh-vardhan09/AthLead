@@ -16,7 +16,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "bugs": {
     "url": "https://github.com/Harsh-vardhan09/AthLead/issues"
   },

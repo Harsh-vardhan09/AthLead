@@ -29,7 +29,7 @@ export const handler = async (github, context, core) => {
           github,
           context,
           issueNumber,
-          username: parsed.username,
+          username: parsed.args[0]?.replace(/^@/, ""),,
           hasWriteAccess: writerAccess,
         });
         break;

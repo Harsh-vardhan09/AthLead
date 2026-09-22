@@ -9,6 +9,7 @@ import cookieParser from "cookie-parser";
 import userRouter from "./routes/userRoutes.js";
 import eventRouter from "./routes/eventRoutes.js";
 import scoreRouter from "./routes/scoreRoute.js";
+import scoreInputRoutes from "./routes/scoreInputRoutes.js";
 
 db();
 
@@ -41,6 +42,8 @@ app.use("/api", eventRouter);
 // Score routes
 app.use("/api", scoreRouter);
 
+// Score Input routes
+app.use("/api", scoreInputRoutes);
 //news route
 app.get("/api/news", getNews);
 

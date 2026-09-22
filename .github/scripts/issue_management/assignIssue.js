@@ -1,4 +1,5 @@
 export const handleAssign = async ({
+  github,
   context,
   issueNumber,
   username,

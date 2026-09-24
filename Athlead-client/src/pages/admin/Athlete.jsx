@@ -121,7 +121,7 @@ const Athlete = () => {
   const [statusFilter, setStatusFilter] = useState("All");
   const [selectedAthlete, setSelectedAthlete] = useState(null);
 
-  if (user && user.role !== "ADMIN") {
+  if (!user || user.role !== "ADMIN") {
     return <Navigate to="/" replace />;
   }
 
@@ -183,7 +183,15 @@ const Athlete = () => {
           {filteredAthletes.map(athlete => (
             <div 
               key={athlete.id} 
+              role="button"
+              tabIndex={0}
               onClick={() => setSelectedAthlete(athlete)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setSelectedAthlete(athlete);
+                }
+              }}
               className="group bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all duration-300 cursor-pointer flex flex-col gap-4 relative overflow-hidden"
             >
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>

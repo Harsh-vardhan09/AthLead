@@ -1,14 +1,4 @@
-import nodemailer from "nodemailer";
 import axios from "axios";
-
-nodemailer.createTransport({
-  port: 465,
-  host: "smtp.gmail.com",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS, // Use an App Password, not your real Gmail password
-  },
-});
 
 export const sendOtpEmail = async (to, otp) => {
   try {
@@ -40,5 +30,3 @@ export const sendOtpEmail = async (to, otp) => {
     console.log(error);
   }
 };
-
-// console.log("EMAIL SENT");

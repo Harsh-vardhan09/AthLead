@@ -1,0 +1,99 @@
+name: Issue Commands
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  process_command:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Process issue commands
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const comment = context.payload.comment.body;
+            const commenter = context.payload.comment.user.login;
+            const issueNumber = context.payload.issue.number;
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const assignees = context.payload.issue.assignees.map(a => a.login);
+
+            // Handle /claim
+            if (comment.startsWith('/claim')) {
+              if (assignees.length > 0) {
+                const currentAssignee = assignees[0];
+                await github.rest.issues.createComment({
+                  owner,
+                  repo,
+                  issue_number: issueNumber,
+                  body: `⚠️ This issue is already assigned to @${currentAssignee}.`
+                });
+                return;
+              }
+              
+              await github.rest.issues.addAssignees({
+                owner,
+                repo,
+                issue_number: issueNumber,
+                assignees: [commenter]
+              });
+              
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: issueNumber,
+                body: `✅ @${commenter} has claimed this issue.`
+              });
+              return;
+            }
+
+            // Handle /assign
+            if (comment.startsWith('/assign')) {
+              try {
+                const permissionResponse = await github.rest.repos.getCollaboratorPermissionLevel({
+                  owner,
+                  repo,
+                  username: commenter
+                });
+                
+                const permission = permissionResponse.data.permission;
+                if (permission !== 'admin' && permission !== 'write') {
+                   await github.rest.issues.createComment({
+                    owner,
+                    repo,
+                    issue_number: issueNumber,
+                    body: `❌ Only maintainers and admins can use /assign.`
+                  });
+                  return;
+                }
+              } catch (e) {
+                 console.log("Error checking permission:", e);
+                 return; // fail gracefully
+              }
+
+              const match = comment.match(/\/assign\s+@([a-zA-Z0-9-]+)/);
+              if (!match || !match[1]) {
+                // Gracefully exit if no username is provided
+                return;
+              }
+              
+              const targetUser = match[1];
+              
+              await github.rest.issues.addAssignees({
+                owner,
+                repo,
+                issue_number: issueNumber,
+                assignees: [targetUser]
+              });
+              
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: issueNumber,
+                body: `✅ This issue has been assigned to @${targetUser} by @${commenter}.`
+              });
+              return;
+            }

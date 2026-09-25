@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import joblib
+import numpy as np
 import pandas as pd
 
 
@@ -46,6 +47,18 @@ def rank_athlete(athlete: Athlete):
 
     df_scaled = scaler.transform(df)
 
-   
     score = model.predict(df_scaled)[0]
-    return {"predicted_potential_score": float(score)}
+
+    response = {"predicted_potential_score": float(score)}
+
+    if hasattr(model, "estimators_"):
+        tree_predictions = np.array([
+            tree.predict(df_scaled)[0] for tree in model.estimators_
+        ])
+        response["prediction_std"] = float(np.std(tree_predictions))
+        response["confidence_note"] = (
+            "prediction_std is the standard deviation across individual "
+            "tree predictions — lower values indicate higher agreement"
+        )
+
+    return response

@@ -20,7 +20,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+CURRENT_SCHEMA_VERSION = "1.0"
+SUPPORTED_SCHEMA_VERSIONS = {"1.0"}
+
+
 class Athlete(BaseModel):
+    schema_version: str = CURRENT_SCHEMA_VERSION
     sport: str
     age: float
     gender: str
@@ -34,9 +39,28 @@ class Athlete(BaseModel):
     performance_score: float
     adaptability_score: float
 
+
+@app.get("/schema/version")
+def get_schema_version():
+    return {
+        "current": CURRENT_SCHEMA_VERSION,
+        "supported": sorted(SUPPORTED_SCHEMA_VERSIONS),
+    }
+
+
 @app.post("/rank")
 def rank_athlete(athlete: Athlete):
-    df = pd.DataFrame([athlete.dict()])
+    if athlete.schema_version not in SUPPORTED_SCHEMA_VERSIONS:
+        from fastapi import HTTPException
+        raise HTTPException(
+            status_code=422,
+            detail=f"Unsupported schema version '{athlete.schema_version}'. "
+                   f"Supported: {', '.join(sorted(SUPPORTED_SCHEMA_VERSIONS))}",
+        )
+
+    data = athlete.dict()
+    data.pop("schema_version", None)
+    df = pd.DataFrame([data])
 
    
     for col, le in label_encoders.items():

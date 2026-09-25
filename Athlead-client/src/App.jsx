@@ -14,6 +14,7 @@ const LazyEvents = React.lazy(() => import("./pages/Events"));
 import { Toaster } from "react-hot-toast";
 import AppProvider from "./context/AppProvider";
 import ProtectedRoute from "./context/ProtectedRoute";
+import AdminRoute from "./context/AdminRoute";
 import Score from "./pages/Score";
 const LazyEventCardSkeleton = React.lazy(() => import("./Components/EventCardSkelton"));
 import IsLoggedIn from "./context/IsLoggedIn";
@@ -84,36 +85,43 @@ const App = () => {
         <Route
           path="/admin"
           element={
-            <ProtectedRoute>
+            <AdminRoute>
               <AdminLayout />
-            </ProtectedRoute>
+            </AdminRoute>
           }
         >
           <Route
             path="dashboard"
             element={
-              <ProtectedRoute>
+              <AdminRoute>
                 <AdminDashboard />
-              </ProtectedRoute>
+              </AdminRoute>
             }
           />
           <Route
             path="events"
             element={
-              <ProtectedRoute>
+              <AdminRoute>
                 <AllEvents />
-              </ProtectedRoute>
+              </AdminRoute>
             }
           />
           <Route
             path="event/new"
             element={
-              <ProtectedRoute>
+              <AdminRoute>
                 <CreateEvent />
-              </ProtectedRoute>
+              </AdminRoute>
             }
           />
-          <Route path="athlete" element={<Athlete />} />
+          <Route
+            path="athlete"
+            element={
+              <AdminRoute>
+                <Athlete />
+              </AdminRoute>
+            }
+          />
         </Route>
       </Routes>
     </AppProvider>

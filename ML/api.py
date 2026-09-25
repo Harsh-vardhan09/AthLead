@@ -1,13 +1,39 @@
+import os
+import logging
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import joblib
 import pandas as pd
 
+logger = logging.getLogger("ml-api")
 
-model = joblib.load("models/athlete_rank_model.pkl")
-scaler = joblib.load("models/scaler.pkl")
-label_encoders = joblib.load("models/label_encoders.pkl")
+MODEL_DIR = os.path.join(os.path.dirname(__file__), "models")
+
+model = None
+scaler = None
+label_encoders = None
+
+
+def _load_models():
+    global model, scaler, label_encoders
+    paths = {
+        "model": os.path.join(MODEL_DIR, "athlete_rank_model.pkl"),
+        "scaler": os.path.join(MODEL_DIR, "scaler.pkl"),
+        "label_encoders": os.path.join(MODEL_DIR, "label_encoders.pkl"),
+    }
+    for name, path in paths.items():
+        if not os.path.isfile(path):
+            logger.error("Missing model file: %s (%s)", name, path)
+            return
+    model = joblib.load(paths["model"])
+    scaler = joblib.load(paths["scaler"])
+    label_encoders = joblib.load(paths["label_encoders"])
+    logger.info("All model artifacts loaded successfully")
+
+
+_load_models()
 
 app = FastAPI()
 
@@ -19,6 +45,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.get("/health")
+def health_check():
+    models_loaded = all(x is not None for x in [model, scaler, label_encoders])
+    status = "ok" if models_loaded else "degraded"
+    return {"status": status, "model_loaded": models_loaded}
+
 
 class Athlete(BaseModel):
     sport: str

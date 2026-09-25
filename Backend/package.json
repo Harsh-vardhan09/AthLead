@@ -15,6 +15,7 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "@emailjs/nodejs": "^5.0.2",
     "@gnews-io/gnews-io-js": "^2.2.0",
     "axios": "^1.15.2",
     "bcrypt": "^6.0.0",
@@ -31,7 +32,6 @@
     "mongodb": "^7.5.0",
     "mongoose": "^9.7.4",
     "multer": "^2.1.1",
-    "nodemailer": "^8.0.10",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "zod": "^4.3.6"

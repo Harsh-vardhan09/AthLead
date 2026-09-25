@@ -46,6 +46,9 @@ export const setScore = async (req, res) => {
     await Score.create({
       user: userId,
       score: mlResponse.data.predicted_potential_score,
+      sport: data.sport,
+      modelVersion: "1.0",
+      inputSnapshot: data,
     });
     console.log(mlResponse.data.predicted_potential_score);
 

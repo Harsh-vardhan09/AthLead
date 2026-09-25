@@ -11,12 +11,13 @@ import {
 import Layout from "./pages/Layout";
 import React from "react";
 const LazyEvents = React.lazy(() => import("./pages/Events"));
+const LazyEventCardSkeleton = React.lazy(() => import("./Components/EventCardSkelton"));
 import { Toaster } from "react-hot-toast";
 import AppProvider from "./context/AppProvider";
 import ProtectedRoute from "./context/ProtectedRoute";
 import Score from "./pages/Score";
-import EventCardSkeleton from "./Components/EventCardSkelton";
 import IsLoggedIn from "./context/IsLoggedIn";
+import RoleBasedRoute from "./context/RoleBasedRoute";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AllEvents from "./pages/admin/AllEvents";
@@ -44,7 +45,7 @@ const App = () => {
                 fallback={
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 my-8 w-full lg:px-20">
                     {Array.from({ length: 6 }).map((_, i) => (
-                      <EventCardSkeleton key={i} />
+                      <LazyEventCardSkeleton key={i} />
                     ))}
                   </div>
                 }
@@ -84,36 +85,43 @@ const App = () => {
         <Route
           path="/admin"
           element={
-            <ProtectedRoute>
+            <RoleBasedRoute allowedRoles={["ADMIN"]}>
               <AdminLayout />
-            </ProtectedRoute>
+            </RoleBasedRoute>
           }
         >
           <Route
             path="dashboard"
             element={
-              <ProtectedRoute>
+              <RoleBasedRoute allowedRoles={["ADMIN"]}>
                 <AdminDashboard />
-              </ProtectedRoute>
+              </RoleBasedRoute>
             }
           />
           <Route
             path="events"
             element={
-              <ProtectedRoute>
+              <RoleBasedRoute allowedRoles={["ADMIN"]}>
                 <AllEvents />
-              </ProtectedRoute>
+              </RoleBasedRoute>
             }
           />
           <Route
             path="event/new"
             element={
-              <ProtectedRoute>
+              <RoleBasedRoute allowedRoles={["ADMIN"]}>
                 <CreateEvent />
-              </ProtectedRoute>
+              </RoleBasedRoute>
             }
           />
-          <Route path="athlete" element={<Athlete />} />
+          <Route
+            path="athlete"
+            element={
+              <RoleBasedRoute allowedRoles={["ADMIN"]}>
+                <Athlete />
+              </RoleBasedRoute>
+            }
+          />
         </Route>
       </Routes>
     </AppProvider>

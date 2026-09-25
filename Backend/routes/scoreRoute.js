@@ -5,6 +5,7 @@ import {
   setScore,
 } from "../controllers/scoreController.js";
 import passport from "passport";
+import { predictionLimiter } from "../middleware/rateLimiter.js";
 
 const router = Router();
 
@@ -17,6 +18,7 @@ router.get(
 router.post(
   "/score",
   passport.authenticate("jwt", { session: false }),
+  predictionLimiter,
   setScore,
 );
 router.get(

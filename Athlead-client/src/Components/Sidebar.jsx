@@ -36,7 +36,7 @@ const Sidebar = ({ sidebar, setSidebar, navItems, pinned, showLogout }) => {
           "fixed top-0 left-0 h-full w-64 bg-black/40 z-30 transform transition-transform duration-300",
           sidebar ? "translate-x-0" : "-translate-x-full",
           pinned &&
-            "lg:sticky lg:top-0 lg:h-screen lg:shrink-0 lg:translate-x-0",
+            "md:sticky md:top-0 md:h-screen md:shrink-0 md:translate-x-0",
         )}
       >
         <div className="flex flex-col justify-start gap-8 p-4 h-full">
@@ -48,7 +48,7 @@ const Sidebar = ({ sidebar, setSidebar, navItems, pinned, showLogout }) => {
             <X
               className={cn(
                 "h-7 w-7 cursor-pointer text-white ml-15",
-                pinned && "lg:hidden",
+                pinned && "md:hidden",
               )}
               onClick={() => setSidebar(false)}
             />
@@ -83,7 +83,7 @@ const Sidebar = ({ sidebar, setSidebar, navItems, pinned, showLogout }) => {
           onClick={() => setSidebar(false)}
           className={cn(
             "fixed inset-0 bg-black/50 z-20",
-            pinned && "lg:hidden",
+            pinned && "md:hidden",
           )}
         />
       )}

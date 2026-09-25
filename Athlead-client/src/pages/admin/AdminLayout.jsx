@@ -20,7 +20,7 @@ const AdminLayout = () => {
       </div>
       <div className="flex-1">
         <Menu
-          className="m-3 p-2 bg-[rgba(20,184,166,0.10)] rounded-md shadow w-10 h-10 text-gray-600 cursor-pointer lg:hidden"
+          className="m-3 p-2 bg-[rgba(20,184,166,0.10)] rounded-md shadow w-10 h-10 text-gray-600 cursor-pointer md:hidden"
           onClick={() => setSidebar(true)}
         />
         <Outlet />

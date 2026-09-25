@@ -34,6 +34,23 @@ class Athlete(BaseModel):
     performance_score: float
     adaptability_score: float
 
+@app.get("/model/info")
+def model_info():
+    supported_sports = []
+    if label_encoders and "sport" in label_encoders:
+        supported_sports = sorted(label_encoders["sport"].classes_.tolist())
+
+    feature_count = scaler.n_features_in_ if scaler is not None else 0
+
+    return {
+        "model_version": "1.0",
+        "model_type": type(model).__name__ if model is not None else None,
+        "supported_sports": supported_sports,
+        "feature_count": feature_count,
+        "model_loaded": model is not None,
+    }
+
+
 @app.post("/rank")
 def rank_athlete(athlete: Athlete):
     df = pd.DataFrame([athlete.dict()])

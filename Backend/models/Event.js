@@ -19,6 +19,8 @@ const EventSchema = new mongoose.Schema(
       type: Date,
       index: { expires: 0 }, // TTL runs on this
     },
+    capacity: { type: Number, default: null },
+    participantsCount: { type: Number, default: 0 },
   },
   { timestamps: true },
 );

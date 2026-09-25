@@ -169,6 +169,35 @@ export const registerEvent = async (req, res) => {
       });
     }
 
+    // Atomically find the event and increment participantsCount ONLY if capacity is open
+    const updatedEvent = await Event.findOneAndUpdate(
+      {
+        _id: eventId,
+        $or: [
+          { capacity: null },
+          { $expr: { $lt: ["$participantsCount", "$capacity"] } }
+        ]
+      },
+      {
+        $inc: { participantsCount: 1 }
+      },
+      { new: true }
+    );
+
+    if (!updatedEvent) {
+      // Check if event exists to distinguish from capacity full
+      const eventExists = await Event.findById(eventId);
+      if (!eventExists) {
+        return res.status(404).json({
+          success: false,
+          message: "Event not found",
+        });
+      }
+      return res.status(400).json({
+        message: "Event has reached its maximum capacity",
+      });
+    }
+
     await Participation.create({
       user: user._id,
       event: eventId,

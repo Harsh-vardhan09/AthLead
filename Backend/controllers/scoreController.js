@@ -86,12 +86,30 @@ export const getScore = async (req, res) => {
 
 export const getRanking = async (req, res) => {
   try {
-    const rank = await Score.find({}).sort({ score: -1 }).populate("user");
-    // console.log(rank);
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 20));
+    const skip = (page - 1) * limit;
+
+    const [rank, total] = await Promise.all([
+      Score.find({})
+        .sort({ score: -1 })
+        .skip(skip)
+        .limit(limit)
+        .select("user score createdAt")
+        .populate("user", "fullname image role")
+        .lean(),
+      Score.countDocuments(),
+    ]);
 
     res.json({
       success: true,
       rank,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
     });
   } catch (error) {
     res.json({

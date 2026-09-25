@@ -4,6 +4,7 @@ import { CalendarPlus } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import { useUnsavedChanges } from "../../hooks/useUnsavedChanges";
 
 const fields = [
   {
@@ -29,8 +30,10 @@ const CreateEvent = () => {
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, isDirty },
   } = useForm();
+
+  useUnsavedChanges(isDirty);
 
   const navigate = useNavigate();
 

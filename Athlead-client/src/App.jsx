@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, Suspense } from "react-router-dom";
 import {
   Announcement,
   Dashboard,
@@ -14,14 +14,25 @@ const LazyEvents = React.lazy(() => import("./pages/Events"));
 import { Toaster } from "react-hot-toast";
 import AppProvider from "./context/AppProvider";
 import ProtectedRoute from "./context/ProtectedRoute";
+import AdminRoute from "./context/AdminRoute";
 import Score from "./pages/Score";
 const LazyEventCardSkeleton = React.lazy(() => import("./Components/EventCardSkelton"));
 import IsLoggedIn from "./context/IsLoggedIn";
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import AdminLayout from "./pages/admin/AdminLayout";
-import AllEvents from "./pages/admin/AllEvents";
-import CreateEvent from "./pages/admin/CreateEvent";
-import Athlete from "./pages/admin/Athlete";
+
+// Admin pages are lazy-loaded to keep the initial bundle small
+const AdminDashboard = React.lazy(() => import("./pages/admin/AdminDashboard"));
+const AdminLayout = React.lazy(() => import("./pages/admin/AdminLayout"));
+const AllEvents = React.lazy(() => import("./pages/admin/AllEvents"));
+const CreateEvent = React.lazy(() => import("./pages/admin/CreateEvent"));
+const Athlete = React.lazy(() => import("./pages/admin/Athlete"));
+
+function AdminFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="animate-pulse text-sm text-slate-400">Loading admin panel…</div>
+    </div>
+  );
+}
 
 const App = () => {
   return (
@@ -84,36 +95,53 @@ const App = () => {
         <Route
           path="/admin"
           element={
-            <ProtectedRoute>
-              <AdminLayout />
-            </ProtectedRoute>
+            <AdminRoute>
+              <Suspense fallback={<AdminFallback />}>
+                <AdminLayout />
+              </Suspense>
+            </AdminRoute>
           }
         >
           <Route
             path="dashboard"
             element={
-              <ProtectedRoute>
-                <AdminDashboard />
-              </ProtectedRoute>
+              <AdminRoute>
+                <Suspense fallback={<AdminFallback />}>
+                  <AdminDashboard />
+                </Suspense>
+              </AdminRoute>
             }
           />
           <Route
             path="events"
             element={
-              <ProtectedRoute>
-                <AllEvents />
-              </ProtectedRoute>
+              <AdminRoute>
+                <Suspense fallback={<AdminFallback />}>
+                  <AllEvents />
+                </Suspense>
+              </AdminRoute>
             }
           />
           <Route
             path="event/new"
             element={
-              <ProtectedRoute>
-                <CreateEvent />
-              </ProtectedRoute>
+              <AdminRoute>
+                <Suspense fallback={<AdminFallback />}>
+                  <CreateEvent />
+                </Suspense>
+              </AdminRoute>
             }
           />
-          <Route path="athlete" element={<Athlete />} />
+          <Route
+            path="athlete"
+            element={
+              <AdminRoute>
+                <Suspense fallback={<AdminFallback />}>
+                  <Athlete />
+                </Suspense>
+              </AdminRoute>
+            }
+          />
         </Route>
       </Routes>
     </AppProvider>

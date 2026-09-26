@@ -8,95 +8,68 @@ export const setScore = async (req, res) => {
   const data = req.body;
   const userId = req.user._id;
 
-  console.log(process.env.ML_URI);
-  console.log(data);
-
   try {
-    const user = await User.findOne({
-      _id: userId,
-    }).select("DOB gender");
-
-    // console.log(user);
+    const user = await User.findOne({ _id: userId }).select("DOB gender");
 
     if (!user) {
-      return res.json({
-        success: false,
-        message: "User Not Found",
-      });
-    } else if (!user.DOB) {
-      return res.json({
-        success: false,
-        message: "Please Update profile with Date of Birth for Score",
-      });
+      return res.status(404).json({ success: false, message: "User Not Found" });
+    } 
+    
+    if (!user.DOB) {
+      return res.status(400).json({ success: false, message: "Please Update profile with Date of Birth for Score" });
     }
-    const birthDate = dayjs(user.DOB).format("YYYY-MM-DD");
 
+    if (!user.gender) {
+      return res.status(400).json({ success: false, message: "Please Update profile with Gender for Score" });
+    }
+
+    const birthDate = dayjs(user.DOB).format("YYYY-MM-DD");
     const age = dobToAge(birthDate);
-    console.log(age);
+    
+    if (!age) {
+      return res.status(400).json({ success: false, message: "Invalid Date of Birth format" });
+    }
 
     const gen = user.gender.toUpperCase().slice(0, 1);
-
     data.age = `${age.count}`;
     data.gender = `${gen}`;
 
-    // console.log(data);
-
     const mlResponse = await axios.post(`${process.env.ML_URI}/rank`, data);
 
-    await Score.create({
+    const newScore = await Score.create({
       user: userId,
       score: mlResponse.data.predicted_potential_score,
     });
-    console.log(mlResponse.data.predicted_potential_score);
 
-    res.json({
+    return res.status(201).json({
       success: true,
-      message: `obtained ${mlResponse.data.predicted_potential_score}`,
+      message: `Score obtained: ${mlResponse.data.predicted_potential_score}`,
+      data: newScore
     });
   } catch (error) {
-    res.json({
+    console.error("Score Generation Error:", error.message);
+    return res.status(500).json({
       success: false,
-      message: error.message,
+      message: error.response?.data?.detail || error.message || "Internal Server Error",
     });
   }
 };
 
 export const getScore = async (req, res) => {
   const userId = req.user._id;
-  // console.log(userId);
-
   try {
-    const scores = await Score.find({
-      user: userId,
-    });
-
-    // console.log(scores);
-
-    res.json({
-      success: true,
-      scores,
-    });
+    const scores = await Score.find({ user: userId });
+    return res.status(200).json({ success: true, scores });
   } catch (error) {
-    res.json({
-      success: false,
-      message: error.message,
-    });
+    return res.status(500).json({ success: false, message: error.message });
   }
 };
 
 export const getRanking = async (req, res) => {
   try {
     const rank = await Score.find({}).sort({ score: -1 }).populate("user");
-    // console.log(rank);
-
-    res.json({
-      success: true,
-      rank,
-    });
+    return res.status(200).json({ success: true, rank });
   } catch (error) {
-    res.json({
-      success: false,
-      message: error.message,
-    });
+    return res.status(500).json({ success: false, message: error.message });
   }
 };

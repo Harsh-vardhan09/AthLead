@@ -62,7 +62,7 @@ router.post("/resend-otp", otpLimiter, resendOtp);
 router.post("/verify-otp", otpLimiter, verifyOtp);
 
 router.post("/signup", SingupAuth);
-router.post("/login", LoginAuth);
+router.post("/login", loginLimiter, LoginAuth);
 router.post(
   "/logout",
   passport.authenticate("jwt", { session: false }),

@@ -16,6 +16,16 @@ import {
 import passport from "passport";
 import multer from "multer";
 
+// Per-IP cap on login attempts: stops unbounded password brute-forcing.
+// Mirrors the otpLimiter pattern already used for the OTP endpoints below.
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: {
+    error: "Too many login attempts, please try again later.",
+  },
+});
+
 const otpLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,

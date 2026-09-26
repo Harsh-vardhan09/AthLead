@@ -52,6 +52,12 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch (error) {
         localStorage.removeItem("accessToken");
+
+        const refreshStatus = error.response?.status;
+        if (refreshStatus) {
+          error.apiMessage = getApiErrorMessage(refreshStatus);
+        }
+
         return Promise.reject(error);
       }
     }

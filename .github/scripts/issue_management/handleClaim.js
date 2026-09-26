@@ -1,4 +1,10 @@
-export const handleClaim = async ({ github, context }) => {
+import {
+  MAX_OPEN_ASSIGNMENTS,
+  getOpenAssignments,
+  limitReachedMessage,
+} from "./assignmentLimit.js";
+
+export const handleClaim =async ({ github, context }) => {
   const { owner, repo } = context.repo;
   const issueNumber = context.payload.issue.number;
   const issueState = context.payload.issue.state;
@@ -43,6 +49,17 @@ export const handleClaim = async ({ github, context }) => {
     return;
   }
 
+  const openIssues = await getOpenAssignments(github, owner, repo, commenter);
+  if (openIssues.length >= MAX_OPEN_ASSIGNMENTS) {
+    await github.rest.issues.createComment({
+      owner,
+      repo,
+      issue_number: issueNumber,
+      body: limitReachedMessage(commenter, openIssues),
+    });
+    return;
+  }
+
    await github.rest.issues.addAssignees({
     owner,
     repo,
@@ -54,6 +71,6 @@ export const handleClaim = async ({ github, context }) => {
     owner,
     repo,
     issue_number: issueNumber,
-    body: `🎉 **Assigned!** Welcome to the project, @${commenter}.\n\n⏳ **Reminder:** You have **2 days** to submit a Pull Request. After 2 days of inactivity, you will be automatically unassigned to give others a chance.\n\n> 💡 Please read [CONTRIBUTION.md](./../blob/main/CONTRIBUTION.md) and star the repo.\n\nHappy coding! 🚀`,
+    body: `🎉 **Assigned!** Welcome to the project, @${commenter}.\n\n⏳ **Reminder:** You have **5 days** to open a Pull Request linked to this issue. If no PR is linked after 5 days, you will be automatically unassigned to give others a chance.\n\n> 💡 Please read [CONTRIBUTION.md](./../blob/main/CONTRIBUTION.md) and star the repo.\n\nHappy coding! 🚀`,
   });
 };

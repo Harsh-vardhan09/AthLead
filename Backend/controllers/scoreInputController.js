@@ -1,4 +1,4 @@
-import AthleteScoreInput from '../models/AthleteScoreInput.js';
+import AthleteScoreInput from "../models/AthleteScoreInput.js";
 
 export const saveScoreInput = async (req, res) => {
   try {
@@ -8,13 +8,15 @@ export const saveScoreInput = async (req, res) => {
     const scoreInput = await AthleteScoreInput.findOneAndUpdate(
       { user: userId },
       { ...data, user: userId },
-      { new: true, upsert: true, runValidators: true }
+      { new: true, upsert: true, runValidators: true },
     );
 
     return res.json({ success: true, data: scoreInput });
   } catch (error) {
-    console.error('Error saving score input:', error);
-    return res.status(500).json({ success: false, message: 'Internal Server Error' });
+    console.error("Error saving score input:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal Server Error" });
   }
 };
 
@@ -24,12 +26,14 @@ export const getScoreInput = async (req, res) => {
     const scoreInput = await AthleteScoreInput.findOne({ user: userId });
 
     if (!scoreInput) {
-      return res.json({ success: false, message: 'No score input found' });
+      return res.json({ success: false, message: "No score input found" });
     }
 
     return res.json({ success: true, data: scoreInput });
   } catch (error) {
-    console.error('Error fetching score input:', error);
-    return res.status(500).json({ success: false, message: 'Internal Server Error' });
+    console.error("Error fetching score input:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal Server Error" });
   }
 };

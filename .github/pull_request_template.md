@@ -1,10 +1,17 @@
+<!-- Keep every section below. PRs that don't follow this template are closed automatically. -->
+
 ## Description
-explain what this pr does
 
-## Closes Issue # <input issue no assigned>
+<!-- Required: explain what this PR does -->
 
+## Linked Issue
+
+<!-- Required: the issue must be assigned to you, or this PR is closed automatically -->
+Closes #<issue number>
 
 ## Type of change
+
+<!-- Required: tick at least one box by changing [ ] to [x] -->
 
 - [ ] Bug fix
 - [ ] New feature
@@ -13,7 +20,7 @@ explain what this pr does
 
 ## Visual Previews
 
-<-add images for visual if changes in UI->
+<!-- Add images if this changes the UI -->
 
 ## Checklist
 

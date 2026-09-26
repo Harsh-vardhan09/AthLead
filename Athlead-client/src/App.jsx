@@ -16,6 +16,9 @@ import { Toaster } from "react-hot-toast";
 import AppProvider from "./context/AppProvider";
 import ProtectedRoute from "./context/ProtectedRoute";
 import Score from "./pages/Score";
+const LazyEventCardSkeleton = React.lazy(
+  () => import("./Components/EventCardSkelton"),
+);
 import IsLoggedIn from "./context/IsLoggedIn";
 import RoleBasedRoute from "./context/RoleBasedRoute";
 import AdminDashboard from "./pages/admin/AdminDashboard";

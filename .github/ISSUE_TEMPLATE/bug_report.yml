@@ -1,0 +1,62 @@
+name: 🐛 Bug Report
+description: Report something that isn't working
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! Please search [existing issues](../issues) first to avoid duplicates.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Frontend (Athlead-client)
+        - Backend
+        - ML
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the bug
+      description: A clear description of what went wrong.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. See error
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots / logs
+      description: Drag images in or paste error output.
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: "e.g. Windows 11, Chrome 128"
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues and this is not a duplicate
+          required: true
+        - label: I have read CONTRIBUTION.md
+          required: true

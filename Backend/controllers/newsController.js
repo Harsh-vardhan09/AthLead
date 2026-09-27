@@ -1,28 +1,29 @@
 import GNews from "@gnews-io/gnews-io-js";
+import dayjs from "dayjs"; // Using dayjs which is already in package.json
 
 const client = new GNews(process.env.GNEWS_API);
 
 export const getNews = async (req, res) => {
-  // Search for articles
   try {
-    const data = await client.search("sports", {
-      lang: "en", // Optional, languages of articles
-      country: "in", // Optional, country of origin of the source
-      max: 10, // Optional, maximum number of articles to be returned
-      //   from: "2025-01-01T00:00:00Z", // Optional, minimum publication date (included)
-      //   to: new Date(), // Optional, maximum publication date (included)
-      // ..., any additional parameter specified in the documentation (see https://docs.gnews.io)
+    // Dynamically calculate the date 7 days ago to ensure fresh news
+    const oneWeekAgo = dayjs().subtract(7, 'day').format('YYYY-MM-DDTHH:mm:ss[Z]');
+
+    const data = await client.search("sports OR ministry OR athletics", {
+      lang: "en",
+      country: "in",
+      max: 10,
+      from: oneWeekAgo, // Dynamically fetch recent news
     });
 
-    res.json({
+    return res.status(200).json({
       success: true,
       message: data.articles,
     });
   } catch (error) {
-    console.log(error);
-    return res.json({
+    console.error("News API Error:", error);
+    return res.status(500).json({
       success: false,
-      message: error.message,
+      message: error.message || "Failed to fetch news",
     });
   }
 };

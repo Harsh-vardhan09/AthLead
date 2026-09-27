@@ -249,6 +249,11 @@ Ensure these files are available before starting the service.
 If `ML/models/` is empty (e.g. right after a fresh clone), generate the
 required artifacts locally:
 
+```bash
+cd ML
+python train_model.py
+```
+
 This reads `data/Cross_sport_selection_data.csv` (relative to the `ML/`
 directory) and produces `athlete_rank_model.pkl`, `scaler.pkl`, and
 `label_encoders.pkl` inside `ML/models/`. The `models/` directory is now

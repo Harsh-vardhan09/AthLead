@@ -1,6 +1,8 @@
 import express from "express";
 import "dotenv/config";
 import cors from "cors";
+import helmet from "helmet";
+import mongoSanitize from "express-mongo-sanitize";
 import { getNews } from "./controllers/newsController.js";
 import db from "./config/db.js";
 import { refesh } from "./controllers/authController.js";
@@ -14,6 +16,10 @@ import scoreInputRoutes from "./routes/scoreInputRoutes.js";
 db();
 
 const app = express();
+
+// Secure HTTP headers
+app.use(helmet());
+
 app.use(cookieParser());
 
 app.use(
@@ -25,6 +31,10 @@ app.use(
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Sanitize data against NoSQL injection
+app.use(mongoSanitize());
+
 app.use(passport.initialize());
 
 import "./config/passport-config.js";

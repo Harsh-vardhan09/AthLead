@@ -14,12 +14,18 @@ const EventSignup = () => {
   const navigate = useNavigate();
   const { eventId } = useParams();
   const onSubmit = async (data) => {
-    const res = await api.post(`/api/events/${eventId}/register`, data);
-    if (res.data.success) {
-      toast.success(res.data.message);
-      navigate("/events");
-    } else {
-      toast.error(res.data.message);
+    try {
+      const res = await api.post(`/api/events/${eventId}/register`, data);
+      if (res.data.success) {
+        toast.success(res.data.message);
+        navigate("/events");
+      } else {
+        toast.error(res.data.message);
+      }
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Could not register for event",
+      );
     }
   };
 

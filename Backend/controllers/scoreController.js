@@ -86,7 +86,13 @@ export const getScore = async (req, res) => {
 
 export const getRanking = async (req, res) => {
   try {
-    const rank = await Score.find({}).sort({ score: -1 }).populate("user");
+    // Only expose the fields the leaderboard renders. Populating the whole
+    // User document would leak every athlete's password hash, email, phone
+    // number and date of birth to any logged-in user.
+    const rank = await Score.find({})
+      .sort({ score: -1 })
+      .populate("user", "fullname state")
+      .lean();
     // console.log(rank);
 
     res.json({

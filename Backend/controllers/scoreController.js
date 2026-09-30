@@ -86,7 +86,9 @@ export const getScore = async (req, res) => {
 
 export const getRanking = async (req, res) => {
   try {
-    const rank = await Score.find({}).sort({ score: -1 }).populate("user");
+    const rank = await Score.find({})
+  .sort({ score: -1 })
+  .populate("user", "fullname image role");
     // console.log(rank);
 
     res.json({

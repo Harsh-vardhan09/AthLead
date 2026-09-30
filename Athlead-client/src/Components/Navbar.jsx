@@ -3,36 +3,22 @@ import { assets, navItems } from "../assets/assets";
 import { useLocation, useNavigate } from "react-router";
 import { CircleUser, X } from "lucide-react";
 import { cn } from "../utility/cn";
-import { useEffect } from "react";
 import toast from "react-hot-toast";
-import { api } from "../api/axios";
 import { useAuth } from "../context/useAuth";
 import Sidebar from "./Sidebar";
 
 const Navbar = ({ sidebar, setSidebar }) => {
-  const { loggedIn, setLoggedIn } = useAuth();
+  const { loggedIn, logout } = useAuth();
   const navigate = useNavigate();
 
   const location = useLocation();
   const pathname = location.pathname;
 
-  const logout = async () => {
-    const res = await api.post("/api/auth/logout", {});
-    if (res.data.success) {
-      localStorage.removeItem("accessToken");
-      navigate("/login");
-      setLoggedIn(false);
-      toast.success(res.data.message);
-    }
+  const handleLogout = async () => {
+    await logout();
+    navigate("/login");
+    toast.success("Logged out successfully");
   };
-
-  useEffect(() => {
-    const token = localStorage.getItem("accessToken");
-
-    if (token) {
-      setLoggedIn(true);
-    }
-  }, [setLoggedIn]);
 
   return (
     <>
@@ -74,7 +60,7 @@ const Navbar = ({ sidebar, setSidebar }) => {
                   className="h-6 w-12 xs:w-18 xs:h-8 ml-4 text-[#2dd4bf] hover:text-[#075f53] hover:ease-in-out transition-all"
                 />
                 <button
-                  onClick={logout}
+                  onClick={handleLogout}
                   className="h-10 w-16 xs:w-24 flex items-center justify-center rounded-xl ml-2 md:ml-4 cursor-pointer border border-[rgba(20,184,166,0.25)] text-[#2dd4bf] bg-[rgba(20,184,166,0.10)] hover:bg-[rgba(53,205,187,0.1)]"
                 >
                   Logout

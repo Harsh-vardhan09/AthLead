@@ -12,6 +12,14 @@ cloudinary.config({
   api_secret: process.env.CLOUD_SECRET,
 });
 
+// Shared by login (set) and logout (clear): browsers only delete a cookie when
+// the clearing Set-Cookie carries the same attributes it was created with.
+const refreshCookieOptions = {
+  httpOnly: true,
+  secure: true,
+  sameSite: "strict",
+};
+
 //login Auth
 export const LoginAuth = async (req, res) => {
   const result = LoginVal.safeParse(req.body);
@@ -45,13 +53,7 @@ export const LoginAuth = async (req, res) => {
     //  console.log(refreshToken);
     //  console.log(accessToken);
 
-    const option = {
-      httpOnly: true,
-      secure: true,
-      sameSite: "strict",
-    };
-
-    res.cookie("refreshToken", refreshToken, option).json({
+    res.cookie("refreshToken", refreshToken, refreshCookieOptions).json({
       success: true,
       message: "user Logged in",
       accessToken,
@@ -106,8 +108,11 @@ export const refesh = async (req, res) => {
   }
 };
 
+// Deliberately public: it only clears the refresh cookie, so it has to work
+// even when the access token has expired or the session is already invalid.
+// Requiring a valid access token made it impossible to log out of a dead one.
 export const logout = (req, res) => {
-  res.clearCookie("accessToken").clearCookie("refreshToken");
+  res.clearCookie("refreshToken", refreshCookieOptions);
   res.json({
     success: true,
     message: "logged out",

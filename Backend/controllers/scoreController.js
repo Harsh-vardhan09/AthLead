@@ -67,8 +67,15 @@ export const getScore = async (req, res) => {
 
 export const getRanking = async (req, res) => {
   try {
-    const rank = await Score.find({}).sort({ score: -1 }).populate("user");
-    return res.status(200).json({ success: true, rank });
+    const rank = await Score.find({})
+  .sort({ score: -1 })
+  .populate("user", "fullname image role");
+    // console.log(rank);
+
+    res.json({
+      success: true,
+      rank,
+    });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }

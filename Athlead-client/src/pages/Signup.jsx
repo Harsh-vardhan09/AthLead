@@ -90,7 +90,7 @@ const Signup = () => {
     try {
       const res = await authService.signup({
         ...formattedData,
-        sessionId, // backend looks up email viathis UUID
+        sessionId, // backend looks up email via this UUID
       });
 
       if (res.data.success) {

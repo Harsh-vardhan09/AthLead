@@ -1,7 +1,7 @@
 import React from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
-import { api } from "../api/axios";
+import { eventService } from "../api";
 import toast from "react-hot-toast";
 
 const EventSignup = () => {
@@ -14,7 +14,7 @@ const EventSignup = () => {
   const navigate = useNavigate();
   const { eventId } = useParams();
   const onSubmit = async (data) => {
-    const res = await api.post(`/api/events/${eventId}/register`, data);
+    const res = await eventService.register(eventId, data);
     if (res.data.success) {
       toast.success(res.data.message);
       navigate("/events");

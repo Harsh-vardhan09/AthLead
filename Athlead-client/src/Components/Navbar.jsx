@@ -5,7 +5,7 @@ import { CircleUser, X } from "lucide-react";
 import { cn } from "../utility/cn";
 import { useEffect } from "react";
 import toast from "react-hot-toast";
-import { api } from "../api/axios";
+import { authService } from "../api";
 import { useAuth } from "../context/useAuth";
 import Sidebar from "./Sidebar";
 
@@ -17,7 +17,7 @@ const Navbar = ({ sidebar, setSidebar }) => {
   const pathname = location.pathname;
 
   const logout = async () => {
-    const res = await api.post("/api/auth/logout", {});
+    const res = await authService.logout();
     if (res.data.success) {
       localStorage.removeItem("accessToken");
       navigate("/login");

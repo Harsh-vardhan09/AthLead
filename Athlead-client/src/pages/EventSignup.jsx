@@ -14,15 +14,21 @@ const EventSignup = () => {
   const navigate = useNavigate();
   const { eventId } = useParams();
   const onSubmit = async (data) => {
-    const res = await eventService.register(eventId, data);
-    if (res.data.success) {
-      toast.success(res.data.message);
-      navigate("/events");
-    } else {
-      toast.error(res.data.message);
+    try {
+      const res = await eventService.register(eventId, data);
+
+      if (res.data.success) {
+        toast.success(res.data.message);
+        navigate("/events");
+      } else {
+        toast.error(res.data.message);
+      }
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Could not register for event",
+      );
     }
   };
-
   return (
     <section className="dark-bg relative max-w-screen min-h-screen flex items-center justify-center ">
       <div className="h-2/3 max-w-180 w-full bg-linear-to-br from-[#0f2027] via-[#1a3a4a] to-[#0f2027] border border-[#1d9e75]/40 text-start text-white rounded-2xl shadow-xl">

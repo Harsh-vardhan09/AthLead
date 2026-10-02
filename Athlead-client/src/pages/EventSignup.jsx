@@ -1,7 +1,7 @@
 import React from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
-import { api } from "../api/axios";
+import { eventService } from "../api";
 import toast from "react-hot-toast";
 
 const EventSignup = () => {
@@ -15,7 +15,8 @@ const EventSignup = () => {
   const { eventId } = useParams();
   const onSubmit = async (data) => {
     try {
-      const res = await api.post(`/api/events/${eventId}/register`, data);
+      const res = await eventService.register(eventId, data);
+
       if (res.data.success) {
         toast.success(res.data.message);
         navigate("/events");
@@ -28,7 +29,6 @@ const EventSignup = () => {
       );
     }
   };
-
   return (
     <section className="dark-bg relative max-w-screen min-h-screen flex items-center justify-center ">
       <div className="h-2/3 max-w-180 w-full bg-linear-to-br from-[#0f2027] via-[#1a3a4a] to-[#0f2027] border border-[#1d9e75]/40 text-start text-white rounded-2xl shadow-xl">

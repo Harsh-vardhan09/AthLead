@@ -15,7 +15,7 @@ import {
 } from "recharts";
 import { useNavigate } from "react-router";
 import { useEffect } from "react";
-import { api } from "../api/axios";
+import { eventService, rankingService, scoreService } from "../api";
 import { useAuth } from "../context/useAuth";
 import { formatDate } from "../utils/dateFormatter";
 import EditForm from "../Components/EditForm";
@@ -123,8 +123,7 @@ const Dashboard = () => {
 
     const initDashboard = async () => {
       try {
-        const scoresRes = await api.get("/api/my-scores");
-
+        const scoresRes = await scoreService.getMyScores();
         const formattedScores = (scoresRes.data.scores || []).map((item) => ({
           ...item,
           date: formatDate(item.date, "DD MMM YY"),
@@ -132,7 +131,7 @@ const Dashboard = () => {
 
         setScores(formattedScores);
 
-        const rankRes = await api.get("/api/score/rank");
+        const rankRes = await rankingService.getRanking();
 
         const rankWithIsMe = (rankRes.data.rank || []).map((item, index) => ({
           ...item,
@@ -146,7 +145,7 @@ const Dashboard = () => {
       }
 
       try {
-        const myEventsRes = await api.get("/api/my-events");
+        const myEventsRes = await eventService.getMyEvents();
         setRegisteredEvents(
           Array.isArray(myEventsRes.data) ? myEventsRes.data : [],
         );

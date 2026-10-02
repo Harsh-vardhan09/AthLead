@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { sports } from "../assets/assets";
 import EventCard from "../Components/EventCard";
 import EventDetails from "../Components/EventDetails";
-import { api } from "../api/axios";
+import { eventService } from "../api";
 import EventCardSkeleton from "../Components/EventCardSkelton";
 import toast from "react-hot-toast";
 
@@ -19,7 +19,7 @@ const Events = () => {
     const getEvents = async () => {
       setIsLoading(true);
       try {
-        const res = await api.get("/api/events");
+        const res = await eventService.getAll();
         setEvents(res.data.events);
         setIsLoading(false);
 

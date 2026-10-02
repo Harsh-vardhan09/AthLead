@@ -2,7 +2,7 @@ import { Eye, EyeClosed } from "lucide-react";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router";
-import { api } from "../api/axios";
+import { authService } from "../api";
 import toast from "react-hot-toast";
 import { useAuth } from "../context/useAuth";
 
@@ -18,7 +18,7 @@ const Login = () => {
   const navigate = useNavigate();
 
   const onSubmit = async (data) => {
-    const res = await api.post("/api/auth/login", data);
+    const res = await authService.login(data);
 
     if (res.data.success) {
       localStorage.setItem("accessToken", res.data.accessToken);

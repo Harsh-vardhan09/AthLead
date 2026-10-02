@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { api } from "../api/axios";
+import { newsService } from "../api";
 import NewsCard from "../Components/NewsCard";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
@@ -15,7 +15,7 @@ const Announcement = () => {
   const getNews = async () => {
     try {
       setIsLoading(true);
-      const { data } = await api.get("/api/news");
+      const { data } = await newsService.getAll();
       if (data.success && data.message.length > 0) {
         setNews(data.message);
       } else {

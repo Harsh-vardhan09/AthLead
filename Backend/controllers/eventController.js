@@ -162,15 +162,27 @@ export const registerEvent = async (req, res, next) => {
       });
     }
 
-    await Participation.create({
-      user: user._id,
-      event: eventId,
-      email: email || user.email,
-      fullname,
-      phone,
-      gender,
-      DOB,
-    });
+    try {
+      await Participation.create({
+        user: user._id,
+        event: eventId,
+        email: email || user.email,
+        fullname,
+        phone,
+        gender,
+        DOB,
+      });
+    } catch (error) {
+      // Handle MongoDB duplicate-key error
+      if (error.code === 11000) {
+        return res.status(409).json({
+          success: false,
+          message: "User is already registered for this event.",
+        });
+      }
+
+      throw error;
+    }
 
     res.json({
       success: true,

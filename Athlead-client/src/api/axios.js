@@ -18,6 +18,7 @@ api.interceptors.request.use((config) => {
 const getApiErrorMessage = (status) => {
   const messages = {
     400: "Bad request. Please check your input.",
+    401: "Session expired. Please log in again.",
     403: "You do not have permission to perform this action.",
     404: "The requested resource was not found.",
     429: "Too many requests. Please try again later.",

@@ -42,6 +42,9 @@ const ParticipationSchema = new mongoose.Schema({
   DOB: { type: Date, required: true },
 });
 
+// Prevent duplicate registration for the same user and event
+ParticipationSchema.index({ user: 1, event: 1 }, { unique: true });
+
 UserSchema.methods.generateAccessToken = function () {
   return jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
     expiresIn: "15m",

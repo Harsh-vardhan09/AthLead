@@ -42,11 +42,9 @@ const Layout = () => {
         <Outlet />
       </div>
 
-      {sidebar ? (
-        <></>
-      ) : (
+      {!sidebar && (
         <Menu
-          className="absolute top-3 left-1 p-2 z-100 bg-[rgba(20,184,166,0.10)] rounded-md shadow w-10 h-10 text-gray-600 lg:hidden"
+          className="absolute top-3 left-1 z-[100] h-10 w-10 rounded-md bg-[rgba(20,184,166,0.10)] p-2 text-gray-600 shadow lg:hidden"
           onClick={() => setSidebar(true)}
         />
       )}
@@ -56,9 +54,9 @@ const Layout = () => {
           onClick={scrollToTop}
           aria-label="Scroll to top"
           title="Scroll to top"
-          className="fixed bottom-6 right-6 z-50 rounded-full bg-teal-500 p-3 text-white shadow-lg transition hover:scale-110 hover:bg-teal-600"
+          className="fixed bottom-6 right-6 z-50 grid h-12 w-12 place-items-center rounded-full bg-teal-500 text-white shadow-lg transition-all hover:scale-105 hover:bg-teal-600"
         >
-          <ArrowUp size={22} />
+          <ArrowUp size={24} />
         </button>
       )}
     </section>

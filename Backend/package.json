@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "test": "node --test tests"
   },
   "keywords": [],
   "author": "",
@@ -18,11 +19,11 @@
   "dependencies": {
     "@emailjs/nodejs": "^5.0.2",
     "@gnews-io/gnews-io-js": "^2.2.0",
-    "axios": "^1.15.2",
+    "axios": "^1.15.0",
     "bcrypt": "^6.0.0",
     "cloudinary": "^2.10.0",
     "cookie-parser": "^1.4.7",
-    "cors": "^2.8.6",
+    "cors": "^2.8.0",
     "dayjs": "^1.11.20",
     "dob-to-age": "^4.0.0",
     "dotenv": "^17.4.2",
@@ -38,7 +39,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
+    "@eslint/js": "^10.0.0",
     "eslint": "^10.4.0",
     "eslint-config-prettier": "^10.1.8",
     "globals": "^17.6.0",

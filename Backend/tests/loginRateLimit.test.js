@@ -13,10 +13,8 @@ test("rate limits /login route after maximum attempts", async () => {
   const url = `http://127.0.0.1:${port}/api/v1/user/login`;
 
   try {
-    let rateLimited = false;
-
-    // Send 6 requests; max allowed is 5 per 15 min
-    for (let i = 0; i < 6; i++) {
+    // Send 5 allowed requests
+    for (let i = 1; i <= 5; i++) {
       const res = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -26,21 +24,29 @@ test("rate limits /login route after maximum attempts", async () => {
         }),
       });
 
-      if (res.status === 429) {
-        rateLimited = true;
-        const body = await res.json();
-        assert.ok(
-          body.error.includes("Too many login attempts"),
-          `Expected error message, got: ${JSON.stringify(body)}`,
-        );
-        break;
-      }
+      assert.notEqual(
+        res.status,
+        429,
+        `Request ${i} should not be rate limited (got 429)`,
+      );
     }
 
-    assert.equal(
-      rateLimited,
-      true,
-      "Expected 6th request to be rate limited (429)",
+    // 6th request should be rate limited
+    const res6 = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: "limiter-test@example.com",
+        password: "WrongPassword123!",
+      }),
+    });
+
+    assert.equal(res6.status, 429, "Expected 6th request to return 429 status");
+
+    const body = await res6.json();
+    assert.ok(
+      body.error.includes("Too many login attempts"),
+      `Expected rate limit error message, got: ${JSON.stringify(body)}`,
     );
   } finally {
     server.close();

@@ -26,7 +26,10 @@ const otpLimiter = rateLimit({
 const otpEmailLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 5,
-  keyGenerator: (req) => (req.body.email ?? "").toLowerCase().trim(),
+  keyGenerator: (req) =>
+    typeof req.body?.email === "string"
+      ? req.body.email.toLowerCase().trim()
+      : "",
   message: {
     error: "Too many OTP requests for this address. Try again later.",
   },
@@ -41,7 +44,13 @@ const loginLimiter = rateLimit({
 const loginEmailLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 5,
-  keyGenerator: (req) => (req.body?.email ?? "").toLowerCase().trim(),
+  keyGenerator: (req) => {
+    const email =
+      typeof req.body?.email === "string"
+        ? req.body.email.toLowerCase().trim()
+        : "";
+    return `${req.ip}_${email}`;
+  },
   message: {
     error: "Too many login attempts for this address. Try again later.",
   },

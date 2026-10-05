@@ -32,6 +32,21 @@ const otpEmailLimiter = rateLimit({
   },
 });
 
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: { error: "Too many login attempts, please try again later." },
+});
+
+const loginEmailLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  keyGenerator: (req) => (req.body?.email ?? "").toLowerCase().trim(),
+  message: {
+    error: "Too many login attempts for this address. Try again later.",
+  },
+});
+
 const upload = multer({
   dest: "uploads/",
   limits: { fileSize: 5 * 1024 * 1024 },
@@ -52,7 +67,7 @@ router.post("/resend-otp", otpLimiter, resendOtp);
 router.post("/verify-otp", otpLimiter, verifyOtp);
 
 router.post("/signup", SingupAuth);
-router.post("/login", LoginAuth);
+router.post("/login", loginEmailLimiter, loginLimiter, LoginAuth);
 router.post(
   "/logout",
   passport.authenticate("jwt", { session: false }),

@@ -1,10 +1,14 @@
-import { compareSync } from "bcrypt";
+import { compareSync, hashSync } from "bcrypt";
 import jwt from "jsonwebtoken";
 import { LoginVal } from "../utils/zodValidation.js";
 import { User } from "../models/Users.js";
 import { v2 as cloudinary } from "cloudinary";
 import { normalizeEmail } from "../utils/normalizeEmail.js";
 import fs from "fs";
+import {
+  PASSWORD_ERROR_MESSAGE,
+  isValidPassword,
+} from "../utils/passwordValidation.js";
 
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
@@ -117,9 +121,16 @@ export const logout = (req, res) => {
 };
 
 export const editUser = async (req, res) => {
-  const { fullname, phone, address, DOB } = req.body;
+  const { fullname, phone, address, DOB, password } = req.body;
 
   try {
+    if (password !== undefined && !isValidPassword(password)) {
+      return res.status(400).json({
+        success: false,
+        message: PASSWORD_ERROR_MESSAGE,
+      });
+    }
+
     let imageUrl;
 
     if (req.file) {
@@ -137,6 +148,7 @@ export const editUser = async (req, res) => {
         phone,
         state: address,
         DOB,
+        ...(password !== undefined && { password: hashSync(password, 10) }),
         ...(imageUrl && { image: imageUrl }),
       },
       { returnDocument: "after" },

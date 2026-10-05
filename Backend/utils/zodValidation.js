@@ -1,4 +1,8 @@
 import * as z from "zod";
+import {
+  PASSWORD_ERROR_MESSAGE,
+  isValidPassword,
+} from "./passwordValidation.js";
 
 export const signupVal = z.object({
   email: z.string().email("Invalid email address"),
@@ -9,7 +13,7 @@ export const signupVal = z.object({
   gender: z.enum(["male", "female", "others"], {
     errorMap: () => ({ message: "Gender must be male, female, or other" }),
   }),
-  password: z.string().regex(/[a-zA-z0-9- @ $]{7,16}/i),
+  password: z.string().refine(isValidPassword, PASSWORD_ERROR_MESSAGE),
   phone: z
     .string()
     .transform((val) => (val === "" ? undefined : val))

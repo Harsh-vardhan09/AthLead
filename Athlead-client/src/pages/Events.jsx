@@ -9,6 +9,7 @@ import {
   ChevronRight,
   Filter,
   X,
+  AlertCircle,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
@@ -43,6 +44,7 @@ const Events = () => {
     totalPages: 1,
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [isError, setIsError] = useState(false);
 
   // Extract filter state from searchParams
   const sport = searchParams.get("sport") || "All";
@@ -53,29 +55,98 @@ const Events = () => {
   const search = searchParams.get("search") || "";
   const page = parseInt(searchParams.get("page") || "1", 10);
 
-  const updateFilters = (newFilters) => {
-    const nextParams = new URLSearchParams(searchParams);
-    Object.entries(newFilters).forEach(([key, val]) => {
-      if (val !== undefined && val !== null && val !== "All" && val !== "") {
-        nextParams.set(key, val);
-      } else {
-        nextParams.delete(key);
+  // Local state for debounced inputs
+  const [searchInput, setSearchInput] = useState(search);
+  const [locationInput, setLocationInput] = useState(location);
+
+  // Sync local inputs when URL searchParams change
+  useEffect(() => {
+    setSearchInput(search);
+  }, [search]);
+
+  useEffect(() => {
+    setLocationInput(location);
+  }, [location]);
+
+  const updateFilters = React.useCallback(
+    (newFilters) => {
+      const nextParams = new URLSearchParams(searchParams);
+      Object.entries(newFilters).forEach(([key, val]) => {
+        if (val !== undefined && val !== null && val !== "All" && val !== "") {
+          nextParams.set(key, val);
+        } else {
+          nextParams.delete(key);
+        }
+      });
+      if (!("page" in newFilters)) {
+        nextParams.delete("page");
       }
-    });
-    if (!("page" in newFilters)) {
-      nextParams.delete("page");
-    }
-    setSearchParams(nextParams);
-  };
+      setSearchParams(nextParams);
+    },
+    [searchParams, setSearchParams],
+  );
+
+  // Debounce search input
+  useEffect(() => {
+    if (searchInput === search) return;
+    const handler = setTimeout(() => {
+      updateFilters({ search: searchInput });
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [searchInput, search, updateFilters]);
+
+  // Debounce location input
+  useEffect(() => {
+    if (locationInput === location) return;
+    const handler = setTimeout(() => {
+      updateFilters({ location: locationInput });
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [locationInput, location, updateFilters]);
 
   const handleReset = () => {
+    setSearchInput("");
+    setLocationInput("");
     setSearchParams({});
+  };
+
+  const getEvents = async () => {
+    setIsLoading(true);
+    setIsError(false);
+    try {
+      const params = {};
+      if (sport && sport !== "All") params.sport = sport;
+      if (level && level !== "All") params.level = level;
+      if (location) params.location = location;
+      if (date) params.date = date;
+      if (status && status !== "All") params.status = status;
+      if (search) params.search = search;
+      params.page = page;
+      params.limit = 6;
+
+      const res = await eventService.getAll(params);
+      setEvents(res.data.events || []);
+      if (res.data.pagination) {
+        setPagination(res.data.pagination);
+      }
+      setIsLoading(false);
+
+      if (res.data.status && res.data.status !== 200 && res.data.message) {
+        toast.error(res.data.message);
+      }
+    } catch (error) {
+      console.log(error);
+      setIsError(true);
+      setEvents([]);
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
     let isCancelled = false;
     const getEvents = async () => {
       setIsLoading(true);
+      setIsError(false);
       try {
         const params = {};
         if (sport && sport !== "All") params.sport = sport;
@@ -101,6 +172,8 @@ const Events = () => {
       } catch (error) {
         if (isCancelled) return;
         console.log(error);
+        setIsError(true);
+        setEvents([]);
         setIsLoading(false);
       }
     };
@@ -129,14 +202,17 @@ const Events = () => {
               <Search size={18} className="text-slate-400 shrink-0" />
               <input
                 type="text"
-                value={search}
-                onChange={(e) => updateFilters({ search: e.target.value })}
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
                 placeholder="Search events by title or description..."
                 className="w-full bg-transparent outline-none text-white text-sm placeholder:text-slate-400"
               />
-              {search && (
+              {searchInput && (
                 <button
-                  onClick={() => updateFilters({ search: "" })}
+                  onClick={() => {
+                    setSearchInput("");
+                    updateFilters({ search: "" });
+                  }}
                   className="text-slate-400 hover:text-white"
                   aria-label="Clear search"
                 >
@@ -189,8 +265,8 @@ const Events = () => {
               </label>
               <input
                 type="text"
-                value={location}
-                onChange={(e) => updateFilters({ location: e.target.value })}
+                value={locationInput}
+                onChange={(e) => setLocationInput(e.target.value)}
                 placeholder="Filter location..."
                 className="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white outline-none focus:border-teal-500 transition-colors placeholder:text-slate-500"
                 aria-label="Filter by location"
@@ -281,7 +357,12 @@ const Events = () => {
             {location && (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-teal-500/10 text-teal-300 border border-teal-500/20 text-xs">
                 Location: {location}
-                <button onClick={() => updateFilters({ location: "" })}>
+                <button
+                  onClick={() => {
+                    setLocationInput("");
+                    updateFilters({ location: "" });
+                  }}
+                >
                   <X size={12} />
                 </button>
               </span>
@@ -305,7 +386,12 @@ const Events = () => {
             {search && (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-teal-500/10 text-teal-300 border border-teal-500/20 text-xs">
                 Search: {search}
-                <button onClick={() => updateFilters({ search: "" })}>
+                <button
+                  onClick={() => {
+                    setSearchInput("");
+                    updateFilters({ search: "" });
+                  }}
+                >
                   <X size={12} />
                 </button>
               </span>
@@ -313,12 +399,25 @@ const Events = () => {
           </div>
         )}
 
-        {/* Events Grid or Empty / Loading State */}
+        {/* Events Grid, Error State, or Empty / Loading State */}
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 my-8 w-full">
             {Array.from({ length: 6 }).map((_, i) => (
               <EventCardSkeleton key={i} />
             ))}
+          </div>
+        ) : isError ? (
+          <div className="flex flex-col items-center justify-center py-16 text-slate-400 gap-3 w-full">
+            <AlertCircle size={32} className="text-red-400" />
+            <p className="text-lg text-slate-300">
+              Failed to load events. Please check your connection and try again.
+            </p>
+            <button
+              onClick={getEvents}
+              className="px-4 py-2 bg-teal-500/20 text-teal-300 border border-teal-500/30 rounded-xl text-sm font-medium hover:bg-teal-500/30 transition-colors flex items-center gap-2"
+            >
+              <RotateCcw size={14} /> Retry
+            </button>
           </div>
         ) : events.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-slate-400 gap-3 w-full">
@@ -347,7 +446,7 @@ const Events = () => {
         )}
 
         {/* Pagination Section */}
-        {!isLoading && pagination.totalPages > 1 && (
+        {!isLoading && !isError && pagination.totalPages > 1 && (
           <div className="flex flex-col sm:flex-row items-center justify-between w-full py-4 border-t border-slate-800 text-slate-300 gap-4">
             <span className="text-xs text-slate-400">
               Showing page {pagination.page} of {pagination.totalPages} (

@@ -1,8 +1,8 @@
 import { api } from "./axios";
 
 export const eventService = {
-  getAll: () =>
-    api.get("/api/events"),
+  getAll: (params) =>
+    api.get("/api/events", { params }),
 
   getMyEvents: () =>
     api.get("/api/my-events"),

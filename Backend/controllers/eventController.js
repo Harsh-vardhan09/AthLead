@@ -1,15 +1,106 @@
 import Event from "../models/Event.js";
 import { Participation, User } from "../models/Users.js";
 
+const escapeRegex = (string) => {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+};
+
 export const findAllEvent = async (req, res, next) => {
   try {
-    const events = await Event.find({});
-    // console.log(events);
+    const {
+      sport,
+      level,
+      location,
+      date,
+      status,
+      search,
+      page,
+      limit,
+    } = req.query;
+
+    const query = {};
+
+    if (sport && sport !== "All") {
+      query.sport = { $regex: new RegExp(`^${escapeRegex(sport)}$`, "i") };
+    }
+
+    if (level && level !== "All") {
+      query.level = { $regex: new RegExp(`^${escapeRegex(level)}$`, "i") };
+    }
+
+    if (location && location.trim() !== "") {
+      query.location = { $regex: escapeRegex(location.trim()), $options: "i" };
+    }
+
+    if (date) {
+      const parsedDate = new Date(date);
+      if (!isNaN(parsedDate.getTime())) {
+        const startOfDay = new Date(parsedDate);
+        startOfDay.setUTCHours(0, 0, 0, 0);
+        const endOfDay = new Date(parsedDate);
+        endOfDay.setUTCHours(23, 59, 59, 999);
+        query.date = { $gte: startOfDay, $lte: endOfDay };
+      }
+    }
+
+    if (status && status !== "All") {
+      const now = new Date();
+      const startOfToday = new Date(now);
+      startOfToday.setUTCHours(0, 0, 0, 0);
+      const endOfToday = new Date(now);
+      endOfToday.setUTCHours(23, 59, 59, 999);
+
+      const statusLower = status.toLowerCase();
+      if (statusLower === "upcoming" || statusLower === "open") {
+        query.date = query.date
+          ? { ...query.date, $gte: startOfToday }
+          : { $gte: startOfToday };
+      } else if (statusLower === "ongoing" || statusLower === "live") {
+        query.date = { $gte: startOfToday, $lte: endOfToday };
+      } else if (
+        statusLower === "completed" ||
+        statusLower === "closed" ||
+        statusLower === "past"
+      ) {
+        query.date = query.date
+          ? { ...query.date, $lt: startOfToday }
+          : { $lt: startOfToday };
+      }
+    }
+
+    if (search && search.trim() !== "") {
+      const regex = new RegExp(escapeRegex(search.trim()), "i");
+      query.$or = [
+        { title: regex },
+        { description: regex },
+        { sport: regex },
+        { location: regex },
+      ];
+    }
+
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
+
+    const total = await Event.countDocuments(query);
+
+    let mongooseQuery = Event.find(query).sort({ date: 1 });
+
+    if (pageNum > 0 && limitNum > 0) {
+      mongooseQuery = mongooseQuery.skip((pageNum - 1) * limitNum).limit(limitNum);
+    }
+
+    const events = await mongooseQuery;
 
     res.status(200).json({
       success: true,
       status: 200,
       events,
+      pagination: {
+        total,
+        page: pageNum > 0 ? pageNum : 1,
+        limit: limitNum > 0 ? limitNum : total,
+        totalPages: limitNum > 0 ? Math.ceil(total / limitNum) || 1 : 1,
+      },
     });
   } catch (error) {
     next(error);

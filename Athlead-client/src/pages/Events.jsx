@@ -73,6 +73,7 @@ const Events = () => {
   };
 
   useEffect(() => {
+    let isCancelled = false;
     const getEvents = async () => {
       setIsLoading(true);
       try {
@@ -87,6 +88,7 @@ const Events = () => {
         params.limit = 6;
 
         const res = await eventService.getAll(params);
+        if (isCancelled) return;
         setEvents(res.data.events || []);
         if (res.data.pagination) {
           setPagination(res.data.pagination);
@@ -97,11 +99,15 @@ const Events = () => {
           toast.error(res.data.message);
         }
       } catch (error) {
+        if (isCancelled) return;
         console.log(error);
         setIsLoading(false);
       }
     };
     getEvents();
+    return () => {
+      isCancelled = true;
+    };
   }, [sport, level, location, date, status, search, page]);
 
   const hasActiveFilters =

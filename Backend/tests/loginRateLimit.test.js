@@ -13,14 +13,13 @@ test("rate limits /login route after maximum attempts", async () => {
   const url = `http://127.0.0.1:${port}/api/v1/user/login`;
 
   try {
-    // Send 5 allowed requests
+    // Send 5 allowed requests with unique emails to test IP-level rate limiter without DB timeout
     for (let i = 1; i <= 5; i++) {
       const res = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: "limiter-test@example.com",
-          password: "WrongPassword123!",
+          email: `limiter-test-${i}@example.com`,
         }),
       });
 
@@ -36,8 +35,7 @@ test("rate limits /login route after maximum attempts", async () => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        email: "limiter-test@example.com",
-        password: "WrongPassword123!",
+        email: "limiter-test-6@example.com",
       }),
     });
 

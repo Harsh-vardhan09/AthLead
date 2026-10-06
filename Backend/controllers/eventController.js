@@ -5,18 +5,22 @@ const escapeRegex = (string) => {
   return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 };
 
+const getStringParam = (val) => {
+  if (typeof val === "string") return val;
+  if (Array.isArray(val) && typeof val[0] === "string") return val[0];
+  return "";
+};
+
 export const findAllEvent = async (req, res, next) => {
   try {
-    const {
-      sport,
-      level,
-      location,
-      date,
-      status,
-      search,
-      page,
-      limit,
-    } = req.query;
+    const sport = getStringParam(req.query.sport);
+    const level = getStringParam(req.query.level);
+    const location = getStringParam(req.query.location);
+    const date = getStringParam(req.query.date);
+    const status = getStringParam(req.query.status);
+    const search = getStringParam(req.query.search);
+    const pageVal = getStringParam(req.query.page);
+    const limitVal = getStringParam(req.query.limit);
 
     const query = {};
 
@@ -28,7 +32,7 @@ export const findAllEvent = async (req, res, next) => {
       query.level = { $regex: new RegExp(`^${escapeRegex(level)}$`, "i") };
     }
 
-    if (location && location.trim() !== "") {
+    if (location.trim() !== "") {
       query.location = { $regex: escapeRegex(location.trim()), $options: "i" };
     }
 
@@ -68,7 +72,7 @@ export const findAllEvent = async (req, res, next) => {
       }
     }
 
-    if (search && search.trim() !== "") {
+    if (search.trim() !== "") {
       const regex = new RegExp(escapeRegex(search.trim()), "i");
       query.$or = [
         { title: regex },
@@ -78,14 +82,21 @@ export const findAllEvent = async (req, res, next) => {
       ];
     }
 
-    const pageNum = parseInt(page, 10);
-    const limitNum = parseInt(limit, 10);
+    let pageNum = parseInt(pageVal, 10);
+    let limitNum = parseInt(limitVal, 10);
+
+    if (isNaN(limitNum) || limitNum <= 0) {
+      limitNum = 0;
+    }
+    if (isNaN(pageNum) || pageNum <= 0) {
+      pageNum = 1;
+    }
 
     const total = await Event.countDocuments(query);
 
     let mongooseQuery = Event.find(query).sort({ date: 1 });
 
-    if (pageNum > 0 && limitNum > 0) {
+    if (limitNum > 0) {
       mongooseQuery = mongooseQuery.skip((pageNum - 1) * limitNum).limit(limitNum);
     }
 
@@ -97,7 +108,7 @@ export const findAllEvent = async (req, res, next) => {
       events,
       pagination: {
         total,
-        page: pageNum > 0 ? pageNum : 1,
+        page: pageNum,
         limit: limitNum > 0 ? limitNum : total,
         totalPages: limitNum > 0 ? Math.ceil(total / limitNum) || 1 : 1,
       },

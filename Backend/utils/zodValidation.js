@@ -31,7 +31,7 @@ export const LoginVal = z.object({
   password: z.string(),
 });
 
-export const scoreInputVal = z.object({
+export const scoreInputVal = z.strictObject({
   sport: z.string().trim().min(1, "Sport is required"),
   training_years: z
     .number()

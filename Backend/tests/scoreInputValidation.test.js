@@ -118,7 +118,7 @@ test("scoreInputVal rejects values above allowed ranges", () => {
   assert.equal(excessiveVo2Max.success, false);
 });
 
-test("scoreInputVal strips unexpected fields", () => {
+test("scoreInputVal rejects unexpected fields", () => {
   const payload = {
     sport: "running",
     training_years: 4,
@@ -127,15 +127,11 @@ test("scoreInputVal strips unexpected fields", () => {
     unknown_metric: 999,
   };
 
-  const parsed = scoreInputVal.parse(payload);
-  assert.equal(parsed.sport, "running");
-  assert.equal(parsed.training_years, 4);
-  assert.equal(parsed.user, undefined);
-  assert.equal(parsed.role, undefined);
-  assert.equal(parsed.unknown_metric, undefined);
+  const result = scoreInputVal.safeParse(payload);
+  assert.equal(result.success, false);
 });
 
-test("saveScoreInput persists validated data, preserves req.user._id, and filters unexpected fields", async () => {
+test("saveScoreInput persists validated data and preserves req.user._id", async () => {
   let capturedQuery = null;
   let capturedUpdate = null;
 
@@ -169,8 +165,6 @@ test("saveScoreInput persists validated data, preserves req.user._id, and filter
         sport: "cycling",
         training_years: 4,
         vo2_max: 55,
-        user: "hacker_override_id",
-        injectedField: "should_not_exist",
       }),
     });
 
@@ -182,7 +176,6 @@ test("saveScoreInput persists validated data, preserves req.user._id, and filter
     assert.equal(capturedUpdate.sport, "cycling");
     assert.equal(capturedUpdate.training_years, 4);
     assert.equal(capturedUpdate.vo2_max, 55);
-    assert.equal(capturedUpdate.injectedField, undefined);
   } finally {
     server.close();
     mock.reset();
@@ -190,6 +183,12 @@ test("saveScoreInput persists validated data, preserves req.user._id, and filter
 });
 
 test("POST /api/score-inputs returns HTTP 400 with formatted errors on invalid inputs", async () => {
+  let findOneAndUpdateCalled = false;
+  mock.method(AthleteScoreInput, "findOneAndUpdate", async () => {
+    findOneAndUpdateCalled = true;
+    return {};
+  });
+
   const app = express();
   app.use(express.json());
   app.post(
@@ -241,7 +240,25 @@ test("POST /api/score-inputs returns HTTP 400 with formatted errors on invalid i
       body: JSON.stringify({ sport: "cycling", training_years: "five" }),
     });
     assert.equal(resBadType.status, 400);
+
+    // Unexpected fields rejected
+    const resUnexpected = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sport: "cycling",
+        training_years: 4,
+        user: "hacker_override_id",
+        injectedField: "should_not_exist",
+      }),
+    });
+    assert.equal(resUnexpected.status, 400);
+    const bodyUnexpected = await resUnexpected.json();
+    assert.equal(bodyUnexpected.success, false);
+    assert.equal(bodyUnexpected.message, "Validation failed");
+    assert.equal(findOneAndUpdateCalled, false);
   } finally {
     server.close();
+    mock.reset();
   }
 });

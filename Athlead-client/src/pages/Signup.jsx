@@ -3,11 +3,15 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router";
 import toast, { Toaster } from "react-hot-toast";
-import { api } from "../api/axios";
+import { authService } from "../api";
 import CalendarPicker from "../Components/CalendarPicker";
 import OtpVerification, {
   OTP_SESSION_KEY,
 } from "../Components/OtpVerification.jsx";
+import {
+  PASSWORD_ERROR_MESSAGE,
+  isValidPassword,
+} from "../utils/passwordValidation.js";
 
 // ── Step constants ────────────────────────────────────────────────────────────
 const STEP_FORM = "form";
@@ -45,7 +49,7 @@ const Signup = () => {
     setSendingOtp(true);
     try {
       console.log("BASE URL:", import.meta.env.VITE_BASE_URL);
-      const res = await api.post("/api/auth/send-otp", { email: data.email });
+      const res = await authService.sendOtp(data.email);
 
       if (res.data.success) {
         // Store the UUID in localStorage — OtpVerification reads it from there.
@@ -88,7 +92,7 @@ const Signup = () => {
 
     setStep(STEP_SUBMITTING);
     try {
-      const res = await api.post("/api/auth/signup", {
+      const res = await authService.signup({
         ...formattedData,
         sessionId, // backend looks up email via this UUID
       });
@@ -287,11 +291,9 @@ const Signup = () => {
                     type={show ? "text" : "password"}
                     placeholder="Enter Password"
                     {...register("password", {
-                      required: true,
-                      pattern: {
-                        value: /[a-zA-z0-9_\-.@$]{7,16}/i,
-                        message: "Need 7-16 chars, special characters allowed",
-                      },
+                      required: "Password is required",
+                      validate: (value) =>
+                        isValidPassword(value) || PASSWORD_ERROR_MESSAGE,
                     })}
                     className="transparent w-full h-full focus:outline-none focus:ring-0"
                   />

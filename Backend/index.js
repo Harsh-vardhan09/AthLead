@@ -11,6 +11,7 @@ import eventRouter from "./routes/eventRoutes.js";
 import scoreRouter from "./routes/scoreRoute.js";
 import scoreInputRoutes from "./routes/scoreInputRoutes.js";
 import newsRoute from './routes/newsRoutes.js';
+import { errorHandler } from "./middleware/errorHandler.js";
 
 db();
 
@@ -56,6 +57,8 @@ app.use((req, res) => {
     message: "Route not found",
   });
 });
+
+app.use(errorHandler);
 
 app.listen(process.env.SERVER_PORT, () => {
   console.log(

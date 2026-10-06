@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import toast from "react-hot-toast";
-import { api } from "../api/axios";
+import { scoreService } from "../api";
 import { useNavigate } from "react-router";
 import { useAuth } from "../context/useAuth";
 
@@ -162,7 +162,7 @@ export default function Score() {
     }
 
     try {
-      const res = await api.post("/api/score", formData);
+      const res = await scoreService.submit(formData);
       if (res.data.success) {
         const scoreData = {
           vo2_max: Number(formData.vo2_max),

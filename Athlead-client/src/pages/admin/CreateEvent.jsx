@@ -1,4 +1,4 @@
-import { api } from "@/api/axios";
+import { adminService } from "@/api";
 import React from "react";
 import { CalendarPlus } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -36,8 +36,9 @@ const CreateEvent = () => {
 
   const onSubmit = async (data) => {
     try {
-      const res = await api.post("/api/events", {
-        data: { ...data, prize: Number(data.prize) },
+      const res = await adminService.createEvent({
+        ...data,
+        prize: Number(data.prize),
       });
       if (res.data.success) {
         toast.success(res.data.message);

@@ -1,5 +1,5 @@
 import React from "react";
-import { ArrowRight, PlayCircle, Section } from "lucide-react";
+import { ArrowRight, PlayCircle } from "lucide-react";
 import { faqs, features, sportsSupported } from "../assets/assets";
 import FaqItem from "../Components/FaqItem";
 import Footer from "../Components/Footer";
@@ -10,7 +10,7 @@ const Home = () => {
   const { loggedIn } = useAuth();
   const navigate = useNavigate();
   return (
-    <section className="relative max-w-screen min-h-screen bg-[#050d1a] bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[60px_60px] bg-repeat overflow-hidden">
+    <section className="relative max-w-screen min-h-screen bg-[#050d1a] bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:60px_60px] bg-repeat overflow-hidden">
       <main className="relative min-h-screen flex items-center justify-center font-segoe mt-20">
         {/* background style */}
         <div className="absolute -top-15 right-220 w-120 h-120 rounded-full bg-teal-radial animate-backforth" />
@@ -26,8 +26,8 @@ const Home = () => {
           </h1>
           <p className=" text-sm md:text-lg basic font-medium mx-3">
             A unified Ai powered Platform for users to rank, evaluate talent
-            accross india,
-            <br /> --Giving every athleate an fair Data driven shot at greatness
+            across India,
+            <br /> --Giving every athlete an fair Data driven shot at greatness
           </p>
 
           <div className="flex m-8 gap-8">
@@ -54,7 +54,7 @@ const Home = () => {
             <div className="border border-gray-100/10 h-25 w-35 rounded-xl flex flex-col justify-center text-xl text-white font-bold transition-all ease-in-out hover:shadow-[0_10px_20px_rgba(255,255,255,0.25)] hover:scale-105">
               12,000+ <br />
               <span className="text-xs basic font-medium">
-                Atheletes Tracked
+                Athletes Tracked
               </span>{" "}
             </div>
             <div className="border border-gray-100/10 h-25 w-35 rounded-xl flex flex-col justify-center text-xl text-white font-bold transition-all ease-in-out hover:shadow-[0_10px_20px_rgba(255,255,255,0.25)] hover:scale-105">
@@ -106,8 +106,8 @@ const Home = () => {
         <h1 className="text-3xl  text-white font-semibold font-segoe">
           Coverage
         </h1>
-        <p className="basic text-md mt-5 wrap-normal">
-          AI model fine tuned for each dicipline. Growing with the players{" "}
+        <p className="basic text-md mt-5 whitespace-normal">
+          AI model fine tuned for each discipline. Growing with the players{" "}
         </p>
         <div className="flex flex-wrap justify-center gap-4 mt-5">
           {sportsSupported.map((s, i) => (

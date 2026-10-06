@@ -4,7 +4,7 @@ import { useNavigate } from "react-router";
 import { cn } from "../utility/cn";
 import React from "react";
 import toast from "react-hot-toast";
-import { api } from "../api/axios";
+import { authService } from "../api";
 import { useAuth } from "../context/useAuth";
 
 // pinned: stays visible on lg+ (admin layout); otherwise it's a drawer only.
@@ -19,7 +19,7 @@ const Sidebar = ({ sidebar, setSidebar, navItems, pinned, showLogout }) => {
   };
 
   const logout = async () => {
-    const res = await api.post("/api/auth/logout", {});
+    const res = await authService.logout();
     if (res.data.success) {
       localStorage.removeItem("accessToken");
       setLoggedIn(false);

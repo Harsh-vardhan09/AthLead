@@ -57,41 +57,17 @@ export const findAllEvent = async (req, res, next) => {
       const statusLower = status.toLowerCase();
       if (statusLower === "upcoming" || statusLower === "open") {
         query.date = query.date
-          ? {
-              ...query.date,
-              $gte:
-                query.date.$gte && query.date.$gte > startOfToday
-                  ? query.date.$gte
-                  : startOfToday,
-            }
+          ? { ...query.date, $gte: startOfToday }
           : { $gte: startOfToday };
       } else if (statusLower === "ongoing" || statusLower === "live") {
-        if (query.date) {
-          const startGte =
-            query.date.$gte && query.date.$gte > startOfToday
-              ? query.date.$gte
-              : startOfToday;
-          const endLte =
-            query.date.$lte && query.date.$lte < endOfToday
-              ? query.date.$lte
-              : endOfToday;
-          query.date = { $gte: startGte, $lte: endLte };
-        } else {
-          query.date = { $gte: startOfToday, $lte: endOfToday };
-        }
+        query.date = { $gte: startOfToday, $lte: endOfToday };
       } else if (
         statusLower === "completed" ||
         statusLower === "closed" ||
         statusLower === "past"
       ) {
         query.date = query.date
-          ? {
-              ...query.date,
-              $lt:
-                query.date.$lte && query.date.$lte < startOfToday
-                  ? query.date.$lte
-                  : startOfToday,
-            }
+          ? { ...query.date, $lt: startOfToday }
           : { $lt: startOfToday };
       }
     }

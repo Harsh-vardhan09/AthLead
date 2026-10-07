@@ -52,8 +52,8 @@ class ErrorBoundary extends React.Component {
             <h1>Something went wrong</h1>
 
             <p>
-              We encountered an unexpected error. Please try again or reload
-              the page.
+              We encountered an unexpected error. Please try again or reload the
+              page.
             </p>
 
             <button onClick={this.handleRetry}>Try Again</button>

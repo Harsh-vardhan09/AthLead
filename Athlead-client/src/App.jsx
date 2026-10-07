@@ -2,6 +2,13 @@ import { Route, Routes } from "react-router-dom";
 import { Announcement, Home, Login, Signup } from "./pages";
 import Layout from "./pages/Layout";
 import React from "react";
+import { Toaster } from "react-hot-toast";
+import AppProvider from "./context/AppProvider";
+import ProtectedRoute from "./context/ProtectedRoute";
+import IsLoggedIn from "./context/IsLoggedIn";
+import RoleBasedRoute from "./context/RoleBasedRoute";
+import AdminLayout from "./pages/admin/AdminLayout";
+
 const LazyEvents = React.lazy(() => import("./pages/Events"));
 const LazyEventSignup = React.lazy(() => import("./pages/EventSignup"));
 const LazyDashboard = React.lazy(() => import("./pages/Dashboard"));
@@ -12,15 +19,9 @@ const LazyAdminDashboard = React.lazy(
 const LazyAllEvents = React.lazy(() => import("./pages/admin/AllEvents"));
 const LazyCreateEvent = React.lazy(() => import("./pages/admin/CreateEvent"));
 const LazyAthlete = React.lazy(() => import("./pages/admin/Athlete"));
-
-import { Toaster } from "react-hot-toast";
-import AppProvider from "./context/AppProvider";
-import ProtectedRoute from "./context/ProtectedRoute";
 const LazyEventCardSkeleton = React.lazy(
   () => import("./Components/EventCardSkelton"),
 );
-import IsLoggedIn from "./context/IsLoggedIn";
-import AdminLayout from "./pages/admin/AdminLayout";
 
 const App = () => {
   return (
@@ -84,36 +85,43 @@ const App = () => {
           <Route
             path="/admin"
             element={
-              <ProtectedRoute>
+              <RoleBasedRoute allowedRoles={["ADMIN"]}>
                 <AdminLayout />
-              </ProtectedRoute>
+              </RoleBasedRoute>
             }
           >
             <Route
               path="dashboard"
               element={
-                <ProtectedRoute>
+                <RoleBasedRoute allowedRoles={["ADMIN"]}>
                   <LazyAdminDashboard />
-                </ProtectedRoute>
+                </RoleBasedRoute>
               }
             />
             <Route
               path="events"
               element={
-                <ProtectedRoute>
+                <RoleBasedRoute allowedRoles={["ADMIN"]}>
                   <LazyAllEvents />
-                </ProtectedRoute>
+                </RoleBasedRoute>
               }
             />
             <Route
               path="event/new"
               element={
-                <ProtectedRoute>
+                <RoleBasedRoute allowedRoles={["ADMIN"]}>
                   <LazyCreateEvent />
-                </ProtectedRoute>
+                </RoleBasedRoute>
               }
             />
-            <Route path="athlete" element={<LazyAthlete />} />
+            <Route
+              path="athlete"
+              element={
+                <RoleBasedRoute allowedRoles={["ADMIN"]}>
+                  <LazyAthlete />
+                </RoleBasedRoute>
+              }
+            />
           </Route>
         </Routes>
       </React.Suspense>

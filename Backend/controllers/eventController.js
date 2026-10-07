@@ -1,16 +1,48 @@
 import Event from "../models/Event.js";
 import { Participation, User } from "../models/Users.js";
+import { buildEventQuery } from "../utils/eventQuery.js";
 
 export const findAllEvent = async (req, res, next) => {
   try {
-    const events = await Event.find({});
-    // console.log(events);
+    const { searchStage, pagination } = buildEventQuery(req.query);
+    let events;
 
-    res.status(200).json({
+    if (searchStage) {
+      const pipeline = [searchStage];
+      if (pagination) {
+        pipeline.push(
+          { $skip: (pagination.page - 1) * pagination.limit },
+          { $limit: pagination.limit + 1 },
+        );
+      }
+      events = await Event.aggregate(pipeline).exec();
+    } else {
+      let eventQuery = Event.find({});
+      if (pagination) {
+        eventQuery = eventQuery
+          .sort({ date: 1, _id: 1 })
+          .skip((pagination.page - 1) * pagination.limit)
+          .limit(pagination.limit + 1);
+      }
+      events = await eventQuery.exec();
+    }
+
+    const response = {
       success: true,
       status: 200,
       events,
-    });
+    };
+
+    if (pagination) {
+      response.pagination = {
+        page: pagination.page,
+        limit: pagination.limit,
+        hasMore: events.length > pagination.limit,
+      };
+      response.events = events.slice(0, pagination.limit);
+    }
+
+    res.status(200).json(response);
   } catch (error) {
     next(error);
   }

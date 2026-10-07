@@ -6,6 +6,7 @@
   "scripts": {
     "server": "nodemon index.js",
     "dev": "node index.js",
+    "test": "node --test",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",

@@ -10,8 +10,6 @@ import {
 } from "./pages";
 import Layout from "./pages/Layout";
 import React from "react";
-const LazyEvents = React.lazy(() => import("./pages/Events"));
-const LazyEventCardSkeleton = React.lazy(() => import("./Components/EventCardSkelton"));
 import { Toaster } from "react-hot-toast";
 import AppProvider from "./context/AppProvider";
 import ProtectedRoute from "./context/ProtectedRoute";
@@ -23,6 +21,11 @@ import AdminLayout from "./pages/admin/AdminLayout";
 import AllEvents from "./pages/admin/AllEvents";
 import CreateEvent from "./pages/admin/CreateEvent";
 import Athlete from "./pages/admin/Athlete";
+
+const LazyEvents = React.lazy(() => import("./pages/Events"));
+const LazyEventCardSkeleton = React.lazy(
+  () => import("./Components/EventCardSkelton"),
+);
 
 const App = () => {
   return (

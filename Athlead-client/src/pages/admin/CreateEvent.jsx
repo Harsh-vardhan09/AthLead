@@ -4,6 +4,7 @@ import { CalendarPlus } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import { useUnsavedChanges } from "../../hooks/useUnsavedChanges";
 
 const fields = [
   {
@@ -29,10 +30,12 @@ const CreateEvent = () => {
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    reset,
+    formState: { errors, isSubmitting, isDirty },
   } = useForm();
 
   const navigate = useNavigate();
+  const { allowNavigation } = useUnsavedChanges(isDirty);
 
   const onSubmit = async (data) => {
     try {
@@ -40,7 +43,10 @@ const CreateEvent = () => {
         ...data,
         prize: Number(data.prize),
       });
+
       if (res.data.success) {
+        reset(data);
+        allowNavigation();
         toast.success(res.data.message);
         navigate("/admin/events");
       } else {

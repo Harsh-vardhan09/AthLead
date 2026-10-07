@@ -1,6 +1,5 @@
 import { api } from "./axios";
 
 export const newsService = {
-  getAll: () =>
-    api.get("/api/news"),
+  getAll: () => api.get("/api/news"),
 };

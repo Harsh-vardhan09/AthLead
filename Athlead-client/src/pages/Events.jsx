@@ -1,5 +1,17 @@
-import { Search } from "lucide-react";
+import {
+  Search,
+  RotateCcw,
+  Calendar as CalendarIcon,
+  MapPin,
+  Signal,
+  Clock,
+  ChevronLeft,
+  ChevronRight,
+  Filter,
+  X,
+} from "lucide-react";
 import React, { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { sports } from "../assets/assets";
 import EventCard from "../Components/EventCard";
 import EventDetails from "../Components/EventDetails";
@@ -7,180 +19,322 @@ import { eventService } from "../api";
 import EventCardSkeleton from "../Components/EventCardSkelton";
 import toast from "react-hot-toast";
 
+const levels = [
+  "All",
+  "Youth",
+  "National",
+  "Beginner",
+  "Intermediate",
+  "Advanced",
+  "Professional",
+];
+
+const statuses = ["All", "Upcoming", "Ongoing", "Completed"];
+
 const Events = () => {
-  const [type, setType] = useState("All");
-  const [search, setSearch] = useState("");
-  const [level, setLevel] = useState("");
-  const [location, setLocation] = useState("");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
-  const [status, setStatus] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
   const [selected, setSelected] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
   const [events, setEvents] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasLoadError, setHasLoadError] = useState(false);
-  const [pagination, setPagination] = useState(null);
-  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({
+    total: 0,
+    page: 1,
+    limit: 6,
+    totalPages: 1,
+  });
+  const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    setPage(1);
-  }, [search, type, level, location, dateFrom, dateTo, status]);
+  // Extract filter state from searchParams
+  const sport = searchParams.get("sport") || "All";
+  const level = searchParams.get("level") || "All";
+  const location = searchParams.get("location") || "";
+  const date = searchParams.get("date") || "";
+  const status = searchParams.get("status") || "All";
+  const search = searchParams.get("search") || "";
+  const page = parseInt(searchParams.get("page") || "1", 10);
 
-  useEffect(() => {
-    const controller = new AbortController();
-    setIsLoading(true);
-    setHasLoadError(false);
-
-    const timeoutId = setTimeout(async () => {
-      try {
-        const res = await eventService.getAll(
-          {
-            q: search.trim() || undefined,
-            sport: type === "All" ? undefined : type,
-            level: level.trim() || undefined,
-            location: location.trim() || undefined,
-            dateFrom: dateFrom || undefined,
-            dateTo: dateTo || undefined,
-            status: status || undefined,
-            page,
-            limit: 24,
-          },
-          { signal: controller.signal },
-        );
-        setEvents(res.data.events);
-        setPagination(res.data.pagination);
-      } catch (error) {
-        if (!controller.signal.aborted) {
-          console.error(error);
-          setEvents([]);
-          setPagination(null);
-          setHasLoadError(true);
-          toast.error("Could not load events");
-        }
-      } finally {
-        if (!controller.signal.aborted) {
-          setIsLoading(false);
-        }
+  const updateFilters = (newFilters) => {
+    const nextParams = new URLSearchParams(searchParams);
+    Object.entries(newFilters).forEach(([key, val]) => {
+      if (val !== undefined && val !== null && val !== "All" && val !== "") {
+        nextParams.set(key, val);
+      } else {
+        nextParams.delete(key);
       }
-    }, 300);
+    });
+    if (!("page" in newFilters)) {
+      nextParams.delete("page");
+    }
+    setSearchParams(nextParams);
+  };
 
-    return () => {
-      clearTimeout(timeoutId);
-      controller.abort();
+  const handleReset = () => {
+    setSearchParams({});
+  };
+
+  useEffect(() => {
+    let isCancelled = false;
+    const getEvents = async () => {
+      setIsLoading(true);
+      try {
+        const params = {};
+        if (sport && sport !== "All") params.sport = sport;
+        if (level && level !== "All") params.level = level;
+        if (location) params.location = location;
+        if (date) params.date = date;
+        if (status && status !== "All") params.status = status;
+        if (search) params.search = search;
+        params.page = page;
+        params.limit = 6;
+
+        const res = await eventService.getAll(params);
+        if (isCancelled) return;
+        setEvents(res.data.events || []);
+        if (res.data.pagination) {
+          setPagination(res.data.pagination);
+        }
+        setIsLoading(false);
+
+        if (res.data.status && res.data.status !== 200 && res.data.message) {
+          toast.error(res.data.message);
+        }
+      } catch (error) {
+        if (isCancelled) return;
+        console.log(error);
+        setIsLoading(false);
+      }
     };
-  }, [search, type, level, location, dateFrom, dateTo, status, page]);
+    getEvents();
+    return () => {
+      isCancelled = true;
+    };
+  }, [sport, level, location, date, status, search, page]);
+
+  const hasActiveFilters =
+    sport !== "All" ||
+    level !== "All" ||
+    location !== "" ||
+    date !== "" ||
+    status !== "All" ||
+    search !== "";
 
   return (
-    <section className=" relative min-h-screen w-full flex flex-col p-5 gap-5">
-      <div className="flex flex-col items-center justify-start min-h-screen w-full">
-        <div className=" flex items-center text-start bg-teal-500/7 border border-teal-950 gap-3 rounded-lg w-full max-w-4xl h-12 px-12">
-          <Search size={20} className="text-slate-500" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search Events..."
-            aria-label="Search events by title"
-            className="w-full outline-none text-white font-segoe "
-          />
-        </div>
-        <div className="flex items-start gap-3 mt-5 w-full max-w-4xl flex-wrap">
-          {sports.map((sport) => (
-            <button
-              key={sport}
-              type="button"
-              aria-pressed={type === sport}
-              onClick={() => {
-                setPage(1);
-                setType(sport);
-              }}
-              className={` border border-gray-700 px-5 py-1 rounded-lg cursor-pointer ${type === sport ? "bg-[#2596be] text-white border-green-400/20" : "bg-[#c3d4dc] text-black"}`}
-            >
-              {sport}
-            </button>
-          ))}
+    <section className="relative min-h-screen w-full flex flex-col p-5 gap-6">
+      <div className="flex flex-col items-center justify-start min-h-screen w-full max-w-6xl mx-auto">
+        {/* Search & Main Filter Section */}
+        <div className="w-full flex flex-col gap-4 bg-slate-900/60 backdrop-blur-md p-5 rounded-2xl border border-slate-800 shadow-xl">
+          <div className="flex flex-col sm:flex-row items-center gap-3">
+            {/* Search Input */}
+            <div className="flex items-center text-start bg-slate-800/80 border border-slate-700 gap-3 rounded-xl w-full h-11 px-4 text-slate-200 focus-within:border-teal-500 transition-colors">
+              <Search size={18} className="text-slate-400 shrink-0" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => updateFilters({ search: e.target.value })}
+                placeholder="Search events by title or description..."
+                className="w-full bg-transparent outline-none text-white text-sm placeholder:text-slate-400"
+              />
+              {search && (
+                <button
+                  onClick={() => updateFilters({ search: "" })}
+                  className="text-slate-400 hover:text-white"
+                  aria-label="Clear search"
+                >
+                  <X size={16} />
+                </button>
+              )}
+            </div>
+
+            {/* Reset Button */}
+            {hasActiveFilters && (
+              <button
+                onClick={handleReset}
+                className="flex items-center gap-2 px-4 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-xl text-sm font-medium transition-colors shrink-0"
+              >
+                <RotateCcw size={16} />
+                Reset Filters
+              </button>
+            )}
+          </div>
+
+          {/* Filter Controls Row */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+            {/* Level Select */}
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-slate-400 flex items-center gap-1">
+                <Signal size={14} /> Level
+              </label>
+              <select
+                value={level}
+                onChange={(e) => updateFilters({ level: e.target.value })}
+                className="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white outline-none focus:border-teal-500 transition-colors"
+                aria-label="Filter by level"
+              >
+                {levels.map((lvl) => (
+                  <option
+                    key={lvl}
+                    value={lvl}
+                    className="bg-slate-800 text-white"
+                  >
+                    {lvl === "All" ? "All Levels" : lvl}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Location Input */}
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-slate-400 flex items-center gap-1">
+                <MapPin size={14} /> Location
+              </label>
+              <input
+                type="text"
+                value={location}
+                onChange={(e) => updateFilters({ location: e.target.value })}
+                placeholder="Filter location..."
+                className="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white outline-none focus:border-teal-500 transition-colors placeholder:text-slate-500"
+                aria-label="Filter by location"
+              />
+            </div>
+
+            {/* Date Input */}
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-slate-400 flex items-center gap-1">
+                <CalendarIcon size={14} /> Date
+              </label>
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => updateFilters({ date: e.target.value })}
+                className="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white outline-none focus:border-teal-500 transition-colors color-scheme-dark"
+                aria-label="Filter by date"
+              />
+            </div>
+
+            {/* Status Select */}
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-slate-400 flex items-center gap-1">
+                <Clock size={14} /> Status
+              </label>
+              <select
+                value={status}
+                onChange={(e) => updateFilters({ status: e.target.value })}
+                className="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white outline-none focus:border-teal-500 transition-colors"
+                aria-label="Filter by status"
+              >
+                {statuses.map((st) => (
+                  <option
+                    key={st}
+                    value={st}
+                    className="bg-slate-800 text-white"
+                  >
+                    {st === "All" ? "All Statuses" : st}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Sport Selector Pills */}
+          <div className="flex flex-col gap-2 pt-2 border-t border-slate-800">
+            <span className="text-xs font-medium text-slate-400 flex items-center gap-1">
+              <Filter size={14} /> Sport
+            </span>
+            <div className="flex items-center gap-2 flex-wrap">
+              {sports.map((s) => (
+                <button
+                  key={s}
+                  onClick={() => updateFilters({ sport: s })}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                    sport === s
+                      ? "bg-[#2596be] text-white font-semibold shadow-md border border-cyan-400/30"
+                      : "bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700/60"
+                  }`}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mt-5 w-full max-w-4xl">
-          <label className="flex flex-col gap-1 text-sm text-slate-300">
-            Level
-            <input
-              type="text"
-              value={level}
-              onChange={(event) => {
-                setPage(1);
-                setLevel(event.target.value);
-              }}
-              placeholder="Any level"
-              className="rounded-lg border border-gray-700 bg-neutral-900 px-3 py-2 text-white"
-            />
-          </label>
-          <label className="flex flex-col gap-1 text-sm text-slate-300">
-            Location
-            <input
-              type="text"
-              value={location}
-              onChange={(event) => {
-                setPage(1);
-                setLocation(event.target.value);
-              }}
-              placeholder="Any location"
-              className="rounded-lg border border-gray-700 bg-neutral-900 px-3 py-2 text-white"
-            />
-          </label>
-          <label className="flex flex-col gap-1 text-sm text-slate-300">
-            From
-            <input
-              type="date"
-              value={dateFrom}
-              max={dateTo || undefined}
-              onChange={(event) => {
-                setPage(1);
-                setDateFrom(event.target.value);
-              }}
-              className="rounded-lg border border-gray-700 bg-neutral-900 px-3 py-2 text-white"
-            />
-          </label>
-          <label className="flex flex-col gap-1 text-sm text-slate-300">
-            To
-            <input
-              type="date"
-              value={dateTo}
-              min={dateFrom || undefined}
-              onChange={(event) => {
-                setPage(1);
-                setDateTo(event.target.value);
-              }}
-              className="rounded-lg border border-gray-700 bg-neutral-900 px-3 py-2 text-white"
-            />
-          </label>
-          <label className="flex flex-col gap-1 text-sm text-slate-300">
-            Status
-            <select
-              value={status}
-              onChange={(event) => {
-                setPage(1);
-                setStatus(event.target.value);
-              }}
-              className="rounded-lg border border-gray-700 bg-neutral-900 px-3 py-2 text-white"
-            >
-              <option value="">Any status</option>
-              <option value="upcoming">Upcoming</option>
-              <option value="ongoing">Ongoing</option>
-              <option value="past">Past</option>
-            </select>
-          </label>
-        </div>
+        {/* Active Filters Display */}
+        {hasActiveFilters && (
+          <div className="flex flex-wrap items-center gap-2 mt-4 w-full">
+            <span className="text-xs text-slate-400">Active filters:</span>
+            {sport !== "All" && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-teal-500/10 text-teal-300 border border-teal-500/20 text-xs">
+                Sport: {sport}
+                <button onClick={() => updateFilters({ sport: "All" })}>
+                  <X size={12} />
+                </button>
+              </span>
+            )}
+            {level !== "All" && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-teal-500/10 text-teal-300 border border-teal-500/20 text-xs">
+                Level: {level}
+                <button onClick={() => updateFilters({ level: "All" })}>
+                  <X size={12} />
+                </button>
+              </span>
+            )}
+            {location && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-teal-500/10 text-teal-300 border border-teal-500/20 text-xs">
+                Location: {location}
+                <button onClick={() => updateFilters({ location: "" })}>
+                  <X size={12} />
+                </button>
+              </span>
+            )}
+            {date && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-teal-500/10 text-teal-300 border border-teal-500/20 text-xs">
+                Date: {date}
+                <button onClick={() => updateFilters({ date: "" })}>
+                  <X size={12} />
+                </button>
+              </span>
+            )}
+            {status !== "All" && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-teal-500/10 text-teal-300 border border-teal-500/20 text-xs">
+                Status: {status}
+                <button onClick={() => updateFilters({ status: "All" })}>
+                  <X size={12} />
+                </button>
+              </span>
+            )}
+            {search && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-teal-500/10 text-teal-300 border border-teal-500/20 text-xs">
+                Search: {search}
+                <button onClick={() => updateFilters({ search: "" })}>
+                  <X size={12} />
+                </button>
+              </span>
+            )}
+          </div>
+        )}
 
-        {/* events */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 my-8 w-full lg:px-20">
-          {isLoading ? (
-            Array.from({ length: 6 }).map((_, i) => (
+        {/* Events Grid or Empty / Loading State */}
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 my-8 w-full">
+            {Array.from({ length: 6 }).map((_, i) => (
               <EventCardSkeleton key={i} />
-            ))
-          ) : events.length > 0 ? (
-            events.map((event) => (
+            ))}
+          </div>
+        ) : events.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 text-slate-400 gap-3 w-full">
+            <p className="text-lg">No events match your selected filters.</p>
+            {hasActiveFilters && (
+              <button
+                onClick={handleReset}
+                className="text-sm text-teal-400 hover:underline flex items-center gap-1"
+              >
+                <RotateCcw size={14} /> Clear all filters
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 my-8 w-full">
+            {events.map((event) => (
               <EventCard
                 key={event._id}
                 e={event}
@@ -188,39 +342,57 @@ const Events = () => {
                 setIsOpen={setIsOpen}
                 isLoading={isLoading}
               />
-            ))
-          ) : hasLoadError ? (
-            <p className="col-span-full text-center text-rose-400" role="alert">
-              Events could not be loaded. Please try again.
-            </p>
-          ) : (
-            <p className="col-span-full text-center text-slate-400">
-              No events match your search and filters.
-            </p>
-          )}
-        </div>
-        {pagination && (page > 1 || pagination.hasMore) && (
-          <div className="flex items-center gap-4 pb-8">
-            <button
-              type="button"
-              disabled={isLoading || page === 1}
-              onClick={() => setPage((currentPage) => currentPage - 1)}
-              className="rounded-lg border border-gray-700 px-4 py-2 text-white disabled:opacity-50"
-            >
-              Previous
-            </button>
-            <span className="text-sm text-slate-300">Page {page}</span>
-            <button
-              type="button"
-              disabled={isLoading || !pagination.hasMore}
-              onClick={() => setPage((currentPage) => currentPage + 1)}
-              className="rounded-lg border border-gray-700 px-4 py-2 text-white disabled:opacity-50"
-            >
-              Next
-            </button>
+            ))}
+          </div>
+        )}
+
+        {/* Pagination Section */}
+        {!isLoading && pagination.totalPages > 1 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between w-full py-4 border-t border-slate-800 text-slate-300 gap-4">
+            <span className="text-xs text-slate-400">
+              Showing page {pagination.page} of {pagination.totalPages} (
+              {pagination.total} total events)
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                disabled={pagination.page <= 1}
+                onClick={() => updateFilters({ page: pagination.page - 1 })}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800 text-xs font-medium text-slate-300 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronLeft size={16} /> Previous
+              </button>
+
+              <div className="flex items-center gap-1 px-2">
+                {Array.from(
+                  { length: pagination.totalPages },
+                  (_, i) => i + 1,
+                ).map((p) => (
+                  <button
+                    key={p}
+                    onClick={() => updateFilters({ page: p })}
+                    className={`w-7 h-7 rounded-lg text-xs font-medium flex items-center justify-center transition-colors ${
+                      pagination.page === p
+                        ? "bg-teal-500 text-white font-bold"
+                        : "bg-slate-800 text-slate-400 hover:bg-slate-700"
+                    }`}
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                disabled={pagination.page >= pagination.totalPages}
+                onClick={() => updateFilters({ page: pagination.page + 1 })}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800 text-xs font-medium text-slate-300 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                Next <ChevronRight size={16} />
+              </button>
+            </div>
           </div>
         )}
       </div>
+
       {isOpen && <EventDetails selected={selected} setIsOpen={setIsOpen} />}
     </section>
   );

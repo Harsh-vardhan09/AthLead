@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import AppContext from "./AppContext";
-import { api } from "../api/axios";
+import { userService } from "../api";
 
 const AppProvider = ({ children }) => {
   const [loggedIn, setLoggedIn] = useState(false);
@@ -16,7 +16,7 @@ const AppProvider = ({ children }) => {
       return;
     }
     try {
-      const res = await api.get("/api/auth/me");
+      const res = await userService.getMe();
       if (res.data) {
         setLoggedIn(true);
         setUser(res.data.user);

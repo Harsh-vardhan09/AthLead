@@ -1,4 +1,4 @@
-import { api } from "@/api/axios";
+import { eventService, adminService } from "@/api";
 import { formatDate } from "@/utils/dateFormatter";
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -33,7 +33,7 @@ const AllEvents = () => {
     const fetchEvents = async () => {
       setIsLoading(true);
       try {
-        const res = await api.get("/api/events");
+        const res = await eventService.getAll();
         setEvents(res.data.events);
       } catch (error) {
         console.log(error);
@@ -48,7 +48,7 @@ const AllEvents = () => {
     if (!window.confirm("Delete this event? This cannot be undone.")) return;
     setBusyId(id);
     try {
-      const res = await api.delete(`/api/events/${id}`);
+      const res = await adminService.deleteEvent(id);
       if (res.data.success) {
         setEvents((prev) => prev.filter((e) => e._id !== id));
         toast.success(res.data.message);
@@ -69,7 +69,7 @@ const AllEvents = () => {
     data.prize = Number(data.prize);
     setBusyId(id);
     try {
-      const res = await api.patch(`/api/events/${id}`, { data });
+      const res = await adminService.updateEvent(id, data);
       if (res.data.success) {
         setEvents((prev) =>
           prev.map((ev) => (ev._id === id ? res.data.event : ev)),

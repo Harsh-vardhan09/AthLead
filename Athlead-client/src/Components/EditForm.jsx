@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import CalendarPicker from "../Components/CalendarPicker";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router";
-import { api } from "../api/axios";
+import { userService } from "../api";
 import toast from "react-hot-toast";
 import { useAuth } from "../context/useAuth";
 
@@ -34,12 +34,12 @@ const EditForm = ({ setEditForm }) => {
 
     formData.append("DOB", formattedDOB);
 
-    const res = await api.patch("/api/edit", formData);
+    const res = await userService.updateProfile(formData);
     console.log(res);
 
     if (res.data.success) {
       try {
-        const updated = await api.get("/api/auth/me");
+        const updated = await userService.getMe();
         setUser(updated.data.user);
       } catch {
         // /me failed but edit succeeded, continue

@@ -1,27 +1,125 @@
 import Event from "../models/Event.js";
 import { Participation, User } from "../models/Users.js";
 
-export const findAllEvent = async (req, res) => {
+const escapeRegex = (string) => {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+};
+
+const getStringParam = (val) => {
+  if (typeof val === "string") return val;
+  if (Array.isArray(val) && typeof val[0] === "string") return val[0];
+  return "";
+};
+
+export const findAllEvent = async (req, res, next) => {
   try {
-    const events = await Event.find({});
-    // console.log(events);
+    const sport = getStringParam(req.query.sport);
+    const level = getStringParam(req.query.level);
+    const location = getStringParam(req.query.location);
+    const date = getStringParam(req.query.date);
+    const status = getStringParam(req.query.status);
+    const search = getStringParam(req.query.search);
+    const pageVal = getStringParam(req.query.page);
+    const limitVal = getStringParam(req.query.limit);
+
+    const query = {};
+
+    if (sport && sport !== "All") {
+      query.sport = { $regex: new RegExp(`^${escapeRegex(sport)}$`, "i") };
+    }
+
+    if (level && level !== "All") {
+      query.level = { $regex: new RegExp(`^${escapeRegex(level)}$`, "i") };
+    }
+
+    if (location.trim() !== "") {
+      query.location = { $regex: escapeRegex(location.trim()), $options: "i" };
+    }
+
+    if (date) {
+      const parsedDate = new Date(date);
+      if (!isNaN(parsedDate.getTime())) {
+        const startOfDay = new Date(parsedDate);
+        startOfDay.setUTCHours(0, 0, 0, 0);
+        const endOfDay = new Date(parsedDate);
+        endOfDay.setUTCHours(23, 59, 59, 999);
+        query.date = { $gte: startOfDay, $lte: endOfDay };
+      }
+    }
+
+    if (status && status !== "All") {
+      const now = new Date();
+      const startOfToday = new Date(now);
+      startOfToday.setUTCHours(0, 0, 0, 0);
+      const endOfToday = new Date(now);
+      endOfToday.setUTCHours(23, 59, 59, 999);
+
+      const statusLower = status.toLowerCase();
+      if (statusLower === "upcoming" || statusLower === "open") {
+        query.date = query.date
+          ? { ...query.date, $gte: startOfToday }
+          : { $gte: startOfToday };
+      } else if (statusLower === "ongoing" || statusLower === "live") {
+        query.date = { $gte: startOfToday, $lte: endOfToday };
+      } else if (
+        statusLower === "completed" ||
+        statusLower === "closed" ||
+        statusLower === "past"
+      ) {
+        query.date = query.date
+          ? { ...query.date, $lt: startOfToday }
+          : { $lt: startOfToday };
+      }
+    }
+
+    if (search.trim() !== "") {
+      const regex = new RegExp(escapeRegex(search.trim()), "i");
+      query.$or = [
+        { title: regex },
+        { description: regex },
+        { sport: regex },
+        { location: regex },
+      ];
+    }
+
+    let pageNum = parseInt(pageVal, 10);
+    let limitNum = parseInt(limitVal, 10);
+
+    if (isNaN(limitNum) || limitNum <= 0) {
+      limitNum = 0;
+    }
+    if (isNaN(pageNum) || pageNum <= 0) {
+      pageNum = 1;
+    }
+
+    const total = await Event.countDocuments(query);
+
+    let mongooseQuery = Event.find(query).sort({ date: 1 });
+
+    if (limitNum > 0) {
+      mongooseQuery = mongooseQuery.skip((pageNum - 1) * limitNum).limit(limitNum);
+    }
+
+    const events = await mongooseQuery;
 
     res.status(200).json({
       success: true,
       status: 200,
       events,
+      pagination: {
+        total,
+        page: pageNum,
+        limit: limitNum > 0 ? limitNum : total,
+        totalPages: limitNum > 0 ? Math.ceil(total / limitNum) || 1 : 1,
+      },
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      status: 500,
-      message: error.message,
-    });
+    next(error);
   }
 };
 
 //create event
-export const createEvent = async (req, res) => {
+export const createEvent = async (req, res, next) => {
   const { data } = req.body;
 
   const {
@@ -61,10 +159,7 @@ export const createEvent = async (req, res) => {
       event,
     });
   } catch (error) {
-    res.json({
-      success: false,
-      message: error.message,
-    });
+    next(error);
   }
 };
 
@@ -134,7 +229,7 @@ export const updateEvent = async (req, res) => {
 };
 
 //User register to event
-export const registerEvent = async (req, res) => {
+export const registerEvent = async (req, res, next) => {
   const { eventId } = req.params;
   const { email, fullname, phone, gender } = req.body;
   try {
@@ -169,30 +264,39 @@ export const registerEvent = async (req, res) => {
       });
     }
 
-    await Participation.create({
-      user: user._id,
-      event: eventId,
-      email: email || user.email,
-      fullname,
-      phone,
-      gender,
-      DOB,
-    });
+    try {
+      await Participation.create({
+        user: user._id,
+        event: eventId,
+        email: email || user.email,
+        fullname,
+        phone,
+        gender,
+        DOB,
+      });
+    } catch (error) {
+      // Handle MongoDB duplicate-key error
+      if (error.code === 11000) {
+        return res.status(409).json({
+          success: false,
+          message: "User is already registered for this event.",
+        });
+      }
+
+      throw error;
+    }
 
     res.json({
       success: true,
       message: "Registered to event",
     });
   } catch (error) {
-    res.json({
-      success: false,
-      message: error.message,
-    });
+    next(error);
   }
 };
 
 // Get events registered by the user
-export const getMyEvents = async (req, res) => {
+export const getMyEvents = async (req, res, next) => {
   try {
     const participations = await Participation.find({
       user: req.user._id,
@@ -220,9 +324,6 @@ export const getMyEvents = async (req, res) => {
 
     res.json(registrations);
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    next(error);
   }
 };

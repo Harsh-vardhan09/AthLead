@@ -10,6 +10,8 @@ import userRouter from "./routes/userRoutes.js";
 import eventRouter from "./routes/eventRoutes.js";
 import scoreRouter from "./routes/scoreRoute.js";
 import scoreInputRoutes from "./routes/scoreInputRoutes.js";
+import newsRoute from './routes/newsRoutes.js';
+import { errorHandler } from "./middleware/errorHandler.js";
 
 db();
 
@@ -26,6 +28,7 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(passport.initialize());
+app.use('/api/news', newsRoute);
 
 import "./config/passport-config.js";
 
@@ -44,8 +47,6 @@ app.use("/api", scoreRouter);
 
 // Score Input routes
 app.use("/api", scoreInputRoutes);
-//news route
-app.get("/api/news", getNews);
 
 // token refresh route
 app.post("/api/refresh", refesh);
@@ -56,6 +57,8 @@ app.use((req, res) => {
     message: "Route not found",
   });
 });
+
+app.use(errorHandler);
 
 app.listen(process.env.SERVER_PORT, () => {
   console.log(

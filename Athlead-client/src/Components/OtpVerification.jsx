@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect, useCallback } from "react";
-import { api } from "../api/axios";
+import { authService } from "../api";
 import toast from "react-hot-toast";
 
 // localStorage key where the OTP session UUID is stored
@@ -84,7 +84,7 @@ const OtpVerification = ({ maskedEmail, onVerified, onBack }) => {
 
     setLoading(true);
     try {
-      const res = await api.post("/api/auth/verify-otp", { sessionId, otp });
+      const res = await authService.verifyOtp(sessionId, otp);
 
       if (res.data.success) {
         toast.success("Email verified!");
@@ -124,7 +124,7 @@ const OtpVerification = ({ maskedEmail, onVerified, onBack }) => {
 
     setResendLoading(true);
     try {
-      const res = await api.post("/api/auth/resend-otp", { sessionId });
+      const res = await authService.resendOtp(sessionId);
 
       if (res.data.success) {
         toast.success("New OTP sent to your email!");

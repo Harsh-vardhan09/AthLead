@@ -12,4 +12,4 @@ jobs:
     - uses: actions/first-interaction@v1
       with:
         repo-token: ${{ secrets.GITHUB_TOKEN }}
-        issue-message: "Welcome to AthLead, Make sure to read CONTRIBUTION.md and star the repo before creating PR"
+        issue-message: "Welcome to AthLead! 👋 Please read CONTRIBUTION.md and ⭐ star the repository before contributing. You can claim this issue using /claim or work on an issue assigned to you by an admin. Your PR must be linked to an issue, otherwise it will be closed. If you are an OSCI26 contributor, please read Issue #184 before contributing."

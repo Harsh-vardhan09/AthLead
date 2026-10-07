@@ -12,9 +12,9 @@ export const sendOtpEmail = async (to, otp, expiryTime) => {
       process.env.EMAILJS_TEMPLATE_ID,
       {
         email: to,
-        passcode: otp,
+        otp: otp,
         time: expiryTime,
-      }
+      },
     );
 
     console.log("OTP email sent:", response.status);

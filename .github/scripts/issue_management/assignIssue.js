@@ -1,4 +1,10 @@
-export const handleAssign = async ({
+import {
+  MAX_OPEN_ASSIGNMENTS,
+  getOpenAssignments,
+  limitReachedMessage,
+} from "./assignmentLimit.js";
+
+export const handleAssign =async ({
   github,
   context,
   issueNumber,
@@ -36,6 +42,17 @@ export const handleAssign = async ({
       repo,
       issue_number: issueNumber,
       body: `❌ \`@${username}\` is not a valid GitHub username.`,
+    });
+    return;
+  }
+
+  const openIssues = await getOpenAssignments(github, owner, repo, username);
+  if (openIssues.length >= MAX_OPEN_ASSIGNMENTS) {
+    await github.rest.issues.createComment({
+      owner,
+      repo,
+      issue_number: issueNumber,
+      body: limitReachedMessage(username, openIssues),
     });
     return;
   }

@@ -1,134 +1,91 @@
-import test from "node:test";
 import assert from "node:assert/strict";
+import test from "node:test";
 import Event from "../models/Event.js";
 import { findAllEvent } from "../controllers/eventController.js";
+import { buildEventQuery } from "../utils/eventQuery.js";
 
-// Helper to create mock req, res, next
-const createMockReqRes = (query = {}) => {
-  const req = { query };
-  let resStatus = null;
-  let resJson = null;
-
-  const res = {
-    status(code) {
-      resStatus = code;
+const invokeController = async (query) => {
+  const response = {
+    statusCode: null,
+    body: null,
+    status(statusCode) {
+      this.statusCode = statusCode;
       return this;
     },
-    json(data) {
-      resJson = data;
+    json(body) {
+      this.body = body;
       return this;
     },
   };
 
-  const next = (err) => {
-    if (err) throw err;
-  };
-
-  return { req, res, getResult: () => ({ status: resStatus, json: resJson }), next };
-};
-
-test("findAllEvent - returns events and pagination when called without query params", async () => {
-  const mockEvents = [
-    { title: "Event 1", sport: "Hockey", level: "Youth", location: "Delhi", date: new Date() },
-    { title: "Event 2", sport: "Cricket", level: "National", location: "Mumbai", date: new Date() },
-  ];
-
-  const originalCountDocuments = Event.countDocuments;
-  const originalFind = Event.find;
-
-  Event.countDocuments = async () => mockEvents.length;
-  Event.find = () => ({
-    sort: () => mockEvents,
+  await findAllEvent({ query }, response, (error) => {
+    throw error;
   });
 
-  try {
-    const { req, res, getResult, next } = createMockReqRes();
-    await findAllEvent(req, res, next);
-    const { status, json } = getResult();
+  return response;
+};
 
-    assert.equal(status, 200);
-    assert.equal(json.success, true);
-    assert.equal(json.events.length, 2);
-    assert.equal(json.pagination.total, 2);
-    assert.equal(json.pagination.page, 1);
+test("preserves the unfiltered endpoint response contract", async () => {
+  const originalFind = Event.find;
+  const events = [{ _id: "event-1" }];
+
+  Event.find = (filter) => {
+    assert.deepEqual(filter, {});
+    return { exec: async () => events };
+  };
+
+  try {
+    const response = await invokeController({});
+
+    assert.equal(response.statusCode, 200);
+    assert.deepEqual(response.body, {
+      success: true,
+      status: 200,
+      events,
+    });
   } finally {
-    Event.countDocuments = originalCountDocuments;
     Event.find = originalFind;
   }
 });
 
-test("findAllEvent - constructs correct query for combined filters and pagination", async () => {
-  let capturedQuery = null;
-  let capturedSkip = null;
-  let capturedLimit = null;
-
-  const mockEvents = [
-    {
-      title: "National Hockey Trials",
-      sport: "Hockey",
-      level: "National",
-      location: "Mumbai",
-      date: new Date("2026-10-20"),
-    },
-  ];
-
-  const originalCountDocuments = Event.countDocuments;
-  const originalFind = Event.find;
-
-  Event.countDocuments = async (query) => {
-    capturedQuery = query;
-    return 1;
+test("uses Atlas Search builder for filtered and paginated events", async () => {
+  const originalAggregate = Event.aggregate;
+  let receivedPipeline;
+  const query = {
+    q: "trials",
+    sport: "Hockey",
+    level: "National",
+    location: "Mumbai",
+    dateFrom: "2026-10-20",
+    dateTo: "2026-10-21",
+    status: "upcoming",
+    page: "2",
+    limit: "2",
   };
+  const events = [{ _id: "event-3" }, { _id: "event-4" }, { _id: "event-5" }];
 
-  Event.find = () => {
-    return {
-      sort: () => ({
-        skip: (skipVal) => {
-          capturedSkip = skipVal;
-          return {
-            limit: (limitVal) => {
-              capturedLimit = limitVal;
-              return mockEvents;
-            },
-          };
-        },
-      }),
-    };
+  Event.aggregate = (pipeline) => {
+    receivedPipeline = pipeline;
+    return { exec: async () => events };
   };
 
   try {
-    const { req, res, getResult, next } = createMockReqRes({
-      sport: "Hockey",
-      level: "National",
-      location: "Mumbai",
-      date: "2026-10-20",
-      status: "Upcoming",
-      search: "Trials",
-      page: "2",
-      limit: "5",
+    const response = await invokeController(query);
+    const { searchStage, pagination } = buildEventQuery(query);
+
+    assert.deepEqual(receivedPipeline, [
+      searchStage,
+      { $skip: 2 },
+      { $limit: 3 },
+    ]);
+    assert.equal(response.statusCode, 200);
+    assert.deepEqual(response.body.events, events.slice(0, 2));
+    assert.deepEqual(response.body.pagination, {
+      page: pagination.page,
+      limit: pagination.limit,
+      hasMore: true,
     });
-
-    await findAllEvent(req, res, next);
-    const { status, json } = getResult();
-
-    assert.equal(status, 200);
-    assert.equal(json.success, true);
-    assert.equal(json.events.length, 1);
-
-    // Verify filter query properties
-    assert.ok(capturedQuery.sport.$regex);
-    assert.ok(capturedQuery.level.$regex);
-    assert.ok(capturedQuery.location.$regex);
-    assert.ok(capturedQuery.date);
-    assert.ok(capturedQuery.$or);
-
-    // Verify pagination
-    assert.equal(capturedSkip, 5); // (page 2 - 1) * limit 5
-    assert.equal(capturedLimit, 5);
-    assert.equal(json.pagination.page, 2);
-    assert.equal(json.pagination.limit, 5);
   } finally {
-    Event.countDocuments = originalCountDocuments;
-    Event.find = originalFind;
+    Event.aggregate = originalAggregate;
   }
 });

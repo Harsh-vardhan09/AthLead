@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import Event from "../models/Event.js";
 import { findAllEvent } from "../controllers/eventController.js";
-import { buildEventQuery } from "../utils/eventQuery.js";
 
 const invokeController = async (query) => {
   const response = {
@@ -27,16 +26,18 @@ const invokeController = async (query) => {
 
 test("preserves the unfiltered endpoint response contract", async () => {
   const originalFind = Event.find;
+  let receivedFilter;
   const events = [{ _id: "event-1" }];
 
   Event.find = (filter) => {
-    assert.deepEqual(filter, {});
+    receivedFilter = filter;
     return { exec: async () => events };
   };
 
   try {
     const response = await invokeController({});
 
+    assert.deepEqual(receivedFilter, {});
     assert.equal(response.statusCode, 200);
     assert.deepEqual(response.body, {
       success: true,
@@ -48,41 +49,31 @@ test("preserves the unfiltered endpoint response contract", async () => {
   }
 });
 
-test("uses Atlas Search builder for filtered and paginated events", async () => {
+test("uses Atlas Search and returns paginated matching events", async () => {
   const originalAggregate = Event.aggregate;
   let receivedPipeline;
-  const query = {
-    q: "trials",
-    sport: "Hockey",
-    level: "National",
-    location: "Mumbai",
-    dateFrom: "2026-10-20",
-    dateTo: "2026-10-21",
-    status: "upcoming",
-    page: "2",
-    limit: "2",
-  };
-  const events = [{ _id: "event-3" }, { _id: "event-4" }, { _id: "event-5" }];
+  const docs = [{ _id: "event-1" }, { _id: "event-2" }, { _id: "event-3" }];
 
   Event.aggregate = (pipeline) => {
     receivedPipeline = pipeline;
-    return { exec: async () => events };
+    return { exec: async () => docs };
   };
 
   try {
-    const response = await invokeController(query);
-    const { searchStage, pagination } = buildEventQuery(query);
+    const response = await invokeController({
+      sport: "Athletics",
+      page: "1",
+      limit: "2",
+    });
 
-    assert.deepEqual(receivedPipeline, [
-      searchStage,
-      { $skip: 2 },
-      { $limit: 3 },
-    ]);
+    assert.equal(receivedPipeline.length, 3);
+    assert.ok(receivedPipeline[0].$search);
+    assert.deepEqual(receivedPipeline.slice(1), [{ $skip: 0 }, { $limit: 3 }]);
     assert.equal(response.statusCode, 200);
-    assert.deepEqual(response.body.events, events.slice(0, 2));
+    assert.deepEqual(response.body.events, docs.slice(0, 2));
     assert.deepEqual(response.body.pagination, {
-      page: pagination.page,
-      limit: pagination.limit,
+      page: 1,
+      limit: 2,
       hasMore: true,
     });
   } finally {

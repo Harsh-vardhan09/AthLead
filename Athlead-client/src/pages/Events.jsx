@@ -37,10 +37,9 @@ const Events = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [events, setEvents] = useState([]);
   const [pagination, setPagination] = useState({
-    total: 0,
     page: 1,
     limit: 6,
-    totalPages: 1,
+    hasMore: false,
   });
   const [isLoading, setIsLoading] = useState(false);
 
@@ -81,9 +80,17 @@ const Events = () => {
         if (sport && sport !== "All") params.sport = sport;
         if (level && level !== "All") params.level = level;
         if (location) params.location = location;
-        if (date) params.date = date;
-        if (status && status !== "All") params.status = status;
-        if (search) params.search = search;
+        if (date) {
+          params.dateFrom = date;
+          params.dateTo = date;
+        }
+        if (status && status !== "All") {
+          params.status =
+            status.toLowerCase() === "completed"
+              ? "past"
+              : status.toLowerCase();
+        }
+        if (search) params.q = search;
         params.page = page;
         params.limit = 6;
 
@@ -347,11 +354,10 @@ const Events = () => {
         )}
 
         {/* Pagination Section */}
-        {!isLoading && pagination.totalPages > 1 && (
+        {!isLoading && (pagination.page > 1 || pagination.hasMore) && (
           <div className="flex flex-col sm:flex-row items-center justify-between w-full py-4 border-t border-slate-800 text-slate-300 gap-4">
             <span className="text-xs text-slate-400">
-              Showing page {pagination.page} of {pagination.totalPages} (
-              {pagination.total} total events)
+              Showing page {pagination.page}
             </span>
             <div className="flex items-center gap-2">
               <button
@@ -362,27 +368,8 @@ const Events = () => {
                 <ChevronLeft size={16} /> Previous
               </button>
 
-              <div className="flex items-center gap-1 px-2">
-                {Array.from(
-                  { length: pagination.totalPages },
-                  (_, i) => i + 1,
-                ).map((p) => (
-                  <button
-                    key={p}
-                    onClick={() => updateFilters({ page: p })}
-                    className={`w-7 h-7 rounded-lg text-xs font-medium flex items-center justify-center transition-colors ${
-                      pagination.page === p
-                        ? "bg-teal-500 text-white font-bold"
-                        : "bg-slate-800 text-slate-400 hover:bg-slate-700"
-                    }`}
-                  >
-                    {p}
-                  </button>
-                ))}
-              </div>
-
               <button
-                disabled={pagination.page >= pagination.totalPages}
+                disabled={!pagination.hasMore}
                 onClick={() => updateFilters({ page: pagination.page + 1 })}
                 className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800 text-xs font-medium text-slate-300 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >

@@ -237,7 +237,7 @@ const Dashboard = () => {
           </div>
 
           <div className="w-full overflow-x-auto">
-            <table className="w-full min-w-[620px] border-collapse">
+            <table className="w-full min-w-[620px] lg:min-w-0 border-collapse">
               <thead>
                 <tr className="text-[10px] text-white uppercase">
                   {["#", "Athlete", "Sport", "State", "ML Score", "Δ"].map(

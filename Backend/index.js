@@ -1,7 +1,7 @@
 import express from "express";
 import "dotenv/config";
 import cors from "cors";
-import { getNews } from "./controllers/newsController.js";
+import helmet from "helmet";
 import db from "./config/db.js";
 import { refesh } from "./controllers/authController.js";
 import passport from "passport";
@@ -10,12 +10,16 @@ import userRouter from "./routes/userRoutes.js";
 import eventRouter from "./routes/eventRoutes.js";
 import scoreRouter from "./routes/scoreRoute.js";
 import scoreInputRoutes from "./routes/scoreInputRoutes.js";
-import newsRoute from './routes/newsRoutes.js';
+import newsRoute from "./routes/newsRoutes.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 
 db();
 
 const app = express();
+
+// Secure HTTP headers
+app.use(helmet());
+
 app.use(cookieParser());
 
 app.use(
@@ -25,10 +29,15 @@ app.use(
   }),
 );
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: "100kb" }));
+app.use(
+  express.urlencoded({
+    extended: true,
+    limit: "100kb",
+  }),
+);
 app.use(passport.initialize());
-app.use('/api/news', newsRoute);
+app.use("/api/news", newsRoute);
 
 import "./config/passport-config.js";
 

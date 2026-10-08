@@ -32,11 +32,14 @@ export const LoginAuth = async (req, res) => {
     const user = await User.findOne({ email: normalizedEmail }).select(
       "+password",
     );
-
-    // One message for both cases, so that the response doesn't reveal
-    // whether an account exists for the email submitted.
-    if (!user || !compareSync(password, user.password)) {
-      return res.status(401).json({
+    if (!user) {
+      return res.json({
+        success: false,
+        message: "No User with this mail",
+      });
+    }
+    if (!compareSync(password, user.password)) {
+      return res.json({
         success: false,
         message: "Invalid email or password",
       });

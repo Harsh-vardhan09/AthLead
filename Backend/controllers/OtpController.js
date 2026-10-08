@@ -39,7 +39,7 @@ export const sendOtp = async (req, res) => {
     const existingUser = await User.findOne({ email: normalizedEmail });
     if (existingUser) {
       return res
-        .status(400)
+        .status(409)
         .json({ success: false, message: "Email already registered" });
     }
 
@@ -68,7 +68,7 @@ export const sendOtp = async (req, res) => {
 
     return res.status(500).json({
       success: false,
-      message: error.message,
+      message: "Failed to send OTP. Please try again later.",
     });
   }
 };
@@ -247,7 +247,7 @@ export const SingupAuth = async (req, res) => {
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res
-        .status(400)
+        .status(409)
         .json({ success: false, message: "User already exists" });
     }
 
@@ -270,6 +270,9 @@ export const SingupAuth = async (req, res) => {
       .json({ success: true, message: "Sign Up Successful" });
   } catch (error) {
     console.error("SingupAuth error:", error);
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({
+      success: false,
+      message: "Server error. Please try again later.",
+    });
   }
 };

@@ -32,8 +32,9 @@ api.interceptors.response.use(
   async (err) => {
     const originalRequest = err.config;
     const status = err.response?.status;
+    const isLoginRequest = originalRequest.url?.includes("/auth/login");
 
-    if (status === 401 && !originalRequest._retry) {
+    if (status === 401 && !originalRequest._retry && !isLoginRequest) {
       originalRequest._retry = true;
 
       try {

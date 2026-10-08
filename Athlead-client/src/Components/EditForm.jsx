@@ -3,9 +3,10 @@ import React, { useState } from "react";
 import CalendarPicker from "../Components/CalendarPicker";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router";
-import { api } from "../api/axios";
+import { userService } from "../api";
 import toast from "react-hot-toast";
 import { useAuth } from "../context/useAuth";
+import { useUnsavedChanges } from "../hooks/useUnsavedChanges";
 
 const EditForm = ({ setEditForm }) => {
   const {
@@ -13,13 +14,23 @@ const EditForm = ({ setEditForm }) => {
     handleSubmit,
     watch,
     setValue,
-    formState: { errors },
+    reset,
+    formState: { errors, isDirty, isSubmitting },
   } = useForm();
+
   const navigate = useNavigate();
   const { setUser, user } = useAuth();
 
   const profile = watch("profile_picture");
+  const hasUnsavedChanges = isDirty || Boolean(profile?.length);
+  const { allowNavigation, confirmDiscard } =
+    useUnsavedChanges(hasUnsavedChanges);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+
+  const handleClose = () => {
+    confirmDiscard(() => setEditForm(false));
+  };
+
   const onSubmit = async (data) => {
     const formData = new FormData();
     if (data.profile_picture && data.profile_picture[0]) {
@@ -34,16 +45,18 @@ const EditForm = ({ setEditForm }) => {
 
     formData.append("DOB", formattedDOB);
 
-    const res = await api.patch("/api/edit", formData);
+    const res = await userService.updateProfile(formData);
     console.log(res);
 
     if (res.data.success) {
       try {
-        const updated = await api.get("/api/auth/me");
+        const updated = await userService.getMe();
         setUser(updated.data.user);
       } catch {
         // /me failed but edit succeeded, continue
       }
+      reset();
+      allowNavigation();
       toast.success(res.data.message);
       setEditForm(false);
       navigate("/dashboard");
@@ -51,9 +64,10 @@ const EditForm = ({ setEditForm }) => {
       toast.error(res.data.message);
     }
   };
+
   return (
     <section
-      onClick={() => setEditForm(false)}
+      onClick={handleClose}
       className="fixed inset-0 z-10 min-h-screen h-full w-full bg-black/60 backdrop-blur-md flex items-center justify-center"
     >
       <div
@@ -65,17 +79,19 @@ const EditForm = ({ setEditForm }) => {
         </div>
         <form
           onSubmit={handleSubmit(onSubmit)}
-          className="w-full flex flex-col  gap-2"
+          className="w-full flex flex-col gap-2"
         >
           <div className="flex items-center justify-center">
-            <div className="w-30 h-30   border border-[#1d9e75]/40 text-[#5dcaa5] flex items-center justify-center rounded-full">
+            <div className="w-30 h-30 border border-[#1d9e75]/40 text-[#5dcaa5] flex items-center justify-center rounded-full">
               <label
                 htmlFor="profile_picture"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
                 <PlusCircle
                   size={50}
-                  className={`${(profile && profile[0]) || user?.image ? "hidden" : ""}`}
+                  className={`${
+                    (profile && profile[0]) || user?.image ? "hidden" : ""
+                  }`}
                 />
                 <input
                   id="profile_picture"
@@ -92,7 +108,7 @@ const EditForm = ({ setEditForm }) => {
                       : user?.image || null
                   }
                   alt=""
-                  className=" w-30 h-30 rounded-full object-cover mt-2"
+                  className="w-30 h-30 rounded-full object-cover mt-2"
                 />
               </label>
             </div>
@@ -119,7 +135,8 @@ const EditForm = ({ setEditForm }) => {
               </p>
             )}
           </div>
-          <div className="grid grid-cols-1 gap-3 ">
+
+          <div className="grid grid-cols-1 gap-3">
             <div>
               <label className="block text-[11px] font-medium text-white/50 uppercase tracking-widest mb-1.5">
                 Phone
@@ -197,12 +214,13 @@ const EditForm = ({ setEditForm }) => {
 
           <div>
             <label
-              htmlFor=""
+              htmlFor="address"
               className="block text-[11px] font-medium text-white/50 uppercase tracking-widest mb-1.5"
             >
               Address
             </label>
             <input
+              id="address"
               type="text"
               {...register("address")}
               className={`w-full bg-white/7 border rounded-xl px-3.5 py-2.5 text-sm text-white outline-none focus:bg-[#1d9e75]/8 transition-all ${
@@ -210,13 +228,14 @@ const EditForm = ({ setEditForm }) => {
               }`}
             />
           </div>
+
           <div>
             <button
               type="submit"
-              className="w-full mt-1 py-3.5 rounded-xl bg-linear-to-r from-[#1d9e75] to-[#378add] text-white text-sm font-semibold tracking-wide cursor-pointer hover:opacity-90 active:scale-99 transition-all"
+              disabled={isSubmitting}
+              className="w-full mt-1 py-3.5 rounded-xl bg-linear-to-r from-[#1d9e75] to-[#378add] text-white text-sm font-semibold tracking-wide cursor-pointer hover:opacity-90 active:scale-99 transition-all disabled:opacity-50"
             >
-              {" "}
-              Edit
+              {isSubmitting ? "Saving…" : "Edit"}
             </button>
           </div>
         </form>

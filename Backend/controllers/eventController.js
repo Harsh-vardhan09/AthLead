@@ -1,27 +1,55 @@
 import Event from "../models/Event.js";
 import { Participation, User } from "../models/Users.js";
+import { buildEventQuery } from "../utils/eventQuery.js";
 
-export const findAllEvent = async (req, res) => {
+export const findAllEvent = async (req, res, next) => {
   try {
-    const events = await Event.find({});
-    // console.log(events);
+    const { searchStage, pagination } = buildEventQuery(req.query);
+    let events;
 
-    res.status(200).json({
+    if (searchStage) {
+      const pipeline = [searchStage];
+      if (pagination) {
+        pipeline.push(
+          { $skip: (pagination.page - 1) * pagination.limit },
+          { $limit: pagination.limit + 1 },
+        );
+      }
+      events = await Event.aggregate(pipeline).exec();
+    } else {
+      let eventQuery = Event.find({});
+      if (pagination) {
+        eventQuery = eventQuery
+          .sort({ date: 1, _id: 1 })
+          .skip((pagination.page - 1) * pagination.limit)
+          .limit(pagination.limit + 1);
+      }
+      events = await eventQuery.exec();
+    }
+
+    const response = {
       success: true,
       status: 200,
       events,
-    });
+    };
+
+    if (pagination) {
+      response.pagination = {
+        page: pagination.page,
+        limit: pagination.limit,
+        hasMore: events.length > pagination.limit,
+      };
+      response.events = events.slice(0, pagination.limit);
+    }
+
+    return res.status(200).json(response);
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      status: 500,
-      message: error.message,
-    });
+    next(error);
   }
 };
 
 //create event
-export const createEvent = async (req, res) => {
+export const createEvent = async (req, res, next) => {
   const { data } = req.body;
 
   const {
@@ -61,10 +89,7 @@ export const createEvent = async (req, res) => {
       event,
     });
   } catch (error) {
-    res.json({
-      success: false,
-      message: error.message,
-    });
+    next(error);
   }
 };
 
@@ -134,7 +159,7 @@ export const updateEvent = async (req, res) => {
 };
 
 //User register to event
-export const registerEvent = async (req, res) => {
+export const registerEvent = async (req, res, next) => {
   const { eventId } = req.params;
   const { email, fullname, phone, gender } = req.body;
   try {
@@ -169,30 +194,39 @@ export const registerEvent = async (req, res) => {
       });
     }
 
-    await Participation.create({
-      user: user._id,
-      event: eventId,
-      email: email || user.email,
-      fullname,
-      phone,
-      gender,
-      DOB,
-    });
+    try {
+      await Participation.create({
+        user: user._id,
+        event: eventId,
+        email: email || user.email,
+        fullname,
+        phone,
+        gender,
+        DOB,
+      });
+    } catch (error) {
+      // Handle MongoDB duplicate-key error
+      if (error.code === 11000) {
+        return res.status(409).json({
+          success: false,
+          message: "User is already registered for this event.",
+        });
+      }
+
+      throw error;
+    }
 
     res.json({
       success: true,
       message: "Registered to event",
     });
   } catch (error) {
-    res.json({
-      success: false,
-      message: error.message,
-    });
+    next(error);
   }
 };
 
 // Get events registered by the user
-export const getMyEvents = async (req, res) => {
+export const getMyEvents = async (req, res, next) => {
   try {
     const participations = await Participation.find({
       user: req.user._id,
@@ -220,9 +254,6 @@ export const getMyEvents = async (req, res) => {
 
     res.json(registrations);
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    next(error);
   }
 };

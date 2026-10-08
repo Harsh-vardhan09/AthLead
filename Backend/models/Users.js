@@ -13,7 +13,7 @@ const UserSchema = new mongoose.Schema(
     },
     phone: { type: Number },
     gender: { type: String, required: true },
-    password: { type: String, required: true },
+    password: { type: String, required: true, select: false },
     image: {
       type: String,
       default:
@@ -41,6 +41,9 @@ const ParticipationSchema = new mongoose.Schema({
   gender: { type: String, required: true },
   DOB: { type: Date, required: true },
 });
+
+// Prevent duplicate registration for the same user and event
+ParticipationSchema.index({ user: 1, event: 1 }, { unique: true });
 
 UserSchema.methods.generateAccessToken = function () {
   return jwt.sign({ id: this._id }, process.env.JWT_SECRET, {

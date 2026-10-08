@@ -1,25 +1,38 @@
 import React from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
-import { api } from "../api/axios";
+import { eventService } from "../api";
 import toast from "react-hot-toast";
+import { useUnsavedChanges } from "../hooks/useUnsavedChanges";
 
 const EventSignup = () => {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    reset,
+    formState: { errors, isDirty, isSubmitting },
   } = useForm();
 
   const navigate = useNavigate();
   const { eventId } = useParams();
+  const { allowNavigation } = useUnsavedChanges(isDirty);
+
   const onSubmit = async (data) => {
-    const res = await api.post(`/api/events/${eventId}/register`, data);
-    if (res.data.success) {
-      toast.success(res.data.message);
-      navigate("/events");
-    } else {
-      toast.error(res.data.message);
+    try {
+      const res = await eventService.register(eventId, data);
+
+      if (res.data.success) {
+        reset(data);
+        allowNavigation();
+        toast.success(res.data.message);
+        navigate("/events");
+      } else {
+        toast.error(res.data.message);
+      }
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Could not register for event",
+      );
     }
   };
 
@@ -155,12 +168,12 @@ const EventSignup = () => {
             )}
           </div>
 
-          {/* Submit */}
           <button
             type="submit"
-            className="w-full mt-1 py-3.5 rounded-xl bg-gradient-to-r from-[#1d9e75] to-[#378add] text-white text-sm font-semibold tracking-wide cursor-pointer hover:opacity-90 active:scale-99 transition-all"
+            disabled={isSubmitting}
+            className="w-full mt-1 py-3.5 rounded-xl bg-gradient-to-r from-[#1d9e75] to-[#378add] text-white text-sm font-semibold tracking-wide cursor-pointer hover:opacity-90 active:scale-99 transition-all disabled:opacity-50"
           >
-            Register Now
+            {isSubmitting ? "Registering…" : "Register Now"}
           </button>
 
           <p className="text-center text-[11px] text-white/25 mt-1">

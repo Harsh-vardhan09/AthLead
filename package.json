@@ -7,7 +7,7 @@
     "prepare": "husky",
     "format": "npm run format --prefix Athlead-client && npm run format --prefix Backend",
     "format:check": "npm run format:check --prefix Athlead-client && npm run format:check --prefix Backend",
-    "lint": "npm run lint --prefix Athlead-client && npm run lint --prefix Backend"
+    "lint": "npm run lint:fix --prefix Athlead-client && npm run lint:fix --prefix Backend"
   },
   "repository": {
     "type": "git",

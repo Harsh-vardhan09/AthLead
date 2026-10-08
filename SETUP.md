@@ -197,6 +197,19 @@ You can use:
 
 Update the `MONGODB_URI` variable in the Backend `.env` file accordingly.
 
+The event search and filtering API requires MongoDB Atlas with Atlas Search
+available (MongoDB 7.0+ for the index migration). Before deploying the updated
+backend, run the database migrations from `Backend/`:
+
+```bash
+npx migrate-mongo up
+```
+
+The migration creates the `events_search` index and waits for it to become
+queryable before completing. Filtered event requests rely on this index. A
+local MongoDB instance without Atlas Search cannot serve those filtered
+requests.
+
 ---
 
 
@@ -243,6 +256,26 @@ ML/models/
 ```
 
 Ensure these files are available before starting the service.
+
+### Generate Model Files
+
+If `ML/models/` is empty (e.g. right after a fresh clone), generate the
+required artifacts locally:
+
+```bash
+cd ML
+python train_model.py
+```
+
+This reads `data/Cross_sport_selection_data.csv` (relative to the `ML/`
+directory) and produces `athlete_rank_model.pkl`, `scaler.pkl`, and
+`label_encoders.pkl` inside `ML/models/`. The `models/` directory is now
+created automatically if it doesn't already exist.
+
+> **Note:** `data/Cross_sport_selection_data.csv` is not currently
+> committed to this repository. If it's missing from your `ML/data/`
+> directory, you'll need to source it separately before running
+> `train_model.py`.
 
 Start the FastAPI server:
 
@@ -304,6 +337,9 @@ python3 -m venv venv
 source venv/bin/activate
 
 pip install -r requirements.txt
+
+# Generate model files if ML/models/ is empty
+python train_model.py
 
 uvicorn api:app --reload
 ```

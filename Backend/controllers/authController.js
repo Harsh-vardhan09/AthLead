@@ -30,8 +30,8 @@ export const LoginAuth = async (req, res) => {
   const normalizedEmail = normalizeEmail(email);
   try {
     const user = await User.findOne({ email: normalizedEmail }).select(
-  "+password",
-);
+      "+password",
+    );
     if (!user) {
       return res.json({
         success: false,

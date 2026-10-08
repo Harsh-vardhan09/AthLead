@@ -14,7 +14,7 @@ export const sendOtpEmail = async (to, otp, expiryTime) => {
         email: to,
         otp: otp,
         time: expiryTime,
-      }
+      },
     );
 
     console.log("OTP email sent:", response.status);

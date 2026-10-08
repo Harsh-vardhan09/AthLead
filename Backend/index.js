@@ -2,8 +2,6 @@ import express from "express";
 import "dotenv/config";
 import cors from "cors";
 import helmet from "helmet";
-import mongoSanitize from "express-mongo-sanitize";
-import { getNews } from "./controllers/newsController.js";
 import db from "./config/db.js";
 import { refesh } from "./controllers/authController.js";
 import passport from "passport";

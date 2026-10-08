@@ -12,22 +12,32 @@ export const setScore = async (req, res) => {
     const user = await User.findOne({ _id: userId }).select("DOB gender");
 
     if (!user) {
-      return res.status(404).json({ success: false, message: "User Not Found" });
-    } 
-    
+      return res
+        .status(404)
+        .json({ success: false, message: "User Not Found" });
+    }
+
     if (!user.DOB) {
-      return res.status(400).json({ success: false, message: "Please Update profile with Date of Birth for Score" });
+      return res.status(400).json({
+        success: false,
+        message: "Please Update profile with Date of Birth for Score",
+      });
     }
 
     if (!user.gender) {
-      return res.status(400).json({ success: false, message: "Please Update profile with Gender for Score" });
+      return res.status(400).json({
+        success: false,
+        message: "Please Update profile with Gender for Score",
+      });
     }
 
     const birthDate = dayjs(user.DOB).format("YYYY-MM-DD");
     const age = dobToAge(birthDate);
-    
+
     if (!age) {
-      return res.status(400).json({ success: false, message: "Invalid Date of Birth format" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid Date of Birth format" });
     }
 
     const gen = user.gender.toUpperCase().slice(0, 1);
@@ -44,13 +54,16 @@ export const setScore = async (req, res) => {
     return res.status(201).json({
       success: true,
       message: `Score obtained: ${mlResponse.data.predicted_potential_score}`,
-      data: newScore
+      data: newScore,
     });
   } catch (error) {
     console.error("Score Generation Error:", error.message);
     return res.status(500).json({
       success: false,
-      message: error.response?.data?.detail || error.message || "Internal Server Error",
+      message:
+        error.response?.data?.detail ||
+        error.message ||
+        "Internal Server Error",
     });
   }
 };
@@ -68,8 +81,8 @@ export const getScore = async (req, res) => {
 export const getRanking = async (req, res) => {
   try {
     const rank = await Score.find({})
-  .sort({ score: -1 })
-  .populate("user", "fullname image role");
+      .sort({ score: -1 })
+      .populate("user", "fullname image role");
     // console.log(rank);
 
     res.json({

@@ -1,13 +1,22 @@
-from fastapi import FastAPI
+import logging
+import math
+
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field
 import joblib
 import pandas as pd
 
 
-model = joblib.load("models/athlete_rank_model.pkl")
-scaler = joblib.load("models/scaler.pkl")
-label_encoders = joblib.load("models/label_encoders.pkl")
+logger = logging.getLogger(__name__)
+
+try:
+    model = joblib.load("models/athlete_rank_model.pkl")
+    scaler = joblib.load("models/scaler.pkl")
+    label_encoders = joblib.load("models/label_encoders.pkl")
+except Exception:
+    logger.exception("ML model artifacts could not be loaded")
+    model = scaler = label_encoders = None
 
 app = FastAPI()
 
@@ -20,32 +29,47 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 class Athlete(BaseModel):
+    model_config = ConfigDict(allow_inf_nan=False)
+
     sport: str
-    age: float
+    age: float = Field(ge=0)
     gender: str
-    training_years: float
-    vo2_max: float
-    hrv: float
-    lactate_threshold: float
-    stride_length: float
-    cadence: float
-    force_application: float
-    performance_score: float
-    adaptability_score: float
+    training_years: float = Field(ge=0)
+    vo2_max: float = Field(ge=0)
+    hrv: float = Field(ge=0)
+    lactate_threshold: float = Field(ge=0)
+    stride_length: float = Field(ge=0)
+    cadence: float = Field(ge=0)
+    force_application: float = Field(ge=0)
+    performance_score: float = Field(ge=0)
+    adaptability_score: float = Field(ge=0)
+
 
 @app.post("/rank")
 def rank_athlete(athlete: Athlete):
-    df = pd.DataFrame([athlete.dict()])
+    if model is None or scaler is None or label_encoders is None:
+        raise HTTPException(status_code=503, detail="ML model unavailable")
 
-   
-    for col, le in label_encoders.items():
-        if col in df:
-            df[col] = le.transform(df[col])
+    try:
+        df = pd.DataFrame([athlete.model_dump()])
+        for col, encoder in label_encoders.items():
+            if col in df:
+                if df[col].iloc[0] not in encoder.classes_:
+                    raise HTTPException(status_code=422, detail=f"Unknown {col}")
+                df[col] = encoder.transform(df[col])
+    except HTTPException:
+        raise
+    except Exception:
+        logger.exception("ML inference failed")
+        raise HTTPException(status_code=500, detail="Prediction failed") from None
 
-
-    df_scaled = scaler.transform(df)
-
-   
-    score = model.predict(df_scaled)[0]
-    return {"predicted_potential_score": float(score)}
+    try:
+        score = float(model.predict(scaler.transform(df))[0])
+        if not math.isfinite(score):
+            raise ValueError("Model returned a non-finite score")
+        return {"predicted_potential_score": score}
+    except Exception:
+        logger.exception("ML inference failed")
+        raise HTTPException(status_code=500, detail="Prediction failed") from None

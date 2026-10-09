@@ -84,6 +84,14 @@ class RankApiTests(unittest.TestCase):
         self.assertEqual(response.status_code, 422)
         self.assertIn("detail", response.json())
 
+    def test_malformed_json_returns_client_error(self):
+        with TestClient(load_api().app) as client:
+            response = client.post(
+                "/rank", content='{"sport":', headers={"content-type": "application/json"}
+            )
+        self.assertEqual(response.status_code, 422)
+        self.assertIn("detail", response.json())
+
     def test_unknown_categories_return_client_errors(self):
         with TestClient(load_api().app) as client:
             for field in ("sport", "gender"):

@@ -182,6 +182,15 @@ export const registerEvent = async (req, res, next) => {
       });
     }
 
+    const event = await Event.findById(eventId);
+
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        message: "Event not found",
+      });
+    }
+
     const alreadyRegistered = await Participation.findOne({
       user: user._id,
       event: eventId,

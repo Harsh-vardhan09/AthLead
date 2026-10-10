@@ -136,6 +136,41 @@ class RankApiTests(unittest.TestCase):
         self.assertIn("detail", response.json())
         self.assertNotIn("NaN", response.text)
 
+    def test_explicit_valid_schema_version_succeeds(self):
+        with TestClient(load_api().app) as client:
+            response = client.post("/rank", json={**VALID_ATHLETE, "schema_version": 1})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"predicted_potential_score": 73.5})
+
+    def test_unsupported_schema_version_returns_client_error(self):
+        with TestClient(load_api().app) as client:
+            for invalid_version in (0, 2, -1, 99, "v1"):
+                with self.subTest(version=invalid_version):
+                    response = client.post(
+                        "/rank", json={**VALID_ATHLETE, "schema_version": invalid_version}
+                    )
+                    self.assertEqual(response.status_code, 422)
+                    self.assertIn("detail", response.json())
+
+    def test_schema_version_excluded_from_model_features(self):
+        captured_columns = []
+
+        class SpyingScaler:
+            def transform(self, frame):
+                captured_columns.extend(frame.columns.tolist())
+                return frame.to_numpy()
+
+        spying_artifacts = [
+            Model(),
+            SpyingScaler(),
+            {"sport": Encoder(["running"]), "gender": Encoder(["F"])},
+        ]
+        with TestClient(load_api(spying_artifacts).app) as client:
+            response = client.post("/rank", json={**VALID_ATHLETE, "schema_version": 1})
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn("schema_version", captured_columns)
+        self.assertIn("sport", captured_columns)
+
 
 if __name__ == "__main__":
     unittest.main()

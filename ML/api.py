@@ -3,12 +3,15 @@ import math
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 import joblib
 import pandas as pd
 
 
 logger = logging.getLogger(__name__)
+
+SUPPORTED_SCHEMA_VERSIONS = {1}
+CURRENT_SCHEMA_VERSION = 1
 
 try:
     model = joblib.load("models/athlete_rank_model.pkl")
@@ -33,6 +36,10 @@ app.add_middleware(
 class Athlete(BaseModel):
     model_config = ConfigDict(allow_inf_nan=False)
 
+    schema_version: int = Field(
+        default=CURRENT_SCHEMA_VERSION,
+        description="ML request schema version (default: 1)",
+    )
     sport: str
     age: float = Field(ge=0)
     gender: str
@@ -46,6 +53,14 @@ class Athlete(BaseModel):
     performance_score: float = Field(ge=0)
     adaptability_score: float = Field(ge=0)
 
+    @field_validator("schema_version")
+    @classmethod
+    def validate_schema_version(cls, v: int) -> int:
+        if v not in SUPPORTED_SCHEMA_VERSIONS:
+            supported = ", ".join(str(ver) for ver in sorted(SUPPORTED_SCHEMA_VERSIONS))
+            raise ValueError(f"Unsupported schema version: {v}. Supported versions: [{supported}]")
+        return v
+
 
 @app.post("/rank")
 def rank_athlete(athlete: Athlete):
@@ -53,7 +68,8 @@ def rank_athlete(athlete: Athlete):
         raise HTTPException(status_code=503, detail="ML model unavailable")
 
     try:
-        df = pd.DataFrame([athlete.model_dump()])
+        features = athlete.model_dump(exclude={"schema_version"})
+        df = pd.DataFrame([features])
         for col, encoder in label_encoders.items():
             if col in df:
                 if df[col].iloc[0] not in encoder.classes_:

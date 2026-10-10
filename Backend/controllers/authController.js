@@ -41,7 +41,7 @@ export const LoginAuth = async (req, res) => {
     if (!compareSync(password, user.password)) {
       return res.json({
         success: false,
-        message: "Wrong password",
+        message: "Invalid email or password",
       });
     }
 
@@ -63,9 +63,10 @@ export const LoginAuth = async (req, res) => {
       accessToken,
     });
   } catch (error) {
-    res.json({
+    console.error("Login failed:", error);
+    res.status(500).json({
       success: false,
-      message: error.message,
+      message: "Server error. Please try again later.",
     });
   }
 };
@@ -174,16 +175,23 @@ export const getUser = async (req, res) => {
     const user = await User.findOne({ _id: userId }).select(
       "-password -createdAt -updatedAt -email",
     );
-    console.log(user);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
 
     res.json({
       success: true,
       user,
     });
   } catch (error) {
-    res.json({
+    console.error("getUser failed:", error);
+    res.status(500).json({
       success: false,
-      message: error,
+      message: "Server error. Please try again later.",
     });
   }
 };

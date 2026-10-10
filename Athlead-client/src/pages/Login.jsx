@@ -18,24 +18,30 @@ const Login = () => {
   const navigate = useNavigate();
 
   const onSubmit = async (data) => {
-    const res = await authService.login(data);
+    try {
+      const res = await authService.login(data);
 
-    if (res.data.success) {
-      localStorage.setItem("accessToken", res.data.accessToken);
+      if (res.data.success) {
+        localStorage.setItem("accessToken", res.data.accessToken);
 
-      setLoggedIn(true);
-      const user = await fetchUser();
+        setLoggedIn(true);
+        const user = await fetchUser();
 
-      toast.success(res.data.message);
-      console.log(user);
+        toast.success(res.data.message);
+        console.log(user);
 
-      if (user.role === "ADMIN") {
-        navigate("/admin/dashboard");
-      } else {
-        navigate("/dashboard");
+        if (user.role === "ADMIN") {
+          navigate("/admin/dashboard");
+        } else {
+          navigate("/dashboard");
+        }
       }
-    } else {
-      toast.error(res.data.message);
+    } catch (err) {
+      toast.error(
+        err.response?.data?.message ||
+          err.apiMessage ||
+          "Something went wrong. Please try again.",
+      );
     }
   };
 

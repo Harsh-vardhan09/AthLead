@@ -236,15 +236,20 @@ const Dashboard = () => {
             </div>
           </div>
 
-          <div className="w-full overflow-x-auto">
-            <table className="w-full min-w-[620px] lg:min-w-0 border-collapse">
+          <div
+            className="w-full max-w-full overflow-x-auto overscroll-x-contain rounded-b-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400"
+            role="region"
+            aria-label="ML leaderboard, horizontally scrollable"
+            tabIndex={0}
+          >
+            <table className="w-full min-w-[620px] lg:min-w-0 border-collapse text-left text-xs sm:text-sm">
               <thead>
-                <tr className="text-[10px] text-white uppercase">
+                <tr className="text-[11px] text-slate-200 uppercase tracking-wide">
                   {["#", "Athlete", "Sport", "State", "ML Score", "Δ"].map(
                     (h) => (
                       <th
                         key={h}
-                        className={`pb-2.5 ${
+                        className={`px-3 py-3 whitespace-nowrap ${
                           h == "#" || h == "ML Score" ? "w-8" : "w-20"
                         } font-semibold border-b border-white/4 ${
                           h === "#" ||
@@ -267,10 +272,7 @@ const Dashboard = () => {
                   <LeaderboardSkeleton />
                 ) : rank.length === 0 ? (
                   <tr>
-                    <td
-                      colSpan="6"
-                      className="text-center py-6 text-gray-400"
-                    >
+                    <td colSpan="6" className="text-center py-6 text-gray-400">
                       No leaderboard data available
                     </td>
                   </tr>
@@ -278,14 +280,14 @@ const Dashboard = () => {
                   getDisplayRankings().map((p, i) => (
                     <tr
                       key={p.user?._id || `athlete-${i}`}
-                      className={`border-b basic border-white/3 transition-colors ${
+                      className={`border-b text-slate-200 border-white/3 transition-colors ${
                         p.isMe ? "bg-teal-500/3" : "hover:bg-white/2"
                       }`}
                     >
-                      <td className="flex items-center justify-center">
+                      <td className="px-3 py-3 text-center align-middle">
                         {p.originalRank && p.originalRank <= 4 ? (
                           <div
-                            className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${
+                            className={`mx-auto w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${
                               p.originalRank === 2
                                 ? "bg-amber-400/15 text-amber-400"
                                 : p.originalRank === 3
@@ -298,38 +300,45 @@ const Dashboard = () => {
                             {p.originalRank}
                           </div>
                         ) : (
-                          <span className="text-[11px] w-5 h-5 text-slate-600 pl-1">
+                          <span className="inline-block w-5 text-[11px] text-slate-300">
                             {p.originalRank || "-"}
                           </span>
                         )}
                       </td>
 
                       <td
-                        className={`mr-3 text-[13px] font-medium ${
+                        className={`px-3 py-3 whitespace-nowrap text-[13px] font-medium ${
                           p.isMe ? "text-teal-300" : "text-slate-200"
                         }`}
                       >
                         {p.user?.fullname?.split(" ")[0]}{" "}
                       </td>
 
-                      <td className="text-sm pl-1">cycling</td>
-                      <td className="text-sm">{p.user?.state}</td>
-                      <td>{p.score}</td>
-                      <td className="text-center">{p.trend}</td>
+                      <td className="px-3 py-3 whitespace-nowrap">cycling</td>
+                      <td className="px-3 py-3 whitespace-nowrap">
+                        {p.user?.state}
+                      </td>
+                      <td className="px-3 py-3 whitespace-nowrap">{p.score}</td>
+                      <td className="px-3 py-3 text-center whitespace-nowrap">
+                        {p.trend}
+                      </td>
                     </tr>
                   ))
                 )}
               </tbody>
             </table>
           </div>
+          <p className="px-3 pb-3 pt-1 text-xs text-slate-300 sm:hidden">
+            Swipe horizontally to see all leaderboard columns.
+          </p>
         </div>
       </div>
 
       {/* Charts */}
-      <div className="w-full grid grid-cols-1 lg:grid-cols-2 px-4 sm:px-10 mb-5 gap-5">
+      <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-5 px-4 sm:px-6 lg:px-10 mb-5">
         {/* Radar Chart */}
         <div className="min-h-[360px] min-w-0 flex flex-col bg-linear-to-br from-[#0f2027] via-[#1a3a4a] to-[#0f2027] border border-[#1d9e75]/40 text-start text-white rounded-xl shadow-xl">
-          <div className="min-h-[300px] min-w-0 flex-1 flex items-center justify-center p-3 sm:p-5 overflow-hidden">
+          <div className="min-h-[300px] min-w-0 w-full flex-1 flex items-center justify-center p-2 sm:p-5">
             {dashboardLoading ? (
               <ChartSkeleton className="w-full h-[300px]" />
             ) : radarChartData.length === 0 ? (
@@ -348,25 +357,26 @@ const Dashboard = () => {
                 height={compactCharts ? 270 : 300}
               >
                 <RadarChart
-                  outerRadius={compactCharts ? "42%" : "72%"}
+                  outerRadius={compactCharts ? "75%" : "68%"}
                   data={radarChartData}
                   margin={{
-                    top: compactCharts ? 10 : 20,
-                    left: compactCharts ? 10 : 30,
-                    right: compactCharts ? 10 : 30,
-                    bottom: compactCharts ? 10 : 20,
+                    top: compactCharts ? 8 : 20,
+                    left: compactCharts ? 8 : 30,
+                    right: compactCharts ? 8 : 30,
+                    bottom: compactCharts ? 8 : 20,
                   }}
                 >
                   <PolarGrid />
 
                   <PolarAngleAxis
                     dataKey="metric"
-                    tick={{
-                      fontSize: compactCharts ? 8 : 12,
-                    }}
+                    tick={
+                      compactCharts ? false : { fontSize: 12, fill: "#cbd5e1" }
+                    }
+                    tickLine={false}
                   />
 
-                  <PolarRadiusAxis />
+                  <PolarRadiusAxis tick={!compactCharts} />
 
                   <Radar
                     name="aarsh"
@@ -379,6 +389,27 @@ const Dashboard = () => {
               </ResponsiveContainer>
             )}
           </div>
+
+          {!dashboardLoading && radarChartData.length > 0 && (
+            <div
+              className="grid grid-cols-2 gap-2 px-4 pb-3 sm:hidden"
+              aria-label="Performance metric values"
+            >
+              {radarChartData.map(({ metric, value }) => (
+                <div
+                  key={metric}
+                  className="min-w-0 rounded-lg border border-white/10 bg-white/5 px-2 py-2"
+                >
+                  <p className="break-words text-[11px] leading-snug text-slate-300">
+                    {metric}
+                  </p>
+                  <p className="text-sm font-semibold text-white">
+                    {value ?? "—"}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
 
           <div className="flex items-center justify-center px-3">
             <button

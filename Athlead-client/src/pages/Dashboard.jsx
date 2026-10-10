@@ -236,11 +236,13 @@ const Dashboard = () => {
             </div>
           </div>
 
-          <div className="w-full max-w-full overflow-x-auto overscroll-x-contain rounded-b-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400"
+          <div
+            className="w-full max-w-full overflow-x-auto overscroll-x-contain rounded-b-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400"
             role="region"
             aria-label="ML leaderboard, horizontally scrollable"
-            tabIndex={0}>
-            <table className="w-full min-w-[620px] border-collapse text-left text-xs sm:text-sm">
+            tabIndex={0}
+          >
+            <table className="w-full min-w-[620px] lg:min-w-0 border-collapse text-left text-xs sm:text-sm">
               <thead>
                 <tr className="text-[11px] text-slate-200 uppercase tracking-wide">
                   {["#", "Athlete", "Sport", "State", "ML Score", "Δ"].map(
@@ -270,10 +272,7 @@ const Dashboard = () => {
                   <LeaderboardSkeleton />
                 ) : rank.length === 0 ? (
                   <tr>
-                    <td
-                      colSpan="6"
-                      className="text-center py-6 text-gray-400"
-                    >
+                    <td colSpan="6" className="text-center py-6 text-gray-400">
                       No leaderboard data available
                     </td>
                   </tr>
@@ -281,7 +280,7 @@ const Dashboard = () => {
                   getDisplayRankings().map((p, i) => (
                     <tr
                       key={p.user?._id || `athlete-${i}`}
-                      className={`border-b basic border-white/3 transition-colors ${
+                      className={`border-b text-slate-200 border-white/3 transition-colors ${
                         p.isMe ? "bg-teal-500/3" : "hover:bg-white/2"
                       }`}
                     >
@@ -316,9 +315,13 @@ const Dashboard = () => {
                       </td>
 
                       <td className="px-3 py-3 whitespace-nowrap">cycling</td>
-                      <td className="px-3 py-3 whitespace-nowrap">{p.user?.state}</td>
+                      <td className="px-3 py-3 whitespace-nowrap">
+                        {p.user?.state}
+                      </td>
                       <td className="px-3 py-3 whitespace-nowrap">{p.score}</td>
-                      <td className="px-3 py-3 text-center whitespace-nowrap">{p.trend}</td>
+                      <td className="px-3 py-3 text-center whitespace-nowrap">
+                        {p.trend}
+                      </td>
                     </tr>
                   ))
                 )}
@@ -367,7 +370,9 @@ const Dashboard = () => {
 
                   <PolarAngleAxis
                     dataKey="metric"
-                    tick={compactCharts ? false : { fontSize: 12, fill: "#cbd5e1" }}
+                    tick={
+                      compactCharts ? false : { fontSize: 12, fill: "#cbd5e1" }
+                    }
                     tickLine={false}
                   />
 

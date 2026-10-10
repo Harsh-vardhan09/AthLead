@@ -84,6 +84,14 @@ class RankApiTests(unittest.TestCase):
         self.assertEqual(response.status_code, 422)
         self.assertIn("detail", response.json())
 
+    def test_malformed_json_returns_client_error(self):
+        with TestClient(load_api().app) as client:
+            response = client.post(
+                "/rank", content='{"sport":', headers={"content-type": "application/json"}
+            )
+        self.assertEqual(response.status_code, 422)
+        self.assertIn("detail", response.json())
+
     def test_unknown_categories_return_client_errors(self):
         with TestClient(load_api().app) as client:
             for field in ("sport", "gender"):
@@ -170,6 +178,22 @@ class RankApiTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertNotIn("schema_version", captured_columns)
         self.assertIn("sport", captured_columns)
+
+    def test_health_endpoint_healthy_when_model_loaded(self):
+        """Verify GET /health returns status ok and model_loaded true when artifacts are loaded."""
+        with TestClient(load_api().app) as client:
+            response = client.get("/health")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"status": "ok", "model_loaded": True})
+
+    def test_health_endpoint_degraded_when_artifacts_missing(self):
+        """Verify GET /health returns status degraded and model_loaded false when artifacts fail to load."""
+        with self.assertLogs("api", level="ERROR"), TestClient(
+            load_api(FileNotFoundError("private model path")).app
+        ) as client:
+            response = client.get("/health")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"status": "degraded", "model_loaded": False})
 
 
 if __name__ == "__main__":

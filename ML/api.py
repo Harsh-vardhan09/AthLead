@@ -62,8 +62,21 @@ class Athlete(BaseModel):
         return v
 
 
+@app.get("/health")
+def health_check():
+    """Verify ML service health and artifact readiness."""
+    is_model_loaded = (
+        model is not None and scaler is not None and label_encoders is not None
+    )
+    return {
+        "status": "ok" if is_model_loaded else "degraded",
+        "model_loaded": is_model_loaded,
+    }
+
+
 @app.post("/rank")
 def rank_athlete(athlete: Athlete):
+    """Predict athlete potential score from biometric and performance metrics."""
     if model is None or scaler is None or label_encoders is None:
         raise HTTPException(status_code=503, detail="ML model unavailable")
 

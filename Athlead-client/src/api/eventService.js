@@ -7,4 +7,7 @@ export const eventService = {
 
   register: (eventId, data) =>
     api.post(`/api/events/${eventId}/register`, data),
+
+  cancelRegistration: (eventId) =>
+    api.delete(`/api/events/${eventId}/register`),
 };

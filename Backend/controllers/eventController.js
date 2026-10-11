@@ -266,3 +266,37 @@ export const getMyEvents = async (req, res, next) => {
     next(error);
   }
 };
+
+export const cancelEventRegistration = async (req, res, next) => {
+  try {
+    const eventId = req.params.eventId;
+    const userId = req.user._id;
+
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        message: "Event not found",
+      });
+    }
+
+    const participation = await Participation.findOneAndDelete({
+      user: userId,
+      event: eventId,
+    });
+    if (!participation) {
+      return res.status(404).json({
+        success: false,
+        message: "Registration not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Event registration cancelled successfully",
+      eventId,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

@@ -4,6 +4,7 @@ import Event from "../models/Event.js";
 import { Participation, User } from "../models/Users.js";
 import { findAllEvent, registerEvent } from "../controllers/eventController.js";
 import { errorHandler } from "../middleware/errorHandler.js";
+import { cancelEventRegistration } from "../controllers/eventController.js";
 
 const invokeController = async (query) => {
   const response = {
@@ -325,5 +326,152 @@ test("Test E — Unexpected database failure is forwarded to error handler and n
     User.findById = originalUserFindById;
     Event.findById = originalEventFindById;
     console.error = originalConsoleError;
+  }
+});
+
+const invokeCancelEventRegistration = async (
+  { params = {}, body = {}, user = { _id: "user-123" } } = {},
+  options = {},
+) => {
+  const response = {
+    statusCode: null,
+    body: null,
+    status(statusCode) {
+      this.statusCode = statusCode;
+      return this;
+    },
+    json(body) {
+      this.body = body;
+      return this;
+    },
+  };
+  let nextError = null;
+  const next = (error) => {
+    nextError = error;
+    if (options.useErrorHandler && error) {
+      errorHandler(error, { params, body, user }, response, () => {});
+    }
+  };
+  await cancelEventRegistration({ params, body, user }, response, next);
+  return { response, nextError };
+};
+
+test("cancelEventRegistration — returns HTTP 404 if event does not exist", async () => {
+  const originalEventFindById = Event.findById;
+  const originalParticipationFindOneAndDelete = Participation.findOneAndDelete;
+  let deleteCalled = false;
+  Event.findById = async () => null;
+  Participation.findOneAndDelete = async () => {
+    deleteCalled = true;
+    return null;
+  };
+
+  try {
+    const { response, nextError } = await invokeCancelEventRegistration({
+      params: { eventId: "507f1f77bcf86cd799439011" },
+      user: { _id: "user-123" },
+    });
+
+    assert.equal(nextError, null);
+    assert.equal(response.statusCode, 404);
+    assert.deepEqual(response.body, {
+      success: false,
+      message: "Event not found",
+    });
+    assert.equal(deleteCalled, false);
+  } finally {
+    Event.findById = originalEventFindById;
+    Participation.findOneAndDelete = originalParticipationFindOneAndDelete;
+  }
+});
+
+test("cancelEventRegistration — returns HTTP 404 if user has no registration for event", async () => {
+  const originalEventFindById = Event.findById;
+  const originalParticipationFindOneAndDelete = Participation.findOneAndDelete;
+  let receivedFilter;
+  Event.findById = async () => ({ _id: "507f1f77bcf86cd799439011" });
+  Participation.findOneAndDelete = async (filter) => {
+    receivedFilter = filter;
+    return null;
+  };
+
+  try {
+    const { response, nextError } = await invokeCancelEventRegistration({
+      params: { eventId: "507f1f77bcf86cd799439011" },
+      user: { _id: "user-123" },
+    });
+
+    assert.equal(nextError, null);
+    assert.equal(response.statusCode, 404);
+    assert.deepEqual(response.body, {
+      success: false,
+      message: "Registration not found",
+    });
+    assert.deepEqual(receivedFilter, {
+      user: "user-123",
+      event: "507f1f77bcf86cd799439011",
+    });
+  } finally {
+    Event.findById = originalEventFindById;
+    Participation.findOneAndDelete = originalParticipationFindOneAndDelete;
+  }
+});
+
+test("cancelEventRegistration — deletes only the authenticated user's participation", async () => {
+  const originalEventFindById = Event.findById;
+  const originalParticipationFindOneAndDelete = Participation.findOneAndDelete;
+  let receivedFilter;
+  Event.findById = async () => ({ _id: "507f1f77bcf86cd799439011" });
+  Participation.findOneAndDelete = async (filter) => {
+    receivedFilter = filter;
+    return { _id: "participation-123", ...filter };
+  };
+
+  try {
+    const { response, nextError } = await invokeCancelEventRegistration({
+      params: { eventId: "507f1f77bcf86cd799439011" },
+      user: { _id: "user-123" },
+    });
+
+    assert.equal(nextError, null);
+    assert.equal(response.statusCode, 200);
+    assert.deepEqual(response.body, {
+      success: true,
+      message: "Event registration cancelled successfully",
+      eventId: "507f1f77bcf86cd799439011",
+    });
+    assert.deepEqual(receivedFilter, {
+      user: "user-123",
+      event: "507f1f77bcf86cd799439011",
+    });
+  } finally {
+    Event.findById = originalEventFindById;
+    Participation.findOneAndDelete = originalParticipationFindOneAndDelete;
+  }
+});
+
+test("cancelEventRegistration — unexpected error is passed to next() middleware", async () => {
+  const originalEventFindById = Event.findById;
+  const originalParticipationFindOneAndDelete = Participation.findOneAndDelete;
+  Event.findById = async () => ({ _id: "507f1f77bcf86cd799439011" });
+  Participation.findOneAndDelete = async () => {
+    throw new Error("Database connection error");
+  };
+
+  try {
+    const { response, nextError } = await invokeCancelEventRegistration(
+      {
+        params: { eventId: "507f1f77bcf86cd799439011" },
+        user: { _id: "user-123" },
+      },
+      { useErrorHandler: true },
+    );
+    assert.ok(nextError);
+    assert.equal(nextError.message, "Database connection error");
+    assert.equal(response.statusCode, 500);
+    assert.equal(response.body.success, false);
+  } finally {
+    Event.findById = originalEventFindById;
+    Participation.findOneAndDelete = originalParticipationFindOneAndDelete;
   }
 });

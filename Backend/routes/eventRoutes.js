@@ -6,6 +6,7 @@ import {
   getMyEvents,
   registerEvent,
   updateEvent,
+  cancelEventRegistration,
 } from "../controllers/eventController.js";
 import { requireAdmin } from "../middleware/middleware.js";
 import passport from "passport";
@@ -25,6 +26,12 @@ router.post(
   "/events/:eventId/register",
   passport.authenticate("jwt", { session: false }),
   registerEvent,
+);
+
+router.delete(
+  "/events/:eventId/register",
+  passport.authenticate("jwt", { session: false }),
+  cancelEventRegistration,
 );
 
 //Admin event routes

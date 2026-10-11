@@ -482,3 +482,52 @@ test("getRanking returns 500 when database query throws an error", async () => {
     Score.find = originalFind;
   }
 });
+
+test("getRanking unpaginated query returns empty rank array when collection is empty", async () => {
+  const originalFind = Score.find;
+
+  const queryChain = {
+    sort() {
+      return this;
+    },
+    select() {
+      return this;
+    },
+    populate() {
+      return this;
+    },
+    lean() {
+      return this;
+    },
+    async exec() {
+      return [];
+    },
+  };
+
+  Score.find = () => queryChain;
+
+  const response = {
+    statusCode: null,
+    body: null,
+    status(code) {
+      this.statusCode = code;
+      return this;
+    },
+    json(data) {
+      this.body = data;
+      return this;
+    },
+  };
+
+  try {
+    await getRanking({}, response);
+
+    assert.equal(response.statusCode, 200);
+    assert.deepEqual(response.body, {
+      success: true,
+      rank: [],
+    });
+  } finally {
+    Score.find = originalFind;
+  }
+});

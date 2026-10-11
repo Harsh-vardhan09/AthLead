@@ -82,7 +82,7 @@ export const getRanking = async (req, res) => {
   try {
     const rank = await Score.find({})
       .sort({ score: -1 })
-      .populate("user", "fullname image role");
+      .populate("user", "fullname image state gender");
     // console.log(rank);
 
     res.json({

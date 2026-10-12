@@ -78,3 +78,41 @@ export const scoreInputVal = z.strictObject({
     .max(100, "Adaptability score cannot exceed 100")
     .optional(),
 });
+
+export const createEventVal = z.object({
+  title: z
+    .string({ required_error: "Title is required" })
+    .trim()
+    .min(1, "Title is required"),
+  sport: z
+    .string({ required_error: "Sport is required" })
+    .trim()
+    .min(1, "Sport is required"),
+  level: z
+    .string({ required_error: "Level is required" })
+    .trim()
+    .min(1, "Level is required"),
+  location: z
+    .string({ required_error: "Location is required" })
+    .trim()
+    .min(1, "Location is required"),
+  prize: z.coerce
+    .number({ invalid_type_error: "Prize must be a number" })
+    .min(0, "Prize must be at least 0"),
+  date: z
+    .union([z.string(), z.date()])
+    .refine((val) => !isNaN(Date.parse(val)), {
+      message: "Valid date is required",
+    }),
+  time: z
+    .string({ required_error: "Time is required" })
+    .trim()
+    .min(1, "Time is required"),
+  description: z
+    .string({ required_error: "Description is required" })
+    .trim()
+    .min(1, "Description is required"),
+  tags: z.array(z.string()).optional(),
+});
+
+export const updateEventVal = createEventVal.partial();

@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
+import PageLoader from "../Components/PageLoader";
 import Navbar from "../Components/Navbar";
 import { Outlet } from "react-router";
 import { Menu, ArrowUp } from "lucide-react";
@@ -30,7 +31,7 @@ const Layout = () => {
   };
 
   return (
-    <section className="dark-bg">
+    <section className="dark-bg min-h-screen">
       <Navbar
         sidebar={sidebar}
         setSidebar={setSidebar}
@@ -39,7 +40,9 @@ const Layout = () => {
       />
 
       <div>
-        <Outlet />
+        <Suspense fallback={<PageLoader />}>
+          <Outlet />
+        </Suspense>
       </div>
 
       {!sidebar && (

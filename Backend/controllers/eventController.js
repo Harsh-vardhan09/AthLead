@@ -138,13 +138,9 @@ export const updateEvent = async (req, res, next) => {
       ...(deleteAt ? { deleteAt } : {}),
     };
 
-    const event = await Event.findByIdAndUpdate(
-      eventId,
-      updatePayload,
-      {
-        new: true,
-      },
-    );
+    const event = await Event.findByIdAndUpdate(eventId, updatePayload, {
+      new: true,
+    });
     if (!event) {
       return res.status(404).json({
         success: false,

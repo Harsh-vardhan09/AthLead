@@ -1,11 +1,12 @@
 import { Navigate } from "react-router";
 import { useAuth } from "./useAuth";
+import PageLoader from "../Components/PageLoader";
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   // Extract user object alongside loggedIn and loading states
   const { loggedIn, loading, user } = useAuth();
 
-  if (loading) return null;
+  if (loading) return <PageLoader />;
 
   if (!loggedIn) return <Navigate to="/login" replace />;
 

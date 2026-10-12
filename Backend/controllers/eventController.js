@@ -1,6 +1,7 @@
 import Event from "../models/Event.js";
 import { Participation, User } from "../models/Users.js";
 import { buildEventQuery } from "../utils/eventQuery.js";
+import { createEventVal, updateEventVal } from "../utils/zodValidation.js";
 
 export const findAllEvent = async (req, res, next) => {
   try {
@@ -50,27 +51,11 @@ export const findAllEvent = async (req, res, next) => {
 
 //create event
 export const createEvent = async (req, res, next) => {
-  const { data } = req.body;
-
-  const {
-    title,
-    level,
-    location,
-    prize,
-    description,
-    sport,
-    date,
-    time,
-    tags,
-  } = data;
-
-  const eventDate = new Date(date);
-
-  const deleteAt = new Date(eventDate);
-  deleteAt.setDate(deleteAt.getDate() - 3);
-
   try {
-    const event = await Event.create({
+    const rawData = req.body?.data !== undefined ? req.body.data : req.body;
+    const validatedData = req.validatedData || createEventVal.parse(rawData);
+
+    const {
       title,
       level,
       location,
@@ -78,6 +63,23 @@ export const createEvent = async (req, res, next) => {
       description,
       sport,
       date,
+      time,
+      tags,
+    } = validatedData;
+
+    const eventDate = new Date(date);
+
+    const deleteAt = new Date(eventDate);
+    deleteAt.setDate(deleteAt.getDate() - 3);
+
+    const event = await Event.create({
+      title,
+      level,
+      location,
+      prize,
+      description,
+      sport,
+      date: eventDate,
       time,
       tags,
       deleteAt,
@@ -117,22 +119,28 @@ export const deleteEvent = async (req, res) => {
   }
 };
 
-export const updateEvent = async (req, res) => {
+export const updateEvent = async (req, res, next) => {
   const { eventId } = req.params;
-  const { data } = req.body;
-
-  const eventDate = new Date(data.date);
-
-  const deleteAt = new Date(eventDate);
-  deleteAt.setDate(deleteAt.getDate() - 3);
 
   try {
+    const rawData = req.body?.data !== undefined ? req.body.data : req.body;
+    const validatedData = req.validatedData || updateEventVal.parse(rawData);
+
+    let deleteAt;
+    if (validatedData.date) {
+      const eventDate = new Date(validatedData.date);
+      deleteAt = new Date(eventDate);
+      deleteAt.setDate(deleteAt.getDate() - 3);
+    }
+
+    const updatePayload = {
+      ...validatedData,
+      ...(deleteAt ? { deleteAt } : {}),
+    };
+
     const event = await Event.findByIdAndUpdate(
       eventId,
-      {
-        ...data,
-        deleteAt,
-      },
+      updatePayload,
       {
         new: true,
       },
@@ -150,11 +158,7 @@ export const updateEvent = async (req, res) => {
       event: event,
     });
   } catch (error) {
-    console.log(error);
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error",
-    });
+    next(error);
   }
 };
 

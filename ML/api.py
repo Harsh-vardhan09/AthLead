@@ -36,19 +36,21 @@ def fingerprint_artifacts(paths):
         return None
     return f"sha256:{digest.hexdigest()}"
 
+def load_inference_artifacts(paths):
+    """Use a version only when artifacts stayed unchanged throughout loading."""
+    version_before = fingerprint_artifacts(paths)
+    loaded = [joblib.load(str(path)) for path in paths]
+    version_after = fingerprint_artifacts(paths)
+    version = version_before if version_before == version_after else None
+    return *loaded, version
+
+
 try:
-    model = joblib.load("models/athlete_rank_model.pkl")
-    scaler = joblib.load("models/scaler.pkl")
-    label_encoders = joblib.load("models/label_encoders.pkl")
+    model, scaler, label_encoders, MODEL_VERSION = load_inference_artifacts(ARTIFACT_PATHS)
 except Exception:
     logger.exception("ML model artifacts could not be loaded")
     model = scaler = label_encoders = None
-
-MODEL_VERSION = (
-    fingerprint_artifacts(ARTIFACT_PATHS)
-    if model is not None and scaler is not None and label_encoders is not None
-    else None
-)
+    MODEL_VERSION = None
 
 app = FastAPI()
 

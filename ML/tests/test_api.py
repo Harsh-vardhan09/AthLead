@@ -94,6 +94,26 @@ class RankApiTests(unittest.TestCase):
             paths[1].write_bytes(b"new scaler")
             self.assertNotEqual(first_version, api.fingerprint_artifacts(paths))
 
+    def test_model_version_is_unknown_if_an_artifact_changes_while_loading(self):
+        api = load_api()
+        with tempfile.TemporaryDirectory() as temp_dir:
+            paths = [Path(temp_dir) / name for name in ("model.pkl", "scaler.pkl", "encoders.pkl")]
+            for path, content in zip(paths, (b"model", b"scaler", b"encoders")):
+                path.write_bytes(content)
+
+            with patch("joblib.load", side_effect=lambda path: path):
+                _, _, _, stable_version = api.load_inference_artifacts(paths)
+            self.assertEqual(stable_version, api.fingerprint_artifacts(paths))
+
+            def load_and_replace(path):
+                if path == str(paths[0]):
+                    paths[1].write_bytes(b"replacement scaler")
+                return path
+
+            with patch("joblib.load", side_effect=load_and_replace):
+                _, _, _, version = api.load_inference_artifacts(paths)
+            self.assertIsNone(version)
+
     def test_missing_field_returns_structured_client_error(self):
         with TestClient(load_api().app) as client:
             response = client.post(

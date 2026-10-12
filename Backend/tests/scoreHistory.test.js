@@ -107,6 +107,26 @@ test("score generation still works with an older ML response", async () => {
   }
 });
 
+test("score generation rejects a missing request body before contacting ML", async () => {
+  let contactedMl = false;
+  mock.method(User, "findOne", () => ({
+    select: async () => ({ DOB: new Date("2000-01-01"), gender: "female" }),
+  }));
+  mock.method(axios, "post", async () => {
+    contactedMl = true;
+  });
+
+  try {
+    const res = response();
+    await setScore({ user: { _id: "user-123" } }, res);
+    assert.equal(res.statusCode, 400);
+    assert.equal(res.body.success, false);
+    assert.equal(contactedMl, false);
+  } finally {
+    mock.reset();
+  }
+});
+
 test("legacy score records remain readable and new metadata is optional", async () => {
   const user = new mongoose.Types.ObjectId();
   const legacy = Score.hydrate({ user, score: 72 });

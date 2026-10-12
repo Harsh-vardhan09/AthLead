@@ -53,6 +53,12 @@ export const setScore = async (req, res) => {
         .json({ success: false, message: "Invalid Date of Birth format" });
     }
 
+    if (req.body == null) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Score inputs are required" });
+    }
+
     const gen = user.gender.toUpperCase().slice(0, 1);
     const inputSnapshot = Object.fromEntries(
       predictionFields

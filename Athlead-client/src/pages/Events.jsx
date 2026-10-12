@@ -372,7 +372,7 @@ const Events = () => {
         )}
 
         {/* Pagination Section */}
-        {!isLoading && (pagination.page > 1 || pagination.hasMore) && (
+        {!isLoading && !error && (pagination.page > 1 || pagination.hasMore) && (
           <div className="flex flex-col sm:flex-row items-center justify-between w-full py-4 border-t border-slate-800 text-slate-300 gap-4">
             <span className="text-xs text-slate-400">
               Showing page {pagination.page}

@@ -159,6 +159,7 @@ export default function Score() {
 
   const handleSubmit = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
+    if (isSubmitting) return;
 
     if (!validateForm()) {
       toast.error("Please fix the errors before submitting.");
@@ -297,7 +298,7 @@ export default function Score() {
             ))}
           </div>
           <div className="p-6 flex flex-col items-center justify-center gap-3">
-            {submitError && (
+            {submitError && !isSubmitting && (
               <ErrorState
                 title="Score Generation Failed"
                 error={submitError}

@@ -26,13 +26,9 @@ const Announcement = () => {
       } else {
         setNews([]);
       }
-    } catch (err) {
-      console.warn("API unavailable, attempting local announcements fallback", err);
-      if (localAnnouncements && localAnnouncements.length > 0) {
-        setNews(localAnnouncements);
-      } else {
-        setError(err?.response?.data?.message || err?.message || "Failed to load announcements");
-      }
+    } catch {
+      console.warn("API unavailable, using local announcements fallback");
+      setNews(localAnnouncements);
     } finally {
       setIsLoading(false);
     }

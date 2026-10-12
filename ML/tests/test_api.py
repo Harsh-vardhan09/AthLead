@@ -1,5 +1,6 @@
 import importlib
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -69,11 +70,29 @@ def load_api(load_result=None):
 
 
 class RankApiTests(unittest.TestCase):
-    def test_valid_prediction_keeps_response_shape(self):
-        with TestClient(load_api().app) as client:
-            response = client.post("/rank", json=VALID_ATHLETE)
+    def test_valid_prediction_returns_score_and_model_version(self):
+        api = load_api()
+        with patch.object(api, "MODEL_VERSION", "sha256:test-artifacts"):
+            with TestClient(api.app) as client:
+                response = client.post("/rank", json=VALID_ATHLETE)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json(), {"predicted_potential_score": 73.5})
+        self.assertEqual(
+            response.json(),
+            {"predicted_potential_score": 73.5, "model_version": "sha256:test-artifacts"},
+        )
+
+    def test_model_version_identifies_the_full_inference_artifact_set(self):
+        api = load_api()
+        with tempfile.TemporaryDirectory() as temp_dir:
+            paths = [Path(temp_dir) / name for name in ("model.pkl", "scaler.pkl", "encoders.pkl")]
+            for path, content in zip(paths, (b"model", b"scaler", b"encoders")):
+                path.write_bytes(content)
+            first_version = api.fingerprint_artifacts(paths)
+            self.assertEqual(first_version, api.fingerprint_artifacts(paths))
+            self.assertTrue(first_version.startswith("sha256:"))
+
+            paths[1].write_bytes(b"new scaler")
+            self.assertNotEqual(first_version, api.fingerprint_artifacts(paths))
 
     def test_missing_field_returns_structured_client_error(self):
         with TestClient(load_api().app) as client:
@@ -148,7 +167,7 @@ class RankApiTests(unittest.TestCase):
         with TestClient(load_api().app) as client:
             response = client.post("/rank", json={**VALID_ATHLETE, "schema_version": 1})
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json(), {"predicted_potential_score": 73.5})
+        self.assertEqual(response.json(), {"predicted_potential_score": 73.5, "model_version": None})
 
     def test_unsupported_schema_version_returns_client_error(self):
         with TestClient(load_api().app) as client:

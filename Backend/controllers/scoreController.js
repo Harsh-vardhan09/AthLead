@@ -4,8 +4,21 @@ import { User } from "../models/Users.js";
 import dobToAge from "dob-to-age";
 import dayjs from "dayjs";
 
+const predictionFields = [
+  "sport",
+  "training_years",
+  "vo2_max",
+  "hrv",
+  "lactate_threshold",
+  "stride_length",
+  "cadence",
+  "force_application",
+  "performance_score",
+  "adaptability_score",
+  "schema_version",
+];
+
 export const setScore = async (req, res) => {
-  const data = req.body;
   const userId = req.user._id;
 
   try {
@@ -41,14 +54,25 @@ export const setScore = async (req, res) => {
     }
 
     const gen = user.gender.toUpperCase().slice(0, 1);
-    data.age = `${age.count}`;
-    data.gender = `${gen}`;
+    const inputSnapshot = Object.fromEntries(
+      predictionFields
+        .filter((field) => Object.hasOwn(req.body, field))
+        .map((field) => [field, req.body[field]]),
+    );
+    inputSnapshot.age = `${age.count}`;
+    inputSnapshot.gender = `${gen}`;
 
-    const mlResponse = await axios.post(`${process.env.ML_URI}/rank`, data);
+    const mlResponse = await axios.post(
+      `${process.env.ML_URI}/rank`,
+      inputSnapshot,
+    );
 
     const newScore = await Score.create({
       user: userId,
       score: mlResponse.data.predicted_potential_score,
+      sport: inputSnapshot.sport,
+      inputSnapshot: { ...inputSnapshot },
+      modelVersion: mlResponse.data.model_version ?? null,
     });
 
     return res.status(201).json({

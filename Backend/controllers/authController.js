@@ -136,9 +136,6 @@ export const editUser = async (req, res) => {
     if (req.file) {
       const profileUrl = await cloudinary.uploader.upload(req.file.path);
       imageUrl = profileUrl.url;
-      fs.unlink(req.file.path, (err) => {
-        if (err) console.error("Failed to delete temp file:", err);
-      });
     }
 
     await User.findByIdAndUpdate(
@@ -164,6 +161,16 @@ export const editUser = async (req, res) => {
       success: false,
       message: error.message,
     });
+  } finally {
+    if (req.file?.path) {
+      try {
+        await fs.promises.unlink(req.file.path);
+      } catch (cleanupError) {
+        if (cleanupError.code !== "ENOENT") {
+          console.error("Failed to delete temp file:", cleanupError);
+        }
+      }
+    }
   }
 };
 

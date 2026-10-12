@@ -12,6 +12,7 @@ const ScoreSchema = new mongoose.Schema(
 
 // TTL: auto-delete scores 30 days after creation (replaces former `date` expires field)
 ScoreSchema.index({ createdAt: 1 }, { expireAfterSeconds: 60 * 60 * 24 * 30 });
+ScoreSchema.index({ score: -1, _id: 1 });
 
 const Score = mongoose.model("Score", ScoreSchema);
 

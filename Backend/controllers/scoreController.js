@@ -80,16 +80,59 @@ export const getScore = async (req, res) => {
 
 export const getRanking = async (req, res) => {
   try {
-    const rank = await Score.find({})
-      .sort({ score: -1 })
-      .populate("user", "fullname image role");
-    // console.log(rank);
+    const { page, limit } = req.query || {};
+    const isPaginated = page !== undefined || limit !== undefined;
 
-    res.json({
+    let query = Score.find({})
+      .sort({ score: -1, _id: 1 })
+      .select("user score")
+      .populate("user", "fullname image role state")
+      .lean();
+
+    if (isPaginated) {
+      const pageNum = Math.max(1, parseInt(page, 10) || 1);
+      const limitNum = Math.max(1, Math.min(100, parseInt(limit, 10) || 10));
+      const skip = (pageNum - 1) * limitNum;
+
+      const [rankDocs, total] = await Promise.all([
+        query.skip(skip).limit(limitNum).exec(),
+        Score.countDocuments({}),
+      ]);
+
+      const rank = rankDocs.map((doc, idx) => ({
+        ...doc,
+        rank: skip + idx + 1,
+      }));
+
+      const totalPages = Math.ceil(total / limitNum);
+
+      return res.status(200).json({
+        success: true,
+        rank,
+        pagination: {
+          page: pageNum,
+          limit: limitNum,
+          total,
+          totalPages,
+          hasMore: pageNum < totalPages,
+        },
+      });
+    }
+
+    const rankDocs = await query.exec();
+    const rank = rankDocs.map((doc, idx) => ({
+      ...doc,
+      rank: idx + 1,
+    }));
+
+    return res.status(200).json({
       success: true,
       rank,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };

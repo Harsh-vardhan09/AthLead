@@ -178,8 +178,6 @@ const Dashboard = () => {
     return topFive;
   };
 
-  console.log(getDisplayRankings());
-
   return (
     <section className="dark-bg relative max-w-screen min-h-screen flex flex-col items-start justify-center">
       {/* Profile + Leaderboard */}

@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
+from sklearn.ensemble import RandomForestRegressor
 
 
 ML_DIR = Path(__file__).resolve().parents[1]
@@ -54,7 +55,7 @@ class Model:
 
 def artifacts(model=None):
     return [
-        model or Model(),
+        model if model is not None else Model(),
         Scaler(),
         {"sport": Encoder(["running"]), "gender": Encoder(["F"])},
     ]
@@ -80,6 +81,39 @@ class RankApiTests(unittest.TestCase):
             response.json(),
             {"predicted_potential_score": 73.5, "model_version": "sha256:test-artifacts"},
         )
+
+    def test_ensemble_reports_tree_disagreement_without_claiming_probability(self):
+        ensemble = RandomForestRegressor(n_estimators=5, random_state=42)
+        ensemble.fit([[value] * 12 for value in range(8)], [value * 10 for value in range(8)])
+        with TestClient(load_api(artifacts(ensemble)).app) as client:
+            response = client.post("/rank", json=VALID_ATHLETE)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertGreaterEqual(response.json()["prediction_std"], 0)
+        self.assertIn("not a calibrated", response.json()["confidence_note"])
+
+    def test_invalid_or_missing_tree_predictions_omit_uncertainty(self):
+        for tree_scores in ([], [70], [70, float("nan")]):
+            with self.subTest(tree_scores=tree_scores):
+                ensemble = RandomForestRegressor()
+                ensemble.predict = Model(score=72).predict
+                ensemble.estimators_ = [Model(score=value) for value in tree_scores]
+                with TestClient(load_api(artifacts(ensemble)).app) as client:
+                    response = client.post("/rank", json=VALID_ATHLETE)
+
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response.json()["predicted_potential_score"], 72)
+                self.assertNotIn("prediction_std", response.json())
+                self.assertNotIn("confidence_note", response.json())
+
+    def test_other_model_with_estimators_does_not_claim_forest_uncertainty(self):
+        model = Model(score=72)
+        model.estimators_ = [Model(score=70), Model(score=74)]
+        with TestClient(load_api(artifacts(model)).app) as client:
+            response = client.post("/rank", json=VALID_ATHLETE)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn("prediction_std", response.json())
 
     def test_model_version_identifies_the_full_inference_artifact_set(self):
         api = load_api()

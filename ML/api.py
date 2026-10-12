@@ -7,7 +7,9 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 import joblib
+import numpy as np
 import pandas as pd
+from sklearn.ensemble import RandomForestRegressor
 
 
 logger = logging.getLogger(__name__)
@@ -126,10 +128,34 @@ def rank_athlete(athlete: Athlete):
         raise HTTPException(status_code=500, detail="Prediction failed") from None
 
     try:
-        score = float(model.predict(scaler.transform(df))[0])
+        scaled_features = scaler.transform(df)
+        score = float(model.predict(scaled_features)[0])
         if not math.isfinite(score):
             raise ValueError("Model returned a non-finite score")
-        return {"predicted_potential_score": score, "model_version": MODEL_VERSION}
+        response = {"predicted_potential_score": score, "model_version": MODEL_VERSION}
+
+        # Tree disagreement is model-derived, but it is not a calibrated probability.
+        trees = getattr(model, "estimators_", None)
+        if (
+            isinstance(model, RandomForestRegressor)
+            and trees is not None
+            and len(trees) > 1
+        ):
+            try:
+                tree_scores = [float(tree.predict(scaled_features)[0]) for tree in trees]
+                if all(math.isfinite(value) for value in tree_scores):
+                    spread = float(np.std(tree_scores))
+                    if math.isfinite(spread):
+                        response["prediction_std"] = spread
+                        response["confidence_note"] = (
+                            "Standard deviation of individual tree predictions in score units; "
+                            "lower means more agreement, not a calibrated confidence "
+                            "probability or error bound."
+                        )
+            except Exception:
+                logger.warning("Prediction spread unavailable", exc_info=True)
+
+        return response
     except Exception:
         logger.exception("ML inference failed")
         raise HTTPException(status_code=500, detail="Prediction failed") from None

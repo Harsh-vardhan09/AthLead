@@ -18,6 +18,7 @@ import EventDetails from "../Components/EventDetails";
 import { eventService } from "../api";
 import EventCardSkeleton from "../Components/EventCardSkelton";
 import toast from "react-hot-toast";
+import { EmptyState, ErrorState } from "../Components/AsyncState";
 
 const levels = [
   "All",
@@ -42,6 +43,8 @@ const Events = () => {
     hasMore: false,
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [retryTrigger, setRetryTrigger] = useState(0);
 
   // Extract filter state from searchParams
   const sport = searchParams.get("sport") || "All";
@@ -75,6 +78,7 @@ const Events = () => {
     let isCancelled = false;
     const getEvents = async () => {
       setIsLoading(true);
+      setError(null);
       try {
         const params = {};
         if (sport && sport !== "All") params.sport = sport;
@@ -105,9 +109,10 @@ const Events = () => {
         if (res.data.status && res.data.status !== 200 && res.data.message) {
           toast.error(res.data.message);
         }
-      } catch (error) {
+      } catch (err) {
         if (isCancelled) return;
-        console.log(error);
+        console.error(err);
+        setError(err?.response?.data?.message || err?.message || "Failed to load events. Please try again.");
         setIsLoading(false);
       }
     };
@@ -115,7 +120,7 @@ const Events = () => {
     return () => {
       isCancelled = true;
     };
-  }, [sport, level, location, date, status, search, page]);
+  }, [sport, level, location, date, status, search, page, retryTrigger]);
 
   const hasActiveFilters =
     sport !== "All" ||
@@ -320,24 +325,37 @@ const Events = () => {
           </div>
         )}
 
-        {/* Events Grid or Empty / Loading State */}
+        {/* Events Grid or Empty / Loading / Error State */}
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 my-8 w-full">
             {Array.from({ length: 6 }).map((_, i) => (
               <EventCardSkeleton key={i} />
             ))}
           </div>
+        ) : error ? (
+          <div className="my-8 w-full bg-slate-900/60 border border-slate-800 rounded-2xl p-6">
+            <ErrorState
+              title="Unable to load events"
+              error={error}
+              onRetry={() => setRetryTrigger((prev) => prev + 1)}
+            />
+          </div>
         ) : events.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-slate-400 gap-3 w-full">
-            <p className="text-lg">No events match your selected filters.</p>
-            {hasActiveFilters && (
-              <button
-                onClick={handleReset}
-                className="text-sm text-teal-400 hover:underline flex items-center gap-1"
-              >
-                <RotateCcw size={14} /> Clear all filters
-              </button>
-            )}
+          <div className="my-8 w-full bg-slate-900/60 border border-slate-800 rounded-2xl p-6">
+            <EmptyState
+              title="No events found"
+              description="No events match your selected filters."
+              action={
+                hasActiveFilters ? (
+                  <button
+                    onClick={handleReset}
+                    className="mt-2 text-sm text-teal-400 hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <RotateCcw size={14} /> Clear all filters
+                  </button>
+                ) : null
+              }
+            />
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 my-8 w-full">
@@ -354,7 +372,7 @@ const Events = () => {
         )}
 
         {/* Pagination Section */}
-        {!isLoading && (pagination.page > 1 || pagination.hasMore) && (
+        {!isLoading && !error && (pagination.page > 1 || pagination.hasMore) && (
           <div className="flex flex-col sm:flex-row items-center justify-between w-full py-4 border-t border-slate-800 text-slate-300 gap-4">
             <span className="text-xs text-slate-400">
               Showing page {pagination.page}

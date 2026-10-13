@@ -14,7 +14,7 @@ import {
   PolarRadiusAxis,
 } from "recharts";
 import { useNavigate } from "react-router";
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { eventService, rankingService, scoreService } from "../api";
 import { useAuth } from "../context/useAuth";
 import { formatDate } from "../utils/dateFormatter";
@@ -24,6 +24,7 @@ import {
   LeaderboardSkeleton,
   ChartSkeleton,
 } from "../Components/DashboardSkeleton";
+import { EmptyState, ErrorState } from "../Components/AsyncState";
 
 const placeholderScores = [
   { date: "Day 1", score: 50 },
@@ -36,13 +37,16 @@ const placeholderScores = [
 const Dashboard = () => {
   const [dashboardLoading, setDashboardLoading] = useState(true);
   const [scores, setScores] = useState([]);
+  const [scoresError, setScoresError] = useState(null);
   const [radarChartData, setRadarChartData] = useState([]);
   const navigate = useNavigate();
   const [editForm, setEditForm] = useState(false);
   // const { user, loading, fetchUser } = useAuth();
   const { user } = useAuth();
   const [rank, setRank] = useState([]);
+  const [rankError, setRankError] = useState(null);
   const [registeredEvents, setRegisteredEvents] = useState([]);
+  const [eventsError, setEventsError] = useState(null);
   const [compactCharts, setCompactCharts] = useState(
     () => window.matchMedia("(max-width: 639px)").matches,
   );
@@ -115,6 +119,53 @@ const Dashboard = () => {
     }
   }, [user]);
 
+  const fetchScores = useCallback(async () => {
+    setScoresError(null);
+    try {
+      const scoresRes = await scoreService.getMyScores();
+      const formattedScores = (scoresRes.data.scores || []).map((item) => ({
+        ...item,
+        date: formatDate(item.date, "DD MMM YY"),
+      }));
+      setScores(formattedScores);
+    } catch (error) {
+      console.error("Failed to load scores:", error);
+      setScoresError(error?.response?.data?.message || "Failed to load scores");
+    }
+  }, []);
+
+  const fetchRank = useCallback(async () => {
+    setRankError(null);
+    try {
+      const rankRes = await rankingService.getRanking();
+      const rankWithIsMe = (rankRes.data.rank || []).map((item, index) => ({
+        ...item,
+        originalRank: index + 1,
+        isMe: item.user?._id === user?._id || item.isMe,
+      }));
+      setRank(rankWithIsMe);
+    } catch (error) {
+      console.error("Failed to load rankings:", error);
+      setRankError(error?.response?.data?.message || "Failed to load rankings");
+    }
+  }, [user]);
+
+  const fetchRegisteredEvents = useCallback(async () => {
+    setEventsError(null);
+    try {
+      const myEventsRes = await eventService.getMyEvents();
+      setRegisteredEvents(
+        Array.isArray(myEventsRes.data) ? myEventsRes.data : [],
+      );
+    } catch (error) {
+      console.error("Failed to load registered events:", error);
+      setEventsError(
+        error?.response?.data?.message || "Failed to load registered events",
+      );
+      setRegisteredEvents([]);
+    }
+  }, []);
+
   useEffect(() => {
     if (!user) {
       setDashboardLoading(false);
@@ -122,43 +173,17 @@ const Dashboard = () => {
     }
 
     const initDashboard = async () => {
-      try {
-        const scoresRes = await scoreService.getMyScores();
-        const formattedScores = (scoresRes.data.scores || []).map((item) => ({
-          ...item,
-          date: formatDate(item.date, "DD MMM YY"),
-        }));
-
-        setScores(formattedScores);
-
-        const rankRes = await rankingService.getRanking();
-
-        const rankWithIsMe = (rankRes.data.rank || []).map((item, index) => ({
-          ...item,
-          originalRank: index + 1,
-          isMe: item.user?._id === user?._id || item.isMe,
-        }));
-
-        setRank(rankWithIsMe);
-      } catch (error) {
-        console.error(error);
-      }
-
-      try {
-        const myEventsRes = await eventService.getMyEvents();
-        setRegisteredEvents(
-          Array.isArray(myEventsRes.data) ? myEventsRes.data : [],
-        );
-      } catch (error) {
-        console.error(error);
-        setRegisteredEvents([]);
-      } finally {
-        setDashboardLoading(false);
-      }
+      setDashboardLoading(true);
+      await Promise.allSettled([
+        fetchScores(),
+        fetchRank(),
+        fetchRegisteredEvents(),
+      ]);
+      setDashboardLoading(false);
     };
 
     initDashboard();
-  }, [user]);
+  }, [user, fetchScores, fetchRank, fetchRegisteredEvents]);
 
   // if (loading) return null;
 
@@ -177,8 +202,6 @@ const Dashboard = () => {
 
     return topFive;
   };
-
-  console.log(getDisplayRankings());
 
   return (
     <section className="dark-bg relative max-w-screen min-h-screen flex flex-col items-start justify-center">
@@ -270,10 +293,23 @@ const Dashboard = () => {
               <tbody>
                 {dashboardLoading ? (
                   <LeaderboardSkeleton />
+                ) : rankError ? (
+                  <tr>
+                    <td colSpan="6" className="py-6">
+                      <ErrorState
+                        title="Failed to load leaderboard"
+                        error={rankError}
+                        onRetry={fetchRank}
+                      />
+                    </td>
+                  </tr>
                 ) : rank.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className="text-center py-6 text-gray-400">
-                      No leaderboard data available
+                    <td colSpan="6" className="py-6">
+                      <EmptyState
+                        title="No leaderboard data available"
+                        description="Athlete rankings will appear here once scores are generated."
+                      />
                     </td>
                   </tr>
                 ) : (
@@ -425,6 +461,14 @@ const Dashboard = () => {
         <div className="min-h-[360px] min-w-0 flex items-center py-5 px-3 sm:p-5 bg-linear-to-br from-[#0f2027] via-[#1a3a4a] to-[#0f2027] border border-[#1d9e75]/40 text-start text-white rounded-2xl shadow-xl overflow-hidden">
           {dashboardLoading ? (
             <ChartSkeleton className="w-full h-[300px]" />
+          ) : scoresError ? (
+            <div className="w-full h-[300px] flex items-center justify-center">
+              <ErrorState
+                title="Failed to load performance scores"
+                error={scoresError}
+                onRetry={fetchScores}
+              />
+            </div>
           ) : scores.length === 0 ? (
             <div className="relative h-[300px] w-full min-w-0">
               <div aria-hidden="true">
@@ -501,7 +545,7 @@ const Dashboard = () => {
 
             <button
               onClick={() => navigate("/events")}
-              className="hidden sm:flex items-center gap-2 rounded-lg border border-[#1d9e75]/40 px-4 py-2 text-sm text-teal-200 hover:bg-[#1d9e75]/15 transition"
+              className="hidden sm:flex items-center gap-2 rounded-lg border border-[#1d9e75]/40 px-4 py-2 text-sm text-teal-200 hover:bg-[#1d9e75]/15 transition cursor-pointer"
             >
               Browse Events
               <ArrowRight className="h-4 w-4" />
@@ -517,17 +561,29 @@ const Dashboard = () => {
                 />
               ))}
             </div>
+          ) : eventsError ? (
+            <div className="mt-4">
+              <ErrorState
+                title="Failed to load registered events"
+                error={eventsError}
+                onRetry={fetchRegisteredEvents}
+              />
+            </div>
           ) : registeredEvents.length === 0 ? (
-            <div className="min-h-40 flex flex-col items-center justify-center gap-4 text-center">
-              <p className="basic text-base">No events registered yet.</p>
-
-              <button
-                onClick={() => navigate("/events")}
-                className="flex items-center gap-2 rounded-lg bg-linear-to-r from-teal-500 to-cyan-600 px-5 py-2.5 text-sm font-semibold text-white hover:from-teal-600 hover:to-cyan-700 transition"
-              >
-                Browse Events
-                <ArrowRight className="h-4 w-4" />
-              </button>
+            <div className="mt-4">
+              <EmptyState
+                title="No events registered yet"
+                description="Upcoming commitments from your event registrations will appear here."
+                action={
+                  <button
+                    onClick={() => navigate("/events")}
+                    className="flex items-center gap-2 rounded-lg bg-linear-to-r from-teal-500 to-cyan-600 px-5 py-2.5 text-sm font-semibold text-white hover:from-teal-600 hover:to-cyan-700 transition cursor-pointer"
+                  >
+                    Browse Events
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
+                }
+              />
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">

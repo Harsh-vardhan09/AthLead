@@ -1,11 +1,13 @@
 import importlib
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
+from sklearn.ensemble import RandomForestRegressor
 
 
 ML_DIR = Path(__file__).resolve().parents[1]
@@ -53,7 +55,7 @@ class Model:
 
 def artifacts(model=None):
     return [
-        model or Model(),
+        model if model is not None else Model(),
         Scaler(),
         {"sport": Encoder(["running"]), "gender": Encoder(["F"])},
     ]
@@ -69,11 +71,82 @@ def load_api(load_result=None):
 
 
 class RankApiTests(unittest.TestCase):
-    def test_valid_prediction_keeps_response_shape(self):
-        with TestClient(load_api().app) as client:
-            response = client.post("/rank", json=VALID_ATHLETE)
+    def test_valid_prediction_returns_score_and_model_version(self):
+        api = load_api()
+        with patch.object(api, "MODEL_VERSION", "sha256:test-artifacts"):
+            with TestClient(api.app) as client:
+                response = client.post("/rank", json=VALID_ATHLETE)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json(), {"predicted_potential_score": 73.5})
+        self.assertEqual(
+            response.json(),
+            {"predicted_potential_score": 73.5, "model_version": "sha256:test-artifacts"},
+        )
+
+    def test_ensemble_reports_tree_disagreement_without_claiming_probability(self):
+        ensemble = RandomForestRegressor(n_estimators=5, random_state=42)
+        ensemble.fit([[value] * 12 for value in range(8)], [value * 10 for value in range(8)])
+        with TestClient(load_api(artifacts(ensemble)).app) as client:
+            response = client.post("/rank", json=VALID_ATHLETE)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertGreaterEqual(response.json()["prediction_std"], 0)
+        self.assertIn("not a calibrated", response.json()["confidence_note"])
+
+    def test_invalid_or_missing_tree_predictions_omit_uncertainty(self):
+        for tree_scores in ([], [70], [70, float("nan")]):
+            with self.subTest(tree_scores=tree_scores):
+                ensemble = RandomForestRegressor()
+                ensemble.predict = Model(score=72).predict
+                ensemble.estimators_ = [Model(score=value) for value in tree_scores]
+                with TestClient(load_api(artifacts(ensemble)).app) as client:
+                    response = client.post("/rank", json=VALID_ATHLETE)
+
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response.json()["predicted_potential_score"], 72)
+                self.assertNotIn("prediction_std", response.json())
+                self.assertNotIn("confidence_note", response.json())
+
+    def test_other_model_with_estimators_does_not_claim_forest_uncertainty(self):
+        model = Model(score=72)
+        model.estimators_ = [Model(score=70), Model(score=74)]
+        with TestClient(load_api(artifacts(model)).app) as client:
+            response = client.post("/rank", json=VALID_ATHLETE)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn("prediction_std", response.json())
+
+    def test_model_version_identifies_the_full_inference_artifact_set(self):
+        api = load_api()
+        with tempfile.TemporaryDirectory() as temp_dir:
+            paths = [Path(temp_dir) / name for name in ("model.pkl", "scaler.pkl", "encoders.pkl")]
+            for path, content in zip(paths, (b"model", b"scaler", b"encoders")):
+                path.write_bytes(content)
+            first_version = api.fingerprint_artifacts(paths)
+            self.assertEqual(first_version, api.fingerprint_artifacts(paths))
+            self.assertTrue(first_version.startswith("sha256:"))
+
+            paths[1].write_bytes(b"new scaler")
+            self.assertNotEqual(first_version, api.fingerprint_artifacts(paths))
+
+    def test_model_version_is_unknown_if_an_artifact_changes_while_loading(self):
+        api = load_api()
+        with tempfile.TemporaryDirectory() as temp_dir:
+            paths = [Path(temp_dir) / name for name in ("model.pkl", "scaler.pkl", "encoders.pkl")]
+            for path, content in zip(paths, (b"model", b"scaler", b"encoders")):
+                path.write_bytes(content)
+
+            with patch("joblib.load", side_effect=lambda path: path):
+                _, _, _, stable_version = api.load_inference_artifacts(paths)
+            self.assertEqual(stable_version, api.fingerprint_artifacts(paths))
+
+            def load_and_replace(path):
+                if path == str(paths[0]):
+                    paths[1].write_bytes(b"replacement scaler")
+                return path
+
+            with patch("joblib.load", side_effect=load_and_replace):
+                _, _, _, version = api.load_inference_artifacts(paths)
+            self.assertIsNone(version)
 
     def test_missing_field_returns_structured_client_error(self):
         with TestClient(load_api().app) as client:
@@ -148,7 +221,7 @@ class RankApiTests(unittest.TestCase):
         with TestClient(load_api().app) as client:
             response = client.post("/rank", json={**VALID_ATHLETE, "schema_version": 1})
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json(), {"predicted_potential_score": 73.5})
+        self.assertEqual(response.json(), {"predicted_potential_score": 73.5, "model_version": None})
 
     def test_unsupported_schema_version_returns_client_error(self):
         with TestClient(load_api().app) as client:

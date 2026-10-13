@@ -8,7 +8,8 @@ import {
   updateEvent,
   cancelEventRegistration,
 } from "../controllers/eventController.js";
-import { requireAdmin } from "../middleware/middleware.js";
+import { requireAdmin, validateEvent } from "../middleware/middleware.js";
+import { createEventVal, updateEventVal } from "../utils/zodValidation.js";
 import passport from "passport";
 
 const router = Router();
@@ -39,6 +40,7 @@ router.post(
   "/events",
   passport.authenticate("jwt", { session: false }),
   requireAdmin,
+  validateEvent(createEventVal),
   createEvent,
 );
 
@@ -53,6 +55,7 @@ router.patch(
   "/events/:eventId",
   passport.authenticate("jwt", { session: false }),
   requireAdmin,
+  validateEvent(updateEventVal),
   updateEvent,
 );
 

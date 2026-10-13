@@ -4,8 +4,21 @@ import { User } from "../models/Users.js";
 import dobToAge from "dob-to-age";
 import dayjs from "dayjs";
 
+const predictionFields = [
+  "sport",
+  "training_years",
+  "vo2_max",
+  "hrv",
+  "lactate_threshold",
+  "stride_length",
+  "cadence",
+  "force_application",
+  "performance_score",
+  "adaptability_score",
+  "schema_version",
+];
+
 export const setScore = async (req, res) => {
-  const data = req.body;
   const userId = req.user._id;
 
   try {
@@ -40,15 +53,32 @@ export const setScore = async (req, res) => {
         .json({ success: false, message: "Invalid Date of Birth format" });
     }
 
-    const gen = user.gender.toUpperCase().slice(0, 1);
-    data.age = `${age.count}`;
-    data.gender = `${gen}`;
+    if (req.body == null) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Score inputs are required" });
+    }
 
-    const mlResponse = await axios.post(`${process.env.ML_URI}/rank`, data);
+    const gen = user.gender.toUpperCase().slice(0, 1);
+    const inputSnapshot = Object.fromEntries(
+      predictionFields
+        .filter((field) => Object.hasOwn(req.body, field))
+        .map((field) => [field, req.body[field]]),
+    );
+    inputSnapshot.age = `${age.count}`;
+    inputSnapshot.gender = `${gen}`;
+
+    const mlResponse = await axios.post(
+      `${process.env.ML_URI}/rank`,
+      inputSnapshot,
+    );
 
     const newScore = await Score.create({
       user: userId,
       score: mlResponse.data.predicted_potential_score,
+      sport: inputSnapshot.sport,
+      inputSnapshot: { ...inputSnapshot },
+      modelVersion: mlResponse.data.model_version ?? null,
     });
 
     return res.status(201).json({
@@ -80,16 +110,59 @@ export const getScore = async (req, res) => {
 
 export const getRanking = async (req, res) => {
   try {
-    const rank = await Score.find({})
-      .sort({ score: -1 })
-      .populate("user", "fullname image state gender");
-    // console.log(rank);
+    const { page, limit } = req.query || {};
+    const isPaginated = page !== undefined || limit !== undefined;
 
-    res.json({
+    let query = Score.find({})
+      .sort({ score: -1, _id: 1 })
+      .select("user score")
+      .populate("user", "fullname image state gender")
+      .lean();
+
+    if (isPaginated) {
+      const pageNum = Math.max(1, parseInt(page, 10) || 1);
+      const limitNum = Math.max(1, Math.min(100, parseInt(limit, 10) || 10));
+      const skip = (pageNum - 1) * limitNum;
+
+      const [rankDocs, total] = await Promise.all([
+        query.skip(skip).limit(limitNum).exec(),
+        Score.countDocuments({}),
+      ]);
+
+      const rank = rankDocs.map((doc, idx) => ({
+        ...doc,
+        rank: skip + idx + 1,
+      }));
+
+      const totalPages = Math.ceil(total / limitNum);
+
+      return res.status(200).json({
+        success: true,
+        rank,
+        pagination: {
+          page: pageNum,
+          limit: limitNum,
+          total,
+          totalPages,
+          hasMore: pageNum < totalPages,
+        },
+      });
+    }
+
+    const rankDocs = await query.exec();
+    const rank = rankDocs.map((doc, idx) => ({
+      ...doc,
+      rank: idx + 1,
+    }));
+
+    return res.status(200).json({
       success: true,
       rank,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };

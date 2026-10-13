@@ -1,25 +1,58 @@
+import hashlib
 import logging
 import math
+from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 import joblib
+import numpy as np
 import pandas as pd
+from sklearn.ensemble import RandomForestRegressor
 
 
 logger = logging.getLogger(__name__)
 
 SUPPORTED_SCHEMA_VERSIONS = {1}
 CURRENT_SCHEMA_VERSION = 1
+ARTIFACT_PATHS = (
+    Path("models/athlete_rank_model.pkl"),
+    Path("models/scaler.pkl"),
+    Path("models/label_encoders.pkl"),
+)
+
+
+def fingerprint_artifacts(paths):
+    """Identify the exact model, scaler, and encoders used for a prediction."""
+    digest = hashlib.sha256()
+    try:
+        for path in paths:
+            path = Path(path)
+            digest.update(path.name.encode("utf-8"))
+            digest.update(b"\0")
+            with path.open("rb") as artifact:
+                for chunk in iter(lambda: artifact.read(1024 * 1024), b""):
+                    digest.update(chunk)
+    except OSError:
+        return None
+    return f"sha256:{digest.hexdigest()}"
+
+def load_inference_artifacts(paths):
+    """Use a version only when artifacts stayed unchanged throughout loading."""
+    version_before = fingerprint_artifacts(paths)
+    loaded = [joblib.load(str(path)) for path in paths]
+    version_after = fingerprint_artifacts(paths)
+    version = version_before if version_before == version_after else None
+    return *loaded, version
+
 
 try:
-    model = joblib.load("models/athlete_rank_model.pkl")
-    scaler = joblib.load("models/scaler.pkl")
-    label_encoders = joblib.load("models/label_encoders.pkl")
+    model, scaler, label_encoders, MODEL_VERSION = load_inference_artifacts(ARTIFACT_PATHS)
 except Exception:
     logger.exception("ML model artifacts could not be loaded")
     model = scaler = label_encoders = None
+    MODEL_VERSION = None
 
 app = FastAPI()
 
@@ -95,10 +128,34 @@ def rank_athlete(athlete: Athlete):
         raise HTTPException(status_code=500, detail="Prediction failed") from None
 
     try:
-        score = float(model.predict(scaler.transform(df))[0])
+        scaled_features = scaler.transform(df)
+        score = float(model.predict(scaled_features)[0])
         if not math.isfinite(score):
             raise ValueError("Model returned a non-finite score")
-        return {"predicted_potential_score": score}
+        response = {"predicted_potential_score": score, "model_version": MODEL_VERSION}
+
+        # Tree disagreement is model-derived, but it is not a calibrated probability.
+        trees = getattr(model, "estimators_", None)
+        if (
+            isinstance(model, RandomForestRegressor)
+            and trees is not None
+            and len(trees) > 1
+        ):
+            try:
+                tree_scores = [float(tree.predict(scaled_features)[0]) for tree in trees]
+                if all(math.isfinite(value) for value in tree_scores):
+                    spread = float(np.std(tree_scores))
+                    if math.isfinite(spread):
+                        response["prediction_std"] = spread
+                        response["confidence_note"] = (
+                            "Standard deviation of individual tree predictions in score units; "
+                            "lower means more agreement, not a calibrated confidence "
+                            "probability or error bound."
+                        )
+            except Exception:
+                logger.warning("Prediction spread unavailable", exc_info=True)
+
+        return response
     except Exception:
         logger.exception("ML inference failed")
         raise HTTPException(status_code=500, detail="Prediction failed") from None

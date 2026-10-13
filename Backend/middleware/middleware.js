@@ -22,3 +22,13 @@ export const wrapAsync = (fn) => {
     fn(req, res, next).catch(next);
   };
 };
+
+export const validateEvent = (schema) => (req, res, next) => {
+  try {
+    const payload = req.body?.data !== undefined ? req.body.data : req.body;
+    req.validatedData = schema.parse(payload);
+    next();
+  } catch (error) {
+    next(error);
+  }
+};

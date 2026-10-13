@@ -7,10 +7,11 @@ const ErrorState = ({
   error,
   onRetry,
   retryLabel = "Try Again",
-  icon: Icon = AlertCircle,
+  icon,
   fullScreen = false,
   className = "",
 }) => {
+  const Icon = icon || AlertCircle;
   const displayMessage =
     (typeof error === "string" && error) ||
     error?.response?.data?.message ||

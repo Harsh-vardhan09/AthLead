@@ -14,7 +14,7 @@ import {
   PolarRadiusAxis,
 } from "recharts";
 import { useNavigate } from "react-router";
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { eventService, rankingService, scoreService } from "../api";
 import { useAuth } from "../context/useAuth";
 import { formatDate } from "../utils/dateFormatter";
@@ -119,7 +119,7 @@ const Dashboard = () => {
     }
   }, [user]);
 
-  const fetchScores = async () => {
+  const fetchScores = useCallback(async () => {
     setScoresError(null);
     try {
       const scoresRes = await scoreService.getMyScores();
@@ -132,9 +132,9 @@ const Dashboard = () => {
       console.error("Failed to load scores:", error);
       setScoresError(error?.response?.data?.message || "Failed to load scores");
     }
-  };
+  }, []);
 
-  const fetchRank = async () => {
+  const fetchRank = useCallback(async () => {
     setRankError(null);
     try {
       const rankRes = await rankingService.getRanking();
@@ -148,9 +148,9 @@ const Dashboard = () => {
       console.error("Failed to load rankings:", error);
       setRankError(error?.response?.data?.message || "Failed to load rankings");
     }
-  };
+  }, [user]);
 
-  const fetchRegisteredEvents = async () => {
+  const fetchRegisteredEvents = useCallback(async () => {
     setEventsError(null);
     try {
       const myEventsRes = await eventService.getMyEvents();
@@ -164,7 +164,7 @@ const Dashboard = () => {
       );
       setRegisteredEvents([]);
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (!user) {
@@ -183,7 +183,7 @@ const Dashboard = () => {
     };
 
     initDashboard();
-  }, [user]);
+  }, [user, fetchScores, fetchRank, fetchRegisteredEvents]);
 
   // if (loading) return null;
 

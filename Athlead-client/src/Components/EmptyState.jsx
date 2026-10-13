@@ -4,12 +4,13 @@ import { Inbox } from "lucide-react";
 const EmptyState = ({
   title = "No data available",
   description,
-  icon: Icon = Inbox,
+  icon,
   action,
   actionLabel,
   onAction,
   className = "",
 }) => {
+  const Icon = icon || Inbox;
   return (
     <div
       role="region"

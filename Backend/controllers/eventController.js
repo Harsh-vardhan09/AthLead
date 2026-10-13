@@ -36,20 +36,23 @@ export const findAllEvent = async (req, res, next) => {
 
     if (pagination) {
       let total;
-      if (!searchStage && typeof Event.countDocuments === "function") {
-        try {
-          total = await Event.countDocuments({});
-        } catch {
-          // ignore if countDocuments is not mocked in unit tests
-        }
+      if (searchStage) {
+        const countResult = await Event.aggregate([
+          searchStage,
+          { $count: "total" },
+        ]).exec();
+        total = countResult[0]?.total ?? 0;
+      } else {
+        total = await Event.countDocuments({});
       }
-      const totalPages =
-        total !== undefined ? Math.ceil(total / pagination.limit) : undefined;
+
+      const totalPages = Math.ceil(total / pagination.limit);
 
       response.pagination = {
         page: pagination.page,
         limit: pagination.limit,
-        ...(total !== undefined ? { total, totalPages } : {}),
+        total,
+        totalPages,
         hasMore: events.length > pagination.limit,
       };
       response.events = events.slice(0, pagination.limit);

@@ -88,6 +88,9 @@ test("uses Atlas Search and returns paginated matching events", async () => {
   const docs = [{ _id: "event-1" }, { _id: "event-2" }, { _id: "event-3" }];
 
   Event.aggregate = (pipeline) => {
+    if (pipeline.some((stage) => stage.$count)) {
+      return { exec: async () => [{ total: docs.length }] };
+    }
     receivedPipeline = pipeline;
     return { exec: async () => docs };
   };
@@ -107,6 +110,8 @@ test("uses Atlas Search and returns paginated matching events", async () => {
     assert.deepEqual(response.body.pagination, {
       page: 1,
       limit: 2,
+      total: 3,
+      totalPages: 2,
       hasMore: true,
     });
   } finally {

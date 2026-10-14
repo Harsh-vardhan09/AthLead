@@ -54,6 +54,8 @@ const Events = () => {
   const status = searchParams.get("status") || "All";
   const search = searchParams.get("search") || "";
   const page = parseInt(searchParams.get("page") || "1", 10);
+  const [searchInput, setSearchInput] = useState(search);
+  const [locationInput, setLocationInput] = useState(location);
 
   const updateFilters = (newFilters) => {
     const nextParams = new URLSearchParams(searchParams);
@@ -70,9 +72,37 @@ const Events = () => {
     setSearchParams(nextParams);
   };
 
+  const clearSearch = () => {
+    setSearchInput("");
+    updateFilters({ search: "" });
+  };
+
   const handleReset = () => {
+    setSearchInput("");
+    setLocationInput("");
     setSearchParams({});
   };
+
+  useEffect(() => {
+    setSearchInput(search);
+    setLocationInput(location);
+  }, [searchParams, search, location]);
+
+  useEffect(() => {
+    if (searchInput === search && locationInput === location) return;
+    const timer = setTimeout(() => {
+      setSearchParams((currentParams) => {
+        const nextParams = new URLSearchParams(currentParams);
+        if (searchInput) nextParams.set("search", searchInput);
+        else nextParams.delete("search");
+        if (locationInput) nextParams.set("location", locationInput);
+        else nextParams.delete("location");
+        nextParams.delete("page");
+        return nextParams;
+      });
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchInput, locationInput, search, location, setSearchParams]);
 
   useEffect(() => {
     let isCancelled = false;
@@ -141,14 +171,14 @@ const Events = () => {
               <Search size={18} className="text-slate-400 shrink-0" />
               <input
                 type="text"
-                value={search}
-                onChange={(e) => updateFilters({ search: e.target.value })}
-                placeholder="Search events by title or description..."
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                placeholder="Search events by title..."
                 className="w-full bg-transparent outline-none text-white text-sm placeholder:text-slate-400"
               />
-              {search && (
+              {searchInput && (
                 <button
-                  onClick={() => updateFilters({ search: "" })}
+                  onClick={clearSearch}
                   className="text-slate-400 hover:text-white"
                   aria-label="Clear search"
                 >
@@ -201,8 +231,8 @@ const Events = () => {
               </label>
               <input
                 type="text"
-                value={location}
-                onChange={(e) => updateFilters({ location: e.target.value })}
+                value={locationInput}
+                onChange={(e) => setLocationInput(e.target.value)}
                 placeholder="Filter location..."
                 className="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white outline-none focus:border-teal-500 transition-colors placeholder:text-slate-500"
                 aria-label="Filter by location"
@@ -317,7 +347,7 @@ const Events = () => {
             {search && (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-teal-500/10 text-teal-300 border border-teal-500/20 text-xs">
                 Search: {search}
-                <button onClick={() => updateFilters({ search: "" })}>
+                <button onClick={clearSearch}>
                   <X size={12} />
                 </button>
               </span>

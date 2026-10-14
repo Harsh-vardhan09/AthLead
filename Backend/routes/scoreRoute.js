@@ -12,6 +12,7 @@ const router = Router();
 router.get(
   "/score/rank",
   passport.authenticate("jwt", { session: false }),
+  predictionLimiter,
   getRanking,
 );
 
@@ -24,6 +25,7 @@ router.post(
 router.get(
   "/my-scores",
   passport.authenticate("jwt", { session: false }),
+  predictionLimiter,
   getScore,
 );
 

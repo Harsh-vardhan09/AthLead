@@ -95,7 +95,7 @@ export const createEvent = async (req, res, next) => {
   }
 };
 
-export const deleteEvent = async (req, res) => {
+export const deleteEvent = async (req, res, next) => {
   const { eventId } = req.params;
 
   try {
@@ -111,11 +111,7 @@ export const deleteEvent = async (req, res) => {
       message: "Event deleted successfully",
     });
   } catch (error) {
-    console.log(error);
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error",
-    });
+    next(error);
   }
 };
 

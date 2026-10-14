@@ -1,8 +1,13 @@
 import rateLimit from "express-rate-limit";
 
+const toInt = (value, fallback) => {
+  const parsed = parseInt(value, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+};
+
 export const predictionLimiter = rateLimit({
-  windowMs: process.env.RATE_LIMIT_WINDOW_MS || 15 * 60 * 1000,
-  max: process.env.RATE_LIMIT_MAX_REQUESTS || 5,
+  windowMs: toInt(process.env.RATE_LIMIT_WINDOW_MS, 15 * 60 * 1000),
+  max: toInt(process.env.RATE_LIMIT_MAX_REQUESTS, 5),
   message: {
     success: false,
     message:

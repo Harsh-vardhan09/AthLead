@@ -80,6 +80,7 @@ test("getRanking applies deterministic sort with _id tie-breaker and preserves d
         image: "https://example.com/alice.jpg",
         role: "USER",
         state: "Maharashtra",
+        gender: "female",
       },
     },
     {
@@ -91,6 +92,7 @@ test("getRanking applies deterministic sort with _id tie-breaker and preserves d
         image: "https://example.com/bob.jpg",
         role: "USER",
         state: "Karnataka",
+        gender: "male",
       },
     },
     {
@@ -102,6 +104,7 @@ test("getRanking applies deterministic sort with _id tie-breaker and preserves d
         image: "https://example.com/charlie.jpg",
         role: "USER",
         state: "Delhi",
+        gender: "male",
       },
     },
   ];
@@ -156,7 +159,7 @@ test("getRanking applies deterministic sort with _id tie-breaker and preserves d
     assert.deepEqual(calls.sortArg, { score: -1, _id: 1 });
     assert.equal(calls.selectArg, "user score");
     assert.equal(calls.populatePath, "user");
-    assert.equal(calls.populateFields, "fullname image role state");
+    assert.equal(calls.populateFields, "fullname image state gender");
     assert.equal(calls.leanCalled, true);
     assert.equal(calls.execCalled, true);
 
@@ -168,6 +171,7 @@ test("getRanking applies deterministic sort with _id tie-breaker and preserves d
     assert.equal(response.body.rank[1].rank, 2);
     assert.equal(response.body.rank[2].rank, 3);
     assert.equal(response.body.rank[0].user.state, "Maharashtra");
+    assert.equal(response.body.rank[0].user.gender, "female");
   } finally {
     Score.find = originalFind;
   }

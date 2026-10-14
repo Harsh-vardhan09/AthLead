@@ -131,6 +131,26 @@ export const editUser = async (req, res) => {
       });
     }
 
+    const updates = {};
+    if (fullname !== undefined) updates.fullname = fullname;
+    if (phone !== undefined) updates.phone = phone;
+    if (address !== undefined) updates.state = address;
+    if (DOB !== undefined) updates.DOB = DOB;
+
+    if (
+      updates.phone !== undefined &&
+      updates.phone !== null &&
+      updates.phone !== ""
+    ) {
+      const digits = String(updates.phone).replace(/\D/g, "");
+      if (digits.length !== 10) {
+        return res.status(400).json({
+          success: false,
+          message: "Phone must be a 10-digit number",
+        });
+      }
+    }
+
     let imageUrl;
 
     if (req.file) {
@@ -141,10 +161,7 @@ export const editUser = async (req, res) => {
     await User.findByIdAndUpdate(
       req.user._id,
       {
-        fullname,
-        phone,
-        state: address,
-        DOB,
+        ...updates,
         ...(password !== undefined && { password: hashSync(password, 10) }),
         ...(imageUrl && { image: imageUrl }),
       },
@@ -179,7 +196,7 @@ export const getUser = async (req, res) => {
 
   try {
     const user = await User.findOne({ _id: userId }).select(
-      "-password -createdAt -updatedAt -email",
+      "-password -createdAt -updatedAt",
     );
 
     res.json({
@@ -187,9 +204,9 @@ export const getUser = async (req, res) => {
       user,
     });
   } catch (error) {
-    res.json({
+    res.status(500).json({
       success: false,
-      message: error,
+      message: "Failed to load profile",
     });
   }
 };

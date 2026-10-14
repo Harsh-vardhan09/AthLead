@@ -13,7 +13,7 @@ const EventSchema = new mongoose.Schema(
     tags: {
       type: [String],
       enum: ["Freestyle", "national", "Youth", "singles", "doubles"], // Allowed values
-      default: ["youth"],
+      default: ["Youth"],
     },
     deleteAt: {
       type: Date,

@@ -2,7 +2,11 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import Event from "../models/Event.js";
 import { Participation, User } from "../models/Users.js";
-import { findAllEvent, registerEvent } from "../controllers/eventController.js";
+import {
+  findAllEvent,
+  getMyEvents,
+  registerEvent,
+} from "../controllers/eventController.js";
 import { errorHandler } from "../middleware/errorHandler.js";
 import { cancelEventRegistration } from "../controllers/eventController.js";
 
@@ -111,6 +115,89 @@ test("uses Atlas Search and returns paginated matching events", async () => {
     });
   } finally {
     Event.aggregate = originalAggregate;
+  }
+});
+
+test("getMyEvents hides past or invalid events without deleting registrations", async () => {
+  const originalParticipationFind = Participation.find;
+  const istNow = new Date(Date.now() + 5.5 * 60 * 60 * 1000);
+  const todayKey = istNow.toISOString().slice(0, 10);
+  const makeDate = (offsetDays) => {
+    const date = new Date(`${todayKey}T00:00:00.000Z`);
+    date.setUTCDate(date.getUTCDate() + offsetDays);
+    return date;
+  };
+  const participations = [
+    {
+      _id: "past-registration",
+      event: { _id: "past-event", date: makeDate(-1) },
+    },
+    {
+      _id: "today-registration",
+      event: {
+        _id: "today-event",
+        title: "Today event",
+        sport: "Running",
+        date: makeDate(0),
+        location: "Stadium",
+      },
+    },
+    {
+      _id: "future-registration",
+      event: {
+        _id: "future-event",
+        title: "Future event",
+        sport: "Running",
+        date: makeDate(1),
+        location: "Stadium",
+      },
+    },
+    {
+      _id: "invalid-date-registration",
+      event: { _id: "invalid-date-event", date: "not-a-date" },
+    },
+    {
+      _id: "missing-date-registration",
+      event: { _id: "missing-date-event", date: null },
+    },
+    { _id: "deleted-event-registration", event: null },
+  ];
+  let receivedFilter;
+  let receivedPopulate;
+  Participation.find = (filter) => {
+    receivedFilter = filter;
+    return {
+      populate: async (...args) => {
+        receivedPopulate = args;
+        return participations;
+      },
+    };
+  };
+
+  const response = {
+    body: null,
+    json(body) {
+      this.body = body;
+      return this;
+    },
+  };
+
+  try {
+    await getMyEvents({ user: { _id: "user-123" } }, response, (error) => {
+      throw error;
+    });
+
+    assert.deepEqual(receivedFilter, { user: "user-123" });
+    assert.deepEqual(receivedPopulate, ["event", "title sport date location"]);
+    assert.deepEqual(
+      response.body.map(({ _id, event }) => [_id, event._id]),
+      [
+        ["today-registration", "today-event"],
+        ["future-registration", "future-event"],
+      ],
+    );
+  } finally {
+    Participation.find = originalParticipationFind;
   }
 });
 

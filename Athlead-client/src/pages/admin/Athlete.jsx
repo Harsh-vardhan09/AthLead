@@ -50,9 +50,15 @@ const Athlete = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [selectedAthlete, setSelectedAthlete] = useState(null);
   const [fetchTrigger, setFetchTrigger] = useState(0);
+
+  useEffect(() => {
+    const id = setTimeout(() => setDebouncedSearch(searchQuery.trim()), 300);
+    return () => clearTimeout(id);
+  }, [searchQuery]);
 
   useEffect(() => {
     let isCurrent = true;
@@ -60,8 +66,7 @@ const Athlete = () => {
     setError(null);
 
     const params = {};
-    const trimmed = searchQuery.trim();
-    if (trimmed) params.search = trimmed;
+    if (debouncedSearch) params.search = debouncedSearch;
     if (statusFilter !== "All") params.status = statusFilter;
 
     athleteService
@@ -85,7 +90,7 @@ const Athlete = () => {
     return () => {
       isCurrent = false;
     };
-  }, [searchQuery, statusFilter, fetchTrigger]);
+  }, [debouncedSearch, statusFilter, fetchTrigger]);
 
   const filteredAthletes = useMemo(() => {
     const term = searchQuery.trim().toLowerCase();

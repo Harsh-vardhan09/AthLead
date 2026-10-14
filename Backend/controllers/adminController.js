@@ -38,8 +38,11 @@ export const getAthletes = async (req, res, next) => {
 
     const users = await User.find(userQuery).select("-password").lean();
 
-    // Fetch scores to compute score & rank (deduplicated by unique athlete)
-    const allScores = await Score.find({})
+    // Fetch scores of all non-ADMIN users to compute score & rank (deduplicated by unique athlete)
+    const athleteIds = await User.find({ role: { $ne: "ADMIN" } }).distinct(
+      "_id",
+    );
+    const allScores = await Score.find({ user: { $in: athleteIds } })
       .sort({ score: -1, _id: 1 })
       .lean();
 
@@ -132,7 +135,10 @@ export const getAthleteById = async (req, res, next) => {
       });
     }
 
-    const allScores = await Score.find({})
+    const athleteIds = await User.find({ role: { $ne: "ADMIN" } }).distinct(
+      "_id",
+    );
+    const allScores = await Score.find({ user: { $in: athleteIds } })
       .sort({ score: -1, _id: 1 })
       .lean();
 
@@ -150,7 +156,7 @@ export const getAthleteById = async (req, res, next) => {
       }
     }
 
-    const scoreSummary = userScoreMap.get(id.toString()) || {
+    const scoreSummary = userScoreMap.get(user._id.toString()) || {
       potentialScore: 0,
       currentRank: "-",
       trend: "0",

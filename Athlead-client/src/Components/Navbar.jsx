@@ -1,5 +1,5 @@
 import React from "react";
-import { assets, navItems } from "../assets/assets";
+import { navItems } from "../assets/assets";
 import { useLocation, useNavigate } from "react-router";
 import { CircleUser, X } from "lucide-react";
 import { cn } from "../utility/cn";
@@ -8,6 +8,7 @@ import toast from "react-hot-toast";
 import { authService } from "../api";
 import { useAuth } from "../context/useAuth";
 import Sidebar from "./Sidebar";
+import AthLeadLogo from "./AthLeadLogo";
 
 const Navbar = ({ sidebar, setSidebar }) => {
   const { loggedIn, setLoggedIn } = useAuth();
@@ -50,7 +51,7 @@ const Navbar = ({ sidebar, setSidebar }) => {
           {sidebar ? (
             <></>
           ) : (
-            <img src={assets.Logo} className="h-15 w-30 lg:h-20 lg:w-50 " />
+            <AthLeadLogo className="w-30 lg:w-50" />
           )}
         </div>
         <div className="flex justify-end mr-10 ">

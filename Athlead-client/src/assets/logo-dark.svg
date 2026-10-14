@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 160" role="img" aria-labelledby="title">
+  <title id="title">AthLead</title>
+  <g fill="none" stroke="#45CEBA" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="99" cy="28" r="13" stroke-width="5"/>
+    <path d="M20 55c20-3 39-4 57-4 10 0 16 2 21 7" stroke-width="6"/>
+    <path d="M106 56c15 5 26 18 30 35 2 8-1 14-9 18l-25 12" stroke-width="8"/>
+    <path d="m100 74-28 29" stroke-width="8"/>
+    <path d="m102 120-53 30m45-38-27 29" stroke-width="8"/>
+    <circle cx="26" cy="135" r="11" stroke-width="5"/>
+    <path d="M164 25v110" stroke-width="3"/>
+  </g>
+  <text x="186" y="106" font-family="Arial, Helvetica, sans-serif" font-size="79" letter-spacing="-3"><tspan fill="#E5FAF5" font-weight="400">Ath</tspan><tspan fill="#45CEBA" font-weight="600">Lead</tspan></text>
+</svg>

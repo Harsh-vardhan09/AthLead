@@ -257,16 +257,22 @@ class RankApiTests(unittest.TestCase):
         with TestClient(load_api().app) as client:
             response = client.get("/health")
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json(), {"status": "ok", "model_loaded": True})
+        body = response.json()
+        self.assertEqual(body["status"], "ok")
+        self.assertEqual(body["model_loaded"], True)
+        self.assertIn("model_version", body)
+        self.assertIn("schema_version", body)
 
     def test_health_endpoint_degraded_when_artifacts_missing(self):
-        """Verify GET /health returns status degraded and model_loaded false when artifacts fail to load."""
+        """Verify GET /health returns 503 degraded and model_loaded false when artifacts fail to load."""
         with self.assertLogs("api", level="ERROR"), TestClient(
             load_api(FileNotFoundError("private model path")).app
         ) as client:
             response = client.get("/health")
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json(), {"status": "degraded", "model_loaded": False})
+        self.assertEqual(response.status_code, 503)
+        body = response.json()
+        self.assertEqual(body["status"], "degraded")
+        self.assertEqual(body["model_loaded"], False)
 
 
 if __name__ == "__main__":

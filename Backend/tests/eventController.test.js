@@ -3,9 +3,11 @@ import test from "node:test";
 import Event from "../models/Event.js";
 import { Participation, User } from "../models/Users.js";
 import {
+  createEvent,
   findAllEvent,
   getMyEvents,
   registerEvent,
+  updateEvent,
 } from "../controllers/eventController.js";
 import { errorHandler } from "../middleware/errorHandler.js";
 import { cancelEventRegistration } from "../controllers/eventController.js";
@@ -60,6 +62,72 @@ const invokeRegisterEvent = async (
 
   return { response, nextError };
 };
+
+test("createEvent retains a new event until three days after its date", async () => {
+  const originalCreate = Event.create;
+  let createdEvent;
+  let responseBody;
+  let nextError;
+  Event.create = async (event) => {
+    createdEvent = event;
+    return event;
+  };
+
+  try {
+    await createEvent(
+      { validatedData: { date: "2026-10-20T12:00:00.000Z" } },
+      {
+        json(body) {
+          responseBody = body;
+        },
+      },
+      (error) => {
+        nextError = error;
+      },
+    );
+
+    assert.equal(nextError, undefined);
+    assert.equal(responseBody.success, true);
+    assert.equal(createdEvent.date.toISOString(), "2026-10-20T12:00:00.000Z");
+    assert.equal(
+      createdEvent.deleteAt.toISOString(),
+      "2026-10-23T12:00:00.000Z",
+    );
+  } finally {
+    Event.create = originalCreate;
+  }
+});
+
+test("updateEvent moves retention when the event date changes", async () => {
+  const originalUpdate = Event.findByIdAndUpdate;
+  let updatedEvent;
+  let nextError;
+  Event.findByIdAndUpdate = async (_id, event) => {
+    updatedEvent = event;
+    return event;
+  };
+
+  try {
+    await updateEvent(
+      {
+        params: { eventId: "event-123" },
+        validatedData: { date: "2026-10-31T12:00:00.000Z" },
+      },
+      { json() {} },
+      (error) => {
+        nextError = error;
+      },
+    );
+
+    assert.equal(nextError, undefined);
+    assert.equal(
+      updatedEvent.deleteAt.toISOString(),
+      "2026-11-03T12:00:00.000Z",
+    );
+  } finally {
+    Event.findByIdAndUpdate = originalUpdate;
+  }
+});
 
 test("preserves the unfiltered endpoint response contract", async () => {
   const originalFind = Event.find;

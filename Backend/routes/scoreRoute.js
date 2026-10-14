@@ -4,27 +4,14 @@ import {
   getScore,
   setScore,
 } from "../controllers/scoreController.js";
-import passport from "passport";
+import { requireAuth } from "../middleware/middleware.js";
 import { predictionLimiter } from "../middleware/rateLimiter.js";
 
 const router = Router();
 
-router.get(
-  "/score/rank",
-  passport.authenticate("jwt", { session: false }),
-  getRanking,
-);
+router.get("/score/rank", requireAuth, getRanking);
 
-router.post(
-  "/score",
-  passport.authenticate("jwt", { session: false }),
-  predictionLimiter,
-  setScore,
-);
-router.get(
-  "/my-scores",
-  passport.authenticate("jwt", { session: false }),
-  getScore,
-);
+router.post("/score", requireAuth, predictionLimiter, setScore);
+router.get("/my-scores", requireAuth, getScore);
 
 export default router;

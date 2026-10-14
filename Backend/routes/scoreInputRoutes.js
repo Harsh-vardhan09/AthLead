@@ -1,5 +1,5 @@
 import { Router } from "express";
-import passport from "passport";
+import { requireAuth } from "../middleware/middleware.js";
 import {
   saveScoreInput,
   getScoreInput,
@@ -7,15 +7,7 @@ import {
 
 const router = Router();
 
-router.post(
-  "/score-inputs",
-  passport.authenticate("jwt", { session: false }),
-  saveScoreInput,
-);
-router.get(
-  "/score-inputs",
-  passport.authenticate("jwt", { session: false }),
-  getScoreInput,
-);
+router.post("/score-inputs", requireAuth, saveScoreInput);
+router.get("/score-inputs", requireAuth, getScoreInput);
 
 export default router;

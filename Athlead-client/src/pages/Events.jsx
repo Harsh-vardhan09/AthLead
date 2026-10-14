@@ -85,11 +85,8 @@ const Events = () => {
 
   useEffect(() => {
     setSearchInput(search);
-  }, [search]);
-
-  useEffect(() => {
     setLocationInput(location);
-  }, [location]);
+  }, [searchParams, search, location]);
 
   useEffect(() => {
     if (searchInput === search && locationInput === location) return;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useAuth } from "../../context/useAuth";
 import { Navigate } from "react-router-dom";
 import { athleteService } from "../../api";
@@ -52,33 +52,48 @@ const Athlete = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [selectedAthlete, setSelectedAthlete] = useState(null);
-
-  const fetchAthletes = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const params = {};
-      if (searchQuery.trim()) params.search = searchQuery.trim();
-      if (statusFilter !== "All") params.status = statusFilter;
-      const res = await athleteService.getAll(params);
-      setAthletes(res.data?.athletes || []);
-    } catch (err) {
-      setError(err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [searchQuery, statusFilter]);
+  const [fetchTrigger, setFetchTrigger] = useState(0);
 
   useEffect(() => {
-    fetchAthletes();
-  }, [fetchAthletes]);
+    let isCurrent = true;
+    setIsLoading(true);
+    setError(null);
+
+    const params = {};
+    const trimmed = searchQuery.trim();
+    if (trimmed) params.search = trimmed;
+    if (statusFilter !== "All") params.status = statusFilter;
+
+    athleteService
+      .getAll(params)
+      .then((res) => {
+        if (isCurrent) {
+          setAthletes(res.data?.athletes || []);
+        }
+      })
+      .catch((err) => {
+        if (isCurrent) {
+          setError(err);
+        }
+      })
+      .finally(() => {
+        if (isCurrent) {
+          setIsLoading(false);
+        }
+      });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [searchQuery, statusFilter, fetchTrigger]);
 
   const filteredAthletes = useMemo(() => {
+    const term = searchQuery.trim().toLowerCase();
     return athletes.filter((athlete) => {
       const matchesSearch =
-        !searchQuery.trim() ||
-        athlete.fullname?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        athlete.email?.toLowerCase().includes(searchQuery.toLowerCase());
+        !term ||
+        athlete.fullname?.toLowerCase().includes(term) ||
+        athlete.email?.toLowerCase().includes(term);
       const matchesStatus =
         statusFilter === "All" || athlete.status === statusFilter;
       return matchesSearch && matchesStatus;
@@ -140,24 +155,24 @@ const Athlete = () => {
 
       {/* Main Content Area: Loading, Error, Empty, or Grid */}
       {isLoading ? (
-        <div className="flex flex-col items-center justify-center p-12 bg-white rounded-2xl border border-slate-200">
+        <div className="flex flex-col items-center justify-center p-12 bg-slate-900 rounded-2xl border border-slate-800 shadow-sm">
           <LoadingState
             message="Loading athletes..."
             description="Fetching athlete profiles and scores from the database"
           />
         </div>
       ) : error ? (
-        <div className="flex flex-col items-center justify-center p-12 bg-white rounded-2xl border border-slate-200">
+        <div className="flex flex-col items-center justify-center p-12 bg-slate-900 rounded-2xl border border-slate-800 shadow-sm">
           <ErrorState
             title="Failed to load athletes"
             message="Could not retrieve athlete records from the database."
             error={error}
-            onRetry={fetchAthletes}
+            onRetry={() => setFetchTrigger((prev) => prev + 1)}
             retryLabel="Retry"
           />
         </div>
       ) : filteredAthletes.length === 0 ? (
-        <div className="flex flex-col items-center justify-center p-12 bg-white rounded-2xl border border-slate-200 border-dashed">
+        <div className="flex flex-col items-center justify-center p-12 bg-slate-900 rounded-2xl border border-slate-800 border-dashed shadow-sm">
           <EmptyState
             title="No athletes found"
             description="Try adjusting your search or filters."

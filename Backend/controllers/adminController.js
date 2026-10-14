@@ -7,39 +7,55 @@ export const getAthletes = async (req, res, next) => {
     const { search, q, status } = req.query;
     const searchTerm = (search || q || "").trim();
 
-    // Query for athlete users (non-admin)
-    const userQuery = {
-      role: { $ne: "ADMIN" },
-    };
+    const andConditions = [{ role: { $ne: "ADMIN" } }];
 
     if (status && status !== "All") {
-      userQuery.status = status;
+      if (status === "Active") {
+        andConditions.push({
+          $or: [
+            { status: "Active" },
+            { status: { $exists: false } },
+            { status: null },
+          ],
+        });
+      } else {
+        andConditions.push({ status });
+      }
     }
 
     if (searchTerm) {
-      const regex = new RegExp(searchTerm, "i");
-      userQuery.$or = [{ fullname: regex }, { email: regex }];
+      const sanitized = searchTerm
+        .slice(0, 100)
+        .replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const regex = new RegExp(sanitized, "i");
+      andConditions.push({
+        $or: [{ fullname: regex }, { email: regex }],
+      });
     }
+
+    const userQuery =
+      andConditions.length > 1 ? { $and: andConditions } : andConditions[0];
 
     const users = await User.find(userQuery).select("-password").lean();
 
-    // Fetch scores to compute score & rank
+    // Fetch scores to compute score & rank (deduplicated by unique athlete)
     const allScores = await Score.find({})
       .sort({ score: -1, _id: 1 })
       .lean();
 
-    // Map each user to their rank and top score
     const userScoreMap = new Map();
-    allScores.forEach((s, idx) => {
+    let currentRank = 0;
+    for (const s of allScores) {
       const uId = s.user?.toString();
       if (uId && !userScoreMap.has(uId)) {
+        currentRank += 1;
         userScoreMap.set(uId, {
           potentialScore: s.score,
-          currentRank: idx + 1,
+          currentRank,
           trend: "+0",
         });
       }
-    });
+    }
 
     // Fetch participations for these users
     const userIds = users.map((u) => u._id);
@@ -120,22 +136,25 @@ export const getAthleteById = async (req, res, next) => {
       .sort({ score: -1, _id: 1 })
       .lean();
 
-    let scoreSummary = {
+    const userScoreMap = new Map();
+    let currentRank = 0;
+    for (const s of allScores) {
+      const uId = s.user?.toString();
+      if (uId && !userScoreMap.has(uId)) {
+        currentRank += 1;
+        userScoreMap.set(uId, {
+          potentialScore: s.score,
+          currentRank,
+          trend: "+0",
+        });
+      }
+    }
+
+    const scoreSummary = userScoreMap.get(id.toString()) || {
       potentialScore: 0,
       currentRank: "-",
       trend: "0",
     };
-
-    const rankIdx = allScores.findIndex(
-      (s) => s.user?.toString() === id.toString(),
-    );
-    if (rankIdx !== -1) {
-      scoreSummary = {
-        potentialScore: allScores[rankIdx].score,
-        currentRank: rankIdx + 1,
-        trend: "+0",
-      };
-    }
 
     const participations = await Participation.find({ user: user._id })
       .populate("event", "title date")

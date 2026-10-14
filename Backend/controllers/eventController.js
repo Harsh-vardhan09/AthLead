@@ -1,6 +1,7 @@
 import Event from "../models/Event.js";
 import { Participation, User } from "../models/Users.js";
 import { buildEventQuery } from "../utils/eventQuery.js";
+import { filterCurrentAndUpcomingRegistrations } from "../utils/registeredEvents.js";
 import { createEventVal, updateEventVal } from "../utils/zodValidation.js";
 
 export const findAllEvent = async (req, res, next) => {
@@ -289,7 +290,7 @@ export const getMyEvents = async (req, res, next) => {
       user: req.user._id,
     }).populate("event", "title sport date location");
 
-    const registrations = participations
+    const registrations = filterCurrentAndUpcomingRegistrations(participations)
       .map((participation) => ({
         _id: participation._id,
         status: "Registered",

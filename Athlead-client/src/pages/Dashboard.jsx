@@ -18,6 +18,7 @@ import { useEffect, useCallback } from "react";
 import { eventService, rankingService, scoreService } from "../api";
 import { useAuth } from "../context/useAuth";
 import { formatDate } from "../utils/dateFormatter";
+import { millisecondsUntilNextIstMidnight } from "../utils/istDate";
 import EditForm from "../Components/EditForm";
 import {
   ProfileSkeleton,
@@ -184,6 +185,28 @@ const Dashboard = () => {
 
     initDashboard();
   }, [user, fetchScores, fetchRank, fetchRegisteredEvents]);
+
+  useEffect(() => {
+    if (!user?._id) return undefined;
+
+    let active = true;
+    let refreshTimeout;
+    const scheduleRefresh = () => {
+      if (!active) return;
+
+      refreshTimeout = window.setTimeout(() => {
+        fetchRegisteredEvents();
+        scheduleRefresh();
+      }, millisecondsUntilNextIstMidnight());
+    };
+
+    scheduleRefresh();
+
+    return () => {
+      active = false;
+      window.clearTimeout(refreshTimeout);
+    };
+  }, [user?._id, fetchRegisteredEvents]);
 
   // if (loading) return null;
 

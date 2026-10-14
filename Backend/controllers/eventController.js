@@ -35,9 +35,24 @@ export const findAllEvent = async (req, res, next) => {
     };
 
     if (pagination) {
+      let total;
+      if (searchStage) {
+        const countResult = await Event.aggregate([
+          searchStage,
+          { $count: "total" },
+        ]).exec();
+        total = countResult[0]?.total ?? 0;
+      } else {
+        total = await Event.countDocuments({});
+      }
+
+      const totalPages = Math.ceil(total / pagination.limit);
+
       response.pagination = {
         page: pagination.page,
         limit: pagination.limit,
+        total,
+        totalPages,
         hasMore: events.length > pagination.limit,
       };
       response.events = events.slice(0, pagination.limit);

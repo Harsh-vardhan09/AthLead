@@ -65,6 +65,9 @@ test("uses Atlas Search builder for filtered and paginated events", async () => 
   const events = [{ _id: "event-3" }, { _id: "event-4" }, { _id: "event-5" }];
 
   Event.aggregate = (pipeline) => {
+    if (pipeline.some((stage) => stage.$count)) {
+      return { exec: async () => [{ total: 5 }] };
+    }
     receivedPipeline = pipeline;
     return { exec: async () => events };
   };
@@ -83,6 +86,8 @@ test("uses Atlas Search builder for filtered and paginated events", async () => 
     assert.deepEqual(response.body.pagination, {
       page: pagination.page,
       limit: pagination.limit,
+      total: 5,
+      totalPages: 3,
       hasMore: true,
     });
   } finally {

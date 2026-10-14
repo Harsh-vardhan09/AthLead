@@ -88,9 +88,10 @@ export const buildEventQuery = (rawQuery, now = new Date()) => {
     filters.dateTo ||
     filters.status,
   );
+  const defaultLimit = hasFilters ? 50 : 20;
   const pagination =
     hasFilters || filters.page || filters.limit
-      ? { page: filters.page ?? 1, limit: filters.limit ?? 50 }
+      ? { page: filters.page ?? 1, limit: filters.limit ?? defaultLimit }
       : null;
 
   if (filters.q) {

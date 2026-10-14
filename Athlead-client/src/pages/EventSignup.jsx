@@ -78,8 +78,9 @@ const EventSignup = () => {
               type="text"
               placeholder="John Doe..."
               {...register("fullname", {
-                required: true,
-                maxLength: { value: 20, message: "Must be < 20 letters" },
+                required: "Full name is required",
+                minLength: { value: 2, message: "Enter your full name" },
+                maxLength: { value: 50, message: "Must be under 50 letters" },
               })}
               className={`w-full bg-white/7 border rounded-xl px-3.5 py-2.5 text-sm text-white placeholder:text-white/25 outline-none focus:bg-[#1d9e75]/8 transition-all ${
                 errors.fullname ? "border-red-500/80" : "border-white/12"
@@ -127,14 +128,26 @@ const EventSignup = () => {
                   +91
                 </span>
                 <input
-                  type="number"
+                  type="tel"
+                  inputMode="numeric"
                   placeholder="98765 43210"
-                  {...register("phone", { required: true })}
+                  {...register("phone", {
+                    required: "Phone number is required",
+                    pattern: {
+                      value: /^[0-9]{10}$/,
+                      message: "Enter a 10-digit mobile number",
+                    },
+                  })}
                   className={`flex-1 max-w-full bg-white/7 border rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-white/25 outline-none focus:bg-[#1d9e75]/8 transition-all ${
                     errors.phone ? "border-red-500/80" : "border-white/12"
                   }`}
                 />
               </div>
+              {errors.phone && (
+                <p className="text-xs text-red-400 mt-1">
+                  {errors.phone.message}
+                </p>
+              )}
             </div>
           </div>
 

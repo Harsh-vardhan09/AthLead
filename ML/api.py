@@ -107,6 +107,33 @@ def health_check():
     }
 
 
+@app.get("/model/info")
+def model_info():
+    """Describe the loaded inference artifacts without exposing their contents."""
+    if model is None or scaler is None or label_encoders is None:
+        return {
+            "model_loaded": False,
+            "model_version": None,
+            "model_type": None,
+            "supported_sports": [],
+            "feature_count": None,
+        }
+
+    sport_encoder = label_encoders.get("sport")
+    sports = getattr(sport_encoder, "classes_", ())
+    feature_count = getattr(model, "n_features_in_", None)
+    if feature_count is None:
+        feature_count = getattr(scaler, "n_features_in_", None)
+
+    return {
+        "model_loaded": True,
+        "model_version": MODEL_VERSION,
+        "model_type": type(model).__name__,
+        "supported_sports": [str(sport) for sport in sports],
+        "feature_count": int(feature_count) if feature_count is not None else None,
+    }
+
+
 @app.post("/rank")
 def rank_athlete(athlete: Athlete):
     """Predict athlete potential score from biometric and performance metrics."""

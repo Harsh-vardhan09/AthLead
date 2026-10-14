@@ -86,7 +86,7 @@ export const createEvent = async (req, res, next) => {
     const eventDate = new Date(date);
 
     const deleteAt = new Date(eventDate);
-    deleteAt.setDate(deleteAt.getDate() - 3);
+    deleteAt.setUTCDate(deleteAt.getUTCDate() + 3);
 
     const event = await Event.create({
       title,
@@ -146,7 +146,7 @@ export const updateEvent = async (req, res, next) => {
     if (validatedData.date) {
       const eventDate = new Date(validatedData.date);
       deleteAt = new Date(eventDate);
-      deleteAt.setDate(deleteAt.getDate() - 3);
+      deleteAt.setUTCDate(deleteAt.getUTCDate() + 3);
     }
 
     const updatePayload = {

@@ -269,5 +269,61 @@ class RankApiTests(unittest.TestCase):
         self.assertEqual(response.json(), {"status": "degraded", "model_loaded": False})
 
 
+class ModelInfoApiTests(unittest.TestCase):
+    def test_reports_metadata_from_loaded_artifacts(self):
+        model = Model()
+        model.n_features_in_ = 12
+        loaded_artifacts = [
+            model,
+            Scaler(),
+            {"sport": Encoder(["running", "swimming"]), "gender": Encoder(["F"])},
+        ]
+        api = load_api(loaded_artifacts)
+        with patch.object(api, "MODEL_VERSION", "sha256:test-artifacts"):
+            with TestClient(api.app) as client:
+                response = client.get("/model/info")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                "model_loaded": True,
+                "model_version": "sha256:test-artifacts",
+                "model_type": "Model",
+                "supported_sports": ["running", "swimming"],
+                "feature_count": 12,
+            },
+        )
+        self.assertNotIn("models/", response.text)
+
+    def test_reports_unknown_metadata_without_guessing(self):
+        with TestClient(load_api().app) as client:
+            response = client.get("/model/info")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["model_version"], None)
+        self.assertEqual(response.json()["feature_count"], None)
+        self.assertNotIn("training_date", response.json())
+
+    def test_missing_artifacts_do_not_expose_private_paths(self):
+        with self.assertLogs("api", level="ERROR"), TestClient(
+            load_api(FileNotFoundError("private model path")).app
+        ) as client:
+            response = client.get("/model/info")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                "model_loaded": False,
+                "model_version": None,
+                "model_type": None,
+                "supported_sports": [],
+                "feature_count": None,
+            },
+        )
+        self.assertNotIn("private model path", response.text)
+
+
 if __name__ == "__main__":
     unittest.main()

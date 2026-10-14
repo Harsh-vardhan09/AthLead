@@ -11,6 +11,7 @@ import eventRouter from "./routes/eventRoutes.js";
 import scoreRouter from "./routes/scoreRoute.js";
 import scoreInputRoutes from "./routes/scoreInputRoutes.js";
 import newsRoute from "./routes/newsRoutes.js";
+import athleteRouter from "./routes/athleteRoutes.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 
 db();
@@ -56,6 +57,9 @@ app.use("/api", scoreRouter);
 
 // Score Input routes
 app.use("/api", scoreInputRoutes);
+
+// Athlete routes
+app.use("/api", athleteRouter);
 
 // token refresh route
 app.post("/api/refresh", refesh);

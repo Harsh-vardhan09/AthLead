@@ -6,4 +6,5 @@ export const adminService = {
   updateEvent: (id, data) => api.patch(`/api/events/${id}`, { data }),
 
   deleteEvent: (id) => api.delete(`/api/events/${id}`),
+  getAthletes: (params) => api.get("/api/athletes", { params }),
 };

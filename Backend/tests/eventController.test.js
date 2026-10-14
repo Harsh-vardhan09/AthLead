@@ -118,8 +118,12 @@ test("uses Atlas Search and returns paginated matching events", async () => {
   }
 });
 
-test("getMyEvents hides past or invalid events without deleting registrations", async () => {
+test("getMyEvents hides past or invalid events without deleting registrations", async (context) => {
   const originalParticipationFind = Participation.find;
+  context.mock.timers.enable({
+    apis: ["Date"],
+    now: new Date("2026-10-13T10:00:00.000Z"),
+  });
   const istNow = new Date(Date.now() + 5.5 * 60 * 60 * 1000);
   const todayKey = istNow.toISOString().slice(0, 10);
   const makeDate = (offsetDays) => {
@@ -198,6 +202,7 @@ test("getMyEvents hides past or invalid events without deleting registrations", 
     );
   } finally {
     Participation.find = originalParticipationFind;
+    context.mock.timers.reset();
   }
 });
 

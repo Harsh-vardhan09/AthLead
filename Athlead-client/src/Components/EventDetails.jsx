@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { sportIcon } from "../assets/assets";
-import { Calendar, Clock, MapPin, Medal } from "lucide-react";
+import { Calendar, Clock, MapPin, Medal, Users } from "lucide-react";
 import { useNavigate } from "react-router";
 import { formatEventTime } from "../utils/formatEventTime";
 import { formatDate } from "../utils/dateFormatter";
@@ -18,6 +18,13 @@ const EventDetails = ({ selected, setIsOpen }) => {
   const [isLoading, setIsLoading] = useState(false);
   const formattedDate = formatDate(selected.date, "D MMM YYYY");
   const eventTime = formatEventTime(selected.time);
+  const isFull =
+    selected.capacity != null &&
+    (selected.registeredCount || 0) >= selected.capacity;
+  const spotsLeft =
+    selected.capacity != null
+      ? Math.max(0, selected.capacity - (selected.registeredCount || 0))
+      : null;
 
   useEffect(() => {
     let isCurrent = true;
@@ -130,10 +137,23 @@ const EventDetails = ({ selected, setIsOpen }) => {
               </div>
               <div className="flex flex-col gap-1 items-start bg-white/5 border border-teal-200/10   w-auto lg:w-50  h-12 justify-center rounded-xl  p-3">
                 <p className="flex">
-                  <Medal className="text-teal-600 h-4 w-4 mr-1" />
-                  Prize Pool
+                  {selected.capacity != null ? (
+                    <>
+                      <Users className="text-teal-600 h-4 w-4 mr-1" />
+                      Capacity
+                    </>
+                  ) : (
+                    <>
+                      <Medal className="text-teal-600 h-4 w-4 mr-1" />
+                      Prize Pool
+                    </>
+                  )}
                 </p>
-                <p className="text-md text-white font-bold">{selected.prize}</p>
+                <p className="text-md text-white font-bold">
+                  {selected.capacity != null
+                    ? `${spotsLeft === 0 ? "Full" : `${spotsLeft} spots left`} (${selected.registeredCount || 0}/${selected.capacity})`
+                    : selected.prize}
+                </p>
               </div>
             </div>
           </div>
@@ -150,15 +170,22 @@ const EventDetails = ({ selected, setIsOpen }) => {
           ) : (
             <button
               onClick={() => {
+                if (isFull) return;
                 setIsOpen(false);
                 navigate(`/events/${selected._id}`);
               }}
-              disabled={isCheckingRegistration}
-              className="text-center bg-linear-to-br from-cyan-400 to-cyan-600 w-full rounded-xl h-10 max-w-120 hover:from-cyan-600 hover:to-cyan-800 mx-4 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isCheckingRegistration || isFull}
+              className={`text-center w-full rounded-xl h-10 max-w-120 mx-4 disabled:opacity-50 disabled:cursor-not-allowed ${
+                isFull
+                  ? "bg-gray-600 text-gray-300"
+                  : "bg-linear-to-br from-cyan-400 to-cyan-600 hover:from-cyan-600 hover:to-cyan-800"
+              }`}
             >
               {isCheckingRegistration
                 ? "Checking registration..."
-                : "Register Now"}
+                : isFull
+                  ? "Event Full"
+                  : "Register Now"}
             </button>
           )}
         </div>

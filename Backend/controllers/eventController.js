@@ -65,6 +65,7 @@ export const createEvent = async (req, res, next) => {
       date,
       time,
       tags,
+      capacity,
     } = validatedData;
 
     const eventDate = new Date(date);
@@ -82,6 +83,8 @@ export const createEvent = async (req, res, next) => {
       date: eventDate,
       time,
       tags,
+      capacity: capacity !== undefined ? Number(capacity) : undefined,
+      registeredCount: 0,
       deleteAt,
     });
 
@@ -203,6 +206,41 @@ export const registerEvent = async (req, res, next) => {
       });
     }
 
+    let capacityIncremented = false;
+    if (event.capacity != null) {
+      const currentParticipants = await Participation.countDocuments({
+        event: eventId,
+      });
+
+      if (currentParticipants >= event.capacity) {
+        return res.status(400).json({
+          success: false,
+          message: "Event has reached maximum capacity",
+        });
+      }
+
+      // Atomic update to increment registeredCount and guard against race conditions
+      const updatedEvent = await Event.findOneAndUpdate(
+        {
+          _id: eventId,
+          $or: [
+            { registeredCount: { $lt: event.capacity } },
+            { registeredCount: { $exists: false } },
+          ],
+        },
+        { $inc: { registeredCount: 1 } },
+        { new: true },
+      );
+
+      if (!updatedEvent) {
+        return res.status(400).json({
+          success: false,
+          message: "Event has reached maximum capacity",
+        });
+      }
+      capacityIncremented = true;
+    }
+
     try {
       await Participation.create({
         user: user._id,
@@ -213,7 +251,21 @@ export const registerEvent = async (req, res, next) => {
         gender,
         DOB,
       });
+
+      if (!capacityIncremented) {
+        await Event.updateOne(
+          { _id: eventId },
+          { $inc: { registeredCount: 1 } },
+        );
+      }
     } catch (error) {
+      if (capacityIncremented) {
+        await Event.updateOne(
+          { _id: eventId, registeredCount: { $gt: 0 } },
+          { $inc: { registeredCount: -1 } },
+        );
+      }
+
       // Handle MongoDB duplicate-key error
       if (error.code === 11000) {
         return res.status(409).json({
@@ -290,6 +342,11 @@ export const cancelEventRegistration = async (req, res, next) => {
         message: "Registration not found",
       });
     }
+
+    await Event.updateOne(
+      { _id: eventId, registeredCount: { $gt: 0 } },
+      { $inc: { registeredCount: -1 } },
+    );
 
     return res.status(200).json({
       success: true,

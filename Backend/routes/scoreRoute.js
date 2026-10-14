@@ -5,13 +5,14 @@ import {
   setScore,
 } from "../controllers/scoreController.js";
 import passport from "passport";
-import { predictionLimiter } from "../middleware/rateLimiter.js";
+import { predictionLimiter, readLimiter } from "../middleware/rateLimiter.js";
 
 const router = Router();
 
 router.get(
   "/score/rank",
   passport.authenticate("jwt", { session: false }),
+  readLimiter,
   getRanking,
 );
 
@@ -24,6 +25,7 @@ router.post(
 router.get(
   "/my-scores",
   passport.authenticate("jwt", { session: false }),
+  readLimiter,
   getScore,
 );
 

@@ -324,6 +324,7 @@ test("Test A — Event does not exist returns HTTP 404 and does not create parti
 test("Test B — Existing event registration succeeds and creates participation record", async () => {
   const originalUserFindById = User.findById;
   const originalEventFindById = Event.findById;
+  const originalEventUpdateOne = Event.updateOne;
   const originalParticipationFindOne = Participation.findOne;
   const originalParticipationCreate = Participation.create;
 
@@ -333,12 +334,17 @@ test("Test B — Existing event registration succeeds and creates participation 
     DOB: new Date("2000-01-01"),
   };
   let capturedParticipation = null;
+  let capturedEventUpdate = null;
 
   User.findById = async () => mockUser;
   Event.findById = async () => ({
     _id: "507f1f77bcf86cd799439011",
     title: "National Championship",
   });
+  Event.updateOne = async (filter, update) => {
+    capturedEventUpdate = { filter, update };
+    return { acknowledged: true, modifiedCount: 1 };
+  };
   Participation.findOne = async () => null;
   Participation.create = async (doc) => {
     capturedParticipation = doc;
@@ -368,9 +374,14 @@ test("Test B — Existing event registration succeeds and creates participation 
     assert.equal(capturedParticipation.phone, 9876543210);
     assert.equal(capturedParticipation.gender, "Male");
     assert.equal(capturedParticipation.DOB, mockUser.DOB);
+    assert.deepEqual(capturedEventUpdate, {
+      filter: { _id: "507f1f77bcf86cd799439011" },
+      update: { $inc: { registeredCount: 1 } },
+    });
   } finally {
     User.findById = originalUserFindById;
     Event.findById = originalEventFindById;
+    Event.updateOne = originalEventUpdateOne;
     Participation.findOne = originalParticipationFindOne;
     Participation.create = originalParticipationCreate;
   }
@@ -494,6 +505,118 @@ test("Test E — Unexpected database failure is forwarded to error handler and n
   }
 });
 
+test("Test F — Event registration rejects with HTTP 400 when event has reached maximum capacity", async () => {
+  const originalUserFindById = User.findById;
+  const originalEventFindById = Event.findById;
+  const originalParticipationFindOne = Participation.findOne;
+  const originalParticipationCount = Participation.countDocuments;
+  const originalParticipationCreate = Participation.create;
+
+  User.findById = async () => ({
+    _id: "user-123",
+    email: "athlete@example.com",
+    DOB: new Date("2000-01-01"),
+  });
+  Event.findById = async () => ({
+    _id: "507f1f77bcf86cd799439011",
+    capacity: 10,
+  });
+  Participation.findOne = async () => null;
+  Participation.countDocuments = async () => 10;
+  let createCalled = false;
+  Participation.create = async () => {
+    createCalled = true;
+  };
+
+  try {
+    const { response, nextError } = await invokeRegisterEvent({
+      params: { eventId: "507f1f77bcf86cd799439011" },
+      body: {
+        fullname: "Athlete One",
+        email: "athlete@example.com",
+        phone: 9876543210,
+        gender: "Male",
+      },
+    });
+
+    assert.equal(nextError, null);
+    assert.equal(response.statusCode, 400);
+    assert.deepEqual(response.body, {
+      success: false,
+      message: "Event has reached maximum capacity",
+    });
+    assert.equal(createCalled, false);
+  } finally {
+    User.findById = originalUserFindById;
+    Event.findById = originalEventFindById;
+    Participation.findOne = originalParticipationFindOne;
+    Participation.countDocuments = originalParticipationCount;
+    Participation.create = originalParticipationCreate;
+  }
+});
+
+test("Test G — Event registration with capacity limit increments registeredCount atomically", async () => {
+  const originalUserFindById = User.findById;
+  const originalEventFindById = Event.findById;
+  const originalEventFindOneAndUpdate = Event.findOneAndUpdate;
+  const originalParticipationFindOne = Participation.findOne;
+  const originalParticipationCount = Participation.countDocuments;
+  const originalParticipationCreate = Participation.create;
+
+  let capturedFindOneAndUpdate = null;
+  let capturedParticipation = null;
+
+  User.findById = async () => ({
+    _id: "user-123",
+    email: "athlete@example.com",
+    DOB: new Date("2000-01-01"),
+  });
+  Event.findById = async () => ({
+    _id: "507f1f77bcf86cd799439011",
+    capacity: 10,
+  });
+  Participation.findOne = async () => null;
+  Participation.countDocuments = async () => 4;
+  Event.findOneAndUpdate = async (filter, update, options) => {
+    capturedFindOneAndUpdate = { filter, update, options };
+    return { _id: "507f1f77bcf86cd799439011", registeredCount: 5 };
+  };
+  Participation.create = async (doc) => {
+    capturedParticipation = doc;
+    return { _id: "part-123", ...doc };
+  };
+
+  try {
+    const { response, nextError } = await invokeRegisterEvent({
+      params: { eventId: "507f1f77bcf86cd799439011" },
+      body: {
+        fullname: "Athlete One",
+        email: "athlete@example.com",
+        phone: 9876543210,
+        gender: "Male",
+      },
+    });
+
+    assert.equal(nextError, null);
+    assert.deepEqual(response.body, {
+      success: true,
+      message: "Registered to event",
+    });
+    assert.ok(capturedParticipation);
+    assert.ok(capturedFindOneAndUpdate);
+    assert.deepEqual(capturedFindOneAndUpdate.update, {
+      $inc: { registeredCount: 1 },
+    });
+  } finally {
+    User.findById = originalUserFindById;
+    Event.findById = originalEventFindById;
+    Event.findOneAndUpdate = originalEventFindOneAndUpdate;
+    Participation.findOne = originalParticipationFindOne;
+    Participation.countDocuments = originalParticipationCount;
+    Participation.create = originalParticipationCreate;
+  }
+});
+
 const invokeCancelEventRegistration = async (
   { params = {}, body = {}, user = { _id: "user-123" } } = {},
   options = {},
@@ -584,9 +707,15 @@ test("cancelEventRegistration — returns HTTP 404 if user has no registration f
 
 test("cancelEventRegistration — deletes only the authenticated user's participation", async () => {
   const originalEventFindById = Event.findById;
+  const originalEventUpdateOne = Event.updateOne;
   const originalParticipationFindOneAndDelete = Participation.findOneAndDelete;
   let receivedFilter;
+  let capturedEventUpdate = null;
   Event.findById = async () => ({ _id: "507f1f77bcf86cd799439011" });
+  Event.updateOne = async (filter, update) => {
+    capturedEventUpdate = { filter, update };
+    return { acknowledged: true, modifiedCount: 1 };
+  };
   Participation.findOneAndDelete = async (filter) => {
     receivedFilter = filter;
     return { _id: "participation-123", ...filter };
@@ -609,8 +738,16 @@ test("cancelEventRegistration — deletes only the authenticated user's particip
       user: "user-123",
       event: "507f1f77bcf86cd799439011",
     });
+    assert.deepEqual(capturedEventUpdate, {
+      filter: {
+        _id: "507f1f77bcf86cd799439011",
+        registeredCount: { $gt: 0 },
+      },
+      update: { $inc: { registeredCount: -1 } },
+    });
   } finally {
     Event.findById = originalEventFindById;
+    Event.updateOne = originalEventUpdateOne;
     Participation.findOneAndDelete = originalParticipationFindOneAndDelete;
   }
 });

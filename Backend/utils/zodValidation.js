@@ -4,27 +4,62 @@ import {
   isValidPassword,
 } from "./passwordValidation.js";
 
-export const signupVal = z.object({
-  email: z.string().email("Invalid email address"),
-  fullname: z
-    .string()
-    .min(3, "Full name must be at least 3 characters")
-    .max(20, "Full name must be at max 20 characters"),
-  gender: z.enum(["male", "female", "others"], {
-    errorMap: () => ({ message: "Gender must be male, female, or other" }),
-  }),
-  password: z.string().refine(isValidPassword, PASSWORD_ERROR_MESSAGE),
-  phone: z
-    .string()
-    .transform((val) => (val === "" ? undefined : val))
-    .optional()
-    .refine((val) => !val || /^[0-9]{10}$/.test(val), {
-      message: "Phone must be exactly 10 digits",
+const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
+const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
+export const getIstTodayDateString = (now = new Date()) =>
+  new Date(now.getTime() + IST_OFFSET_MS).toISOString().slice(0, 10);
+
+export const createSignupSchema = (getNow = () => new Date()) =>
+  z.object({
+    email: z.string().email("Invalid email address"),
+    fullname: z
+      .string()
+      .min(3, "Full name must be at least 3 characters")
+      .max(20, "Full name must be at max 20 characters"),
+    gender: z.enum(["male", "female", "others"], {
+      errorMap: () => ({ message: "Gender must be male, female, or other" }),
     }),
-  DOB: z.string().refine((val) => !isNaN(Date.parse(val)), {
-    message: "Date provided must be in YYYY-MM-DD format",
-  }),
-});
+    password: z.string().refine(isValidPassword, PASSWORD_ERROR_MESSAGE),
+    phone: z
+      .string()
+      .transform((val) => (val === "" ? undefined : val))
+      .optional()
+      .refine((val) => !val || /^[0-9]{10}$/.test(val), {
+        message: "Phone must be exactly 10 digits",
+      }),
+    DOB: z.string().superRefine((val, ctx) => {
+      if (!DATE_ONLY_PATTERN.test(val)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Date provided must be in YYYY-MM-DD format",
+        });
+        return;
+      }
+
+      const date = new Date(`${val}T00:00:00.000Z`);
+      const isValidCalendar =
+        Number.isFinite(date.getTime()) &&
+        date.toISOString().slice(0, 10) === val;
+
+      if (!isValidCalendar) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Date provided must be a valid calendar date",
+        });
+        return;
+      }
+
+      if (val >= getIstTodayDateString(getNow())) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Date of Birth should not be today or later",
+        });
+      }
+    }),
+  });
+
+export const signupVal = createSignupSchema();
 
 export const LoginVal = z.object({
   email: z.string().email("Invalid email address"),

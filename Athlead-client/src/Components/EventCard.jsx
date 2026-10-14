@@ -1,6 +1,6 @@
 import React from "react";
 import { sportIcon } from "../assets/assets";
-import { Calendar, Clock, MapPin, Medal } from "lucide-react";
+import { Calendar, Clock, MapPin, Medal, Users } from "lucide-react";
 import { useNavigate } from "react-router";
 import { formatEventTime } from "../utils/formatEventTime";
 import { formatDate } from "../utils/dateFormatter";
@@ -9,6 +9,12 @@ const EventCard = ({ e, setSelected, setIsOpen }) => {
   const navigate = useNavigate();
   const eventTime = formatEventTime(e.time);
   const formattedDate = formatDate(e.date, "D MMM YYYY");
+  const isFull = e.capacity != null && (e.registeredCount || 0) >= e.capacity;
+  const spotsLeft =
+    e.capacity != null
+      ? Math.max(0, e.capacity - (e.registeredCount || 0))
+      : null;
+
   return (
     <div
       key={e.id}
@@ -48,8 +54,19 @@ const EventCard = ({ e, setSelected, setIsOpen }) => {
             {eventTime}
           </p>
           <p className="flex gap-1">
-            <Medal className="text-teal-600 h-4 w-4" />
-            {e.prize}
+            {e.capacity != null ? (
+              <>
+                <Users className="text-teal-600 h-4 w-4" />
+                <span>
+                  {spotsLeft === 0 ? "Full" : `${spotsLeft} spots left`}
+                </span>
+              </>
+            ) : (
+              <>
+                <Medal className="text-teal-600 h-4 w-4" />
+                {e.prize}
+              </>
+            )}
           </p>
         </div>
       </div>
@@ -62,14 +79,20 @@ const EventCard = ({ e, setSelected, setIsOpen }) => {
       </div>
       <div className="flex items-center justify-center ">
         <button
+          disabled={isFull}
           onClick={(event) => {
+            if (isFull) return;
             setSelected(e);
             navigate(`/events/${e._id}`);
             event.stopPropagation();
           }}
-          className="my-6 text-center bg-linear-to-br from-cyan-400 to-cyan-600 w-full rounded-xl h-10 max-w-70 hover:from-cyan-600 hover:to-cyan-800"
+          className={`my-6 text-center w-full rounded-xl h-10 max-w-70 ${
+            isFull
+              ? "bg-gray-600 text-gray-300 cursor-not-allowed"
+              : "bg-linear-to-br from-cyan-400 to-cyan-600 hover:from-cyan-600 hover:to-cyan-800"
+          }`}
         >
-          Register Now
+          {isFull ? "Event Full" : "Register Now"}
         </button>
       </div>
     </div>

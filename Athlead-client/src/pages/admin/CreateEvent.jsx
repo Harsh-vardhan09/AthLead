@@ -17,6 +17,13 @@ const fields = [
   { name: "level", label: "Level", type: "text", placeholder: "State" },
   { name: "location", label: "Location", type: "text", placeholder: "Delhi" },
   { name: "prize", label: "Prize (₹)", type: "number", placeholder: "50000" },
+  {
+    name: "capacity",
+    label: "Capacity (Optional)",
+    type: "number",
+    placeholder: "100",
+    required: false,
+  },
   { name: "date", label: "Date", type: "date" },
   { name: "time", label: "Time", type: "time" },
 ];
@@ -39,10 +46,16 @@ const CreateEvent = () => {
 
   const onSubmit = async (data) => {
     try {
-      const res = await adminService.createEvent({
+      const payload = {
         ...data,
         prize: Number(data.prize),
-      });
+      };
+      if (data.capacity) {
+        payload.capacity = Number(data.capacity);
+      } else {
+        delete payload.capacity;
+      }
+      const res = await adminService.createEvent(payload);
 
       if (res.data.success) {
         reset(data);
@@ -88,7 +101,12 @@ const CreateEvent = () => {
                 <input
                   type={f.type}
                   placeholder={f.placeholder}
-                  {...register(f.name, { required: `${f.label} is required` })}
+                  {...register(
+                    f.name,
+                    f.required === false
+                      ? {}
+                      : { required: `${f.label} is required` },
+                  )}
                   className={inputClass}
                 />
                 {errors[f.name] && (

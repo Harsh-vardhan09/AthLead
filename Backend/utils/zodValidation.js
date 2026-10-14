@@ -112,6 +112,15 @@ export const createEventVal = z.object({
     .string({ required_error: "Description is required" })
     .trim()
     .min(1, "Description is required"),
+  capacity: z.preprocess(
+    (val) =>
+      val === "" || val === null || val === undefined ? undefined : val,
+    z.coerce
+      .number({ invalid_type_error: "Capacity must be a number" })
+      .int("Capacity must be an integer")
+      .min(1, "Capacity must be at least 1")
+      .optional(),
+  ),
   tags: z.array(z.string()).optional(),
 });
 

@@ -206,6 +206,39 @@ export const registerEvent = async (req, res, next) => {
       });
     }
 
+    // Lightweight contact checks so obvious typos do not reach the database.
+    // Missing fields are left to the model layer to preserve existing flows.
+    if (email !== undefined && email !== null && email !== "") {
+      const emailOk =
+        typeof email === "string" &&
+        /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email.trim());
+      if (!emailOk) {
+        return res.status(400).json({
+          success: false,
+          message: "A valid email is required for event registration",
+        });
+      }
+    }
+
+    if (phone !== undefined && phone !== null && phone !== "") {
+      const digits = String(phone).replace(/\D/g, "");
+      if (digits.length !== 10) {
+        return res.status(400).json({
+          success: false,
+          message: "Phone must be a 10-digit number",
+        });
+      }
+    }
+
+    if (fullname !== undefined && fullname !== null && fullname !== "") {
+      if (typeof fullname !== "string" || fullname.trim().length < 2) {
+        return res.status(400).json({
+          success: false,
+          message: "Full name is required for event registration",
+        });
+      }
+    }
+
     const alreadyRegistered = await Participation.findOne({
       user: user._id,
       event: eventId,

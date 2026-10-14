@@ -71,11 +71,23 @@ export const setScore = async (req, res) => {
     const mlResponse = await axios.post(
       `${process.env.ML_URI}/rank`,
       inputSnapshot,
+      { timeout: 10000 },
     );
+
+    const predictedScore = mlResponse.data?.predicted_potential_score;
+    if (
+      typeof predictedScore !== "number" ||
+      !Number.isFinite(predictedScore)
+    ) {
+      return res.status(502).json({
+        success: false,
+        message: "Score service returned an invalid result",
+      });
+    }
 
     const newScore = await Score.create({
       user: userId,
-      score: mlResponse.data.predicted_potential_score,
+      score: predictedScore,
       sport: inputSnapshot.sport,
       inputSnapshot: { ...inputSnapshot },
       modelVersion: mlResponse.data.model_version ?? null,
@@ -83,17 +95,27 @@ export const setScore = async (req, res) => {
 
     return res.status(201).json({
       success: true,
-      message: `Score obtained: ${mlResponse.data.predicted_potential_score}`,
+      message: `Score obtained: ${predictedScore}`,
       data: newScore,
     });
   } catch (error) {
     console.error("Score Generation Error:", error.message);
+    if (error.code === "ECONNABORTED" || error.message?.includes("timeout")) {
+      return res.status(504).json({
+        success: false,
+        message: "Score service timed out. Please try again.",
+      });
+    }
+    const upstreamStatus = error.response?.status;
+    if (upstreamStatus && upstreamStatus >= 400 && upstreamStatus < 500) {
+      return res.status(upstreamStatus).json({
+        success: false,
+        message: "Score request was rejected. Please check your inputs.",
+      });
+    }
     return res.status(500).json({
       success: false,
-      message:
-        error.response?.data?.detail ||
-        error.message ||
-        "Internal Server Error",
+      message: "Failed to generate score. Please try again.",
     });
   }
 };
@@ -101,7 +123,13 @@ export const setScore = async (req, res) => {
 export const getScore = async (req, res) => {
   const userId = req.user._id;
   try {
-    const scores = await Score.find({ user: userId });
+    const query = Score.find({ user: userId });
+    let scores;
+    if (query && typeof query.limit === "function") {
+      scores = await query.sort({ createdAt: -1 }).limit(100);
+    } else {
+      scores = await query;
+    }
     return res.status(200).json({ success: true, scores });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });

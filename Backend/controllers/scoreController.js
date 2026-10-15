@@ -1,5 +1,6 @@
 import axios from "axios";
 import Score from "../models/Score.js";
+import AthleteScoreInput from "../models/AthleteScoreInput.js";
 import { User } from "../models/Users.js";
 import dobToAge from "dob-to-age";
 import dayjs from "dayjs";
@@ -39,6 +40,7 @@ export const setScore = async (req, res) => {
     const newScore = await Score.create({
       user: userId,
       score: mlResponse.data.predicted_potential_score,
+      sport: data.sport,
     });
 
     return res.status(201).json({
@@ -68,13 +70,25 @@ export const getScore = async (req, res) => {
 export const getRanking = async (req, res) => {
   try {
     const rank = await Score.find({})
-  .sort({ score: -1 })
-  .populate("user", "fullname image role");
-    // console.log(rank);
+      .sort({ score: -1 })
+      .populate("user", "fullname image role state");
+
+    const userIds = rank.map((r) => r.user?._id).filter(Boolean);
+    const scoreInputs = await AthleteScoreInput.find({ user: { $in: userIds } });
+    const sportMap = {};
+    scoreInputs.forEach((si) => {
+      if (si.user) sportMap[si.user.toString()] = si.sport;
+    });
+
+    const rankWithSport = rank.map((r) => {
+      const doc = r.toObject ? r.toObject() : { ...r };
+      doc.sport = doc.sport || (doc.user ? sportMap[doc.user._id.toString()] : null) || "General";
+      return doc;
+    });
 
     res.json({
       success: true,
-      rank,
+      rank: rankWithSport,
     });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });

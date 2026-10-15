@@ -85,30 +85,6 @@ const Events = () => {
     [searchParams, setSearchParams],
   );
 
-  // Extract filter state from searchParams
-  const sport = searchParams.get("sport") || "All";
-  const level = searchParams.get("level") || "All";
-  const location = searchParams.get("location") || "";
-  const date = searchParams.get("date") || "";
-  const status = searchParams.get("status") || "All";
-  const search = searchParams.get("search") || "";
-  const page = parseInt(searchParams.get("page") || "1", 10);
-
-  const updateFilters = (newFilters) => {
-    const nextParams = new URLSearchParams(searchParams);
-    Object.entries(newFilters).forEach(([key, val]) => {
-      if (val !== undefined && val !== null && val !== "All" && val !== "") {
-        nextParams.set(key, val);
-      } else {
-        nextParams.delete(key);
-      }
-    });
-    if (!("page" in newFilters)) {
-      nextParams.delete("page");
-    }
-    setSearchParams(nextParams);
-  };
-
   const handleReset = () => {
     setSearchParams({});
   };

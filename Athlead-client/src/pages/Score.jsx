@@ -165,6 +165,8 @@ export default function Score() {
       const res = await scoreService.submit(formData);
       if (res.data.success) {
         const scoreData = {
+          sport: formData.sport,
+          training_years: Number(formData.training_years),
           vo2_max: Number(formData.vo2_max),
           hrv: Number(formData.hrv),
           lactate_threshold: Number(formData.lactate_threshold),
@@ -174,6 +176,12 @@ export default function Score() {
           performance_score: Number(formData.performance_score),
           adaptability_score: Number(formData.adaptability_score),
         };
+
+        try {
+          await scoreService.saveScoreInput(scoreData);
+        } catch (err) {
+          console.error("Failed to save score input to server:", err);
+        }
 
         if (user?._id) {
           const scoreStorageKey = `athlead_score_data:${user._id}`;

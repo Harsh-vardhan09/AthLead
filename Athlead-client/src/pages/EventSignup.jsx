@@ -21,6 +21,7 @@ const EventSignup = () => {
     status: "loading",
     event: null,
   });
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -29,12 +30,23 @@ const EventSignup = () => {
         if (!cancelled) setEventState({ status: "not-found", event: null });
         return;
       }
+      if (!cancelled) setEventState({ status: "loading", event: null });
       try {
-        const res = await eventService.getAll({ limit: 100 });
-        const list = res.data?.events ?? res.data?.message ?? [];
-        const found = Array.isArray(list)
-          ? list.find((e) => String(e._id) === String(eventId))
-          : null;
+        const limit = 100;
+        let page = 1;
+        let found = null;
+        for (let attempt = 0; attempt < 20; attempt++) {
+          const res = await eventService.getAll({ limit, page });
+          const list = res.data?.events ?? res.data?.message ?? [];
+          if (Array.isArray(list)) {
+            found =
+              list.find((e) => String(e._id) === String(eventId)) ?? null;
+          }
+          if (found) break;
+          const pagination = res.data?.pagination;
+          if (!pagination?.hasMore) break;
+          page = (pagination.page ?? page) + 1;
+        }
         if (!cancelled) {
           if (!found) {
             setEventState({ status: "not-found", event: null });
@@ -51,20 +63,28 @@ const EventSignup = () => {
           else setEventState({ status: "open", event: found });
         }
       } catch {
-        // If the list cannot be loaded we still allow signup so a
-        // transient listing failure does not block registration.
-        if (!cancelled) setEventState({ status: "open", event: null });
+        // Loading failure leaves the event unknown. Block signup until
+        // the event can be verified so past/full events cannot slip through.
+        if (!cancelled) setEventState({ status: "unavailable", event: null });
       }
     };
     loadEvent();
     return () => {
       cancelled = true;
     };
-  }, [eventId]);
+  }, [eventId, retryCount]);
 
   const onSubmit = async (data) => {
+    if (eventState.status !== "open") {
+      toast.error("Registration is not available for this event.");
+      return;
+    }
     try {
-      const res = await eventService.register(eventId, data);
+      const digits = String(data.phone ?? "").replace(/\D/g, "");
+      const res = await eventService.register(eventId, {
+        ...data,
+        phone: digits,
+      });
 
       if (res.data.success) {
         reset(data);
@@ -90,14 +110,17 @@ const EventSignup = () => {
           ? "Registration closed"
           : eventState.status === "full"
             ? "Event full"
-            : "Registration open";
+            : eventState.status === "unavailable"
+              ? "Event unavailable"
+              : "Registration open";
 
   const formDisabled =
     isSubmitting ||
     eventState.status === "loading" ||
     eventState.status === "not-found" ||
     eventState.status === "closed" ||
-    eventState.status === "full";
+    eventState.status === "full" ||
+    eventState.status === "unavailable";
 
   const spotsLeft =
     eventState.event?.capacity != null
@@ -125,6 +148,21 @@ const EventSignup = () => {
               This event could not be found. Check the link or browse other
               events.
             </p>
+          )}
+          {eventState.status === "unavailable" && (
+            <div className="mt-2 flex flex-col items-center gap-2">
+              <p className="text-sm text-amber-200">
+                Could not verify this event. Registration is paused until the
+                event details load.
+              </p>
+              <button
+                type="button"
+                onClick={() => setRetryCount((c) => c + 1)}
+                className="px-4 py-1.5 rounded-lg bg-amber-500/20 border border-amber-500/40 text-xs font-medium text-amber-100 hover:bg-amber-500/30 transition-colors"
+              >
+                Retry
+              </button>
+            </div>
           )}
           {(eventState.status === "closed" ||
             eventState.status === "full") && (
@@ -200,12 +238,15 @@ const EventSignup = () => {
                 <input
                   type="tel"
                   inputMode="numeric"
-                  placeholder="98765 43210"
+                  placeholder="9876543210"
                   {...register("phone", {
                     required: "Phone number is required",
-                    pattern: {
-                      value: /^[0-9]{10}$/,
-                      message: "Enter a 10-digit mobile number",
+                    validate: (value) => {
+                      const digits = String(value ?? "").replace(/\D/g, "");
+                      return (
+                        digits.length === 10 ||
+                        "Enter a 10-digit mobile number"
+                      );
                     },
                   })}
                   className={`flex-1 max-w-full bg-white/7 border rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-white/25 outline-none focus:bg-[#1d9e75]/8 transition-all ${

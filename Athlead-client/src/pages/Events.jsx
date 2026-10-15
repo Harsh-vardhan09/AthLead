@@ -57,19 +57,6 @@ const Events = () => {
   const [searchInput, setSearchInput] = useState(search);
   const [locationInput, setLocationInput] = useState(location);
 
-  // Local state for debounced inputs
-  const [searchInput, setSearchInput] = useState(search);
-  const [locationInput, setLocationInput] = useState(location);
-
-  // Sync local inputs when URL searchParams change
-  useEffect(() => {
-    setSearchInput(search);
-  }, [search]);
-
-  useEffect(() => {
-    setLocationInput(location);
-  }, [location]);
-
   const updateFilters = React.useCallback(
     (newFilters) => {
       const nextParams = new URLSearchParams(searchParams);

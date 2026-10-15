@@ -13,6 +13,18 @@
 
 @custom-variant dark (&:is(.dark *));
 
+.athlead-logo-light {
+  display: none;
+}
+
+:root:is(.light, [data-theme="light"]) .athlead-logo-dark {
+  display: none;
+}
+
+:root:is(.light, [data-theme="light"]) .athlead-logo-light {
+  display: block;
+}
+
 @theme {
   --font-akkurat: akkurat, "sans-sarif";
 }

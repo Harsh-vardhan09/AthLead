@@ -1,9 +1,7 @@
-import Logo from "./Logo.png";
 import court from "./court.jpg";
 import { Brain, Globe, Calendar } from "lucide-react";
 
 export const assets = {
-  Logo,
   court,
 };
 

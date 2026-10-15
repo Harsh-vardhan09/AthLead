@@ -1,11 +1,11 @@
 import { LogOut, X } from "lucide-react";
-import { assets } from "../assets/assets";
 import { useNavigate } from "react-router";
 import { cn } from "../utility/cn";
 import React from "react";
 import toast from "react-hot-toast";
 import { authService } from "../api";
 import { useAuth } from "../context/useAuth";
+import AthLeadLogo from "./AthLeadLogo";
 
 // pinned: stays visible on lg+ (admin layout); otherwise it's a drawer only.
 // showLogout: renders a logout button pinned to the bottom (admin sidebar only).
@@ -42,7 +42,7 @@ const Sidebar = ({ sidebar, setSidebar, navItems, pinned, showLogout }) => {
         <div className="flex flex-col justify-start gap-8 p-4 h-full">
           <div className="flex items-center justify-around">
             <div onClick={() => go("/")} className="font-bold cursor-pointer">
-              <img src={assets.Logo} className="h-15 w-40" />
+              <AthLeadLogo className="w-40" />
             </div>
 
             <X

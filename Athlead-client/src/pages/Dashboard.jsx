@@ -262,11 +262,18 @@ const Dashboard = () => {
               <ProfileSkeleton />
             ) : (
               <>
-                <img
-                  src={user?.image}
-                  alt="Profile"
-                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-full p-2 shrink-0"
-                />
+                {user?.image && !avatarError ? (
+                  <img
+                    src={user.image}
+                    alt={user.fullname || "Profile"}
+                    onError={() => setAvatarError(true)}
+                    className="w-16 h-16 sm:w-20 sm:h-20 rounded-full p-2 shrink-0 object-cover"
+                  />
+                ) : (
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-teal-500/20 border border-teal-500/40 text-teal-300 font-bold text-xl flex items-center justify-center shrink-0">
+                    {getInitials(user?.fullname)}
+                  </div>
+                )}
 
                 <div className="flex min-w-0 flex-col items-start justify-center">
                   <h1 className="font-semibold font-segoe text-xl break-words">
@@ -372,13 +379,13 @@ const Dashboard = () => {
                         {p.originalRank && p.originalRank <= 4 ? (
                           <div
                             className={`mx-auto w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${
-                              p.originalRank === 2
-                                ? "bg-amber-400/15 text-amber-400"
-                                : p.originalRank === 3
-                                  ? "bg-slate-400/15 text-slate-400"
-                                  : p.originalRank === 1
-                                    ? "bg-orange-800/15 text-orange-700"
-                                    : "bg-slate-400/15 text-slate-400"
+                              p.originalRank === 1
+                                ? "bg-amber-400/20 text-amber-400"
+                                : p.originalRank === 2
+                                  ? "bg-slate-300/20 text-slate-300"
+                                  : p.originalRank === 3
+                                    ? "bg-amber-700/20 text-amber-500"
+                                    : "bg-slate-500/15 text-slate-400"
                             }`}
                           >
                             {p.originalRank}
@@ -398,7 +405,9 @@ const Dashboard = () => {
                         {p.user?.fullname?.split(" ")[0]}{" "}
                       </td>
 
-                      <td className="px-3 py-3 whitespace-nowrap">cycling</td>
+                      <td className="px-3 py-3 whitespace-nowrap capitalize">
+                        {p.sport || p.user?.sport || "N/A"}
+                      </td>
                       <td className="px-3 py-3 whitespace-nowrap">
                         {p.user?.state}
                       </td>

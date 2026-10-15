@@ -18,7 +18,6 @@ import EventDetails from "../Components/EventDetails";
 import { eventService } from "../api";
 import EventCardSkeleton from "../Components/EventCardSkelton";
 import toast from "react-hot-toast";
-import { EmptyState, ErrorState } from "../Components/AsyncState";
 
 const levels = [
   "All",
@@ -38,13 +37,12 @@ const Events = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [events, setEvents] = useState([]);
   const [pagination, setPagination] = useState({
+    total: 0,
     page: 1,
     limit: 6,
-    hasMore: false,
+    totalPages: 1,
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [retryTrigger, setRetryTrigger] = useState(0);
 
   // Extract filter state from searchParams
   const sport = searchParams.get("sport") || "All";
@@ -75,59 +73,22 @@ const Events = () => {
     [searchParams, setSearchParams],
   );
 
-  const clearSearch = () => {
-    setSearchInput("");
-    updateFilters({ search: "" });
-  };
-
   const handleReset = () => {
-    setSearchInput("");
-    setLocationInput("");
     setSearchParams({});
   };
-
-  useEffect(() => {
-    setSearchInput(search);
-    setLocationInput(location);
-  }, [searchParams, search, location]);
-
-  useEffect(() => {
-    if (searchInput === search && locationInput === location) return;
-    const timer = setTimeout(() => {
-      setSearchParams((currentParams) => {
-        const nextParams = new URLSearchParams(currentParams);
-        if (searchInput) nextParams.set("search", searchInput);
-        else nextParams.delete("search");
-        if (locationInput) nextParams.set("location", locationInput);
-        else nextParams.delete("location");
-        nextParams.delete("page");
-        return nextParams;
-      });
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [searchInput, locationInput, search, location, setSearchParams]);
 
   useEffect(() => {
     let isCancelled = false;
     const getEvents = async () => {
       setIsLoading(true);
-      setError(null);
       try {
         const params = {};
         if (sport && sport !== "All") params.sport = sport;
         if (level && level !== "All") params.level = level;
         if (location) params.location = location;
-        if (date) {
-          params.dateFrom = date;
-          params.dateTo = date;
-        }
-        if (status && status !== "All") {
-          params.status =
-            status.toLowerCase() === "completed"
-              ? "past"
-              : status.toLowerCase();
-        }
-        if (search) params.q = search;
+        if (date) params.date = date;
+        if (status && status !== "All") params.status = status;
+        if (search) params.search = search;
         params.page = page;
         params.limit = 6;
 
@@ -142,10 +103,10 @@ const Events = () => {
         if (res.data.status && res.data.status !== 200 && res.data.message) {
           toast.error(res.data.message);
         }
-      } catch (err) {
+      } catch (error) {
         if (isCancelled) return;
-        console.error(err);
-        setError(err?.response?.data?.message || err?.message || "Failed to load events. Please try again.");
+        console.log(error);
+        setEvents([]);
         setIsLoading(false);
       }
     };
@@ -153,7 +114,7 @@ const Events = () => {
     return () => {
       isCancelled = true;
     };
-  }, [sport, level, location, date, status, search, page, retryTrigger]);
+  }, [sport, level, location, date, status, search, page]);
 
   const hasActiveFilters =
     sport !== "All" ||
@@ -174,14 +135,14 @@ const Events = () => {
               <Search size={18} className="text-slate-400 shrink-0" />
               <input
                 type="text"
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                placeholder="Search events by title..."
+                value={search}
+                onChange={(e) => updateFilters({ search: e.target.value })}
+                placeholder="Search events by title or description..."
                 className="w-full bg-transparent outline-none text-white text-sm placeholder:text-slate-400"
               />
-              {searchInput && (
+              {search && (
                 <button
-                  onClick={clearSearch}
+                  onClick={() => updateFilters({ search: "" })}
                   className="text-slate-400 hover:text-white"
                   aria-label="Clear search"
                 >
@@ -234,8 +195,8 @@ const Events = () => {
               </label>
               <input
                 type="text"
-                value={locationInput}
-                onChange={(e) => setLocationInput(e.target.value)}
+                value={location}
+                onChange={(e) => updateFilters({ location: e.target.value })}
                 placeholder="Filter location..."
                 className="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white outline-none focus:border-teal-500 transition-colors placeholder:text-slate-500"
                 aria-label="Filter by location"
@@ -350,7 +311,7 @@ const Events = () => {
             {search && (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-teal-500/10 text-teal-300 border border-teal-500/20 text-xs">
                 Search: {search}
-                <button onClick={clearSearch}>
+                <button onClick={() => updateFilters({ search: "" })}>
                   <X size={12} />
                 </button>
               </span>
@@ -358,37 +319,24 @@ const Events = () => {
           </div>
         )}
 
-        {/* Events Grid or Empty / Loading / Error State */}
+        {/* Events Grid or Empty / Loading State */}
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 my-8 w-full">
             {Array.from({ length: 6 }).map((_, i) => (
               <EventCardSkeleton key={i} />
             ))}
           </div>
-        ) : error ? (
-          <div className="my-8 w-full bg-slate-900/60 border border-slate-800 rounded-2xl p-6">
-            <ErrorState
-              title="Unable to load events"
-              error={error}
-              onRetry={() => setRetryTrigger((prev) => prev + 1)}
-            />
-          </div>
         ) : events.length === 0 ? (
-          <div className="my-8 w-full bg-slate-900/60 border border-slate-800 rounded-2xl p-6">
-            <EmptyState
-              title="No events found"
-              description="No events match your selected filters."
-              action={
-                hasActiveFilters ? (
-                  <button
-                    onClick={handleReset}
-                    className="mt-2 text-sm text-teal-400 hover:underline flex items-center gap-1 cursor-pointer"
-                  >
-                    <RotateCcw size={14} /> Clear all filters
-                  </button>
-                ) : null
-              }
-            />
+          <div className="flex flex-col items-center justify-center py-16 text-slate-400 gap-3 w-full">
+            <p className="text-lg">No events match your selected filters.</p>
+            {hasActiveFilters && (
+              <button
+                onClick={handleReset}
+                className="text-sm text-teal-400 hover:underline flex items-center gap-1"
+              >
+                <RotateCcw size={14} /> Clear all filters
+              </button>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 my-8 w-full">
@@ -405,10 +353,11 @@ const Events = () => {
         )}
 
         {/* Pagination Section */}
-        {!isLoading && !error && (pagination.page > 1 || pagination.hasMore) && (
+        {!isLoading && pagination.totalPages > 1 && (
           <div className="flex flex-col sm:flex-row items-center justify-between w-full py-4 border-t border-slate-800 text-slate-300 gap-4">
             <span className="text-xs text-slate-400">
-              Showing page {pagination.page}
+              Showing page {pagination.page} of {pagination.totalPages} (
+              {pagination.total} total events)
             </span>
             <div className="flex items-center gap-2">
               <button
@@ -419,8 +368,27 @@ const Events = () => {
                 <ChevronLeft size={16} /> Previous
               </button>
 
+              <div className="flex items-center gap-1 px-2">
+                {Array.from(
+                  { length: pagination.totalPages },
+                  (_, i) => i + 1,
+                ).map((p) => (
+                  <button
+                    key={p}
+                    onClick={() => updateFilters({ page: p })}
+                    className={`w-7 h-7 rounded-lg text-xs font-medium flex items-center justify-center transition-colors ${
+                      pagination.page === p
+                        ? "bg-teal-500 text-white font-bold"
+                        : "bg-slate-800 text-slate-400 hover:bg-slate-700"
+                    }`}
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
+
               <button
-                disabled={!pagination.hasMore}
+                disabled={pagination.page >= pagination.totalPages}
                 onClick={() => updateFilters({ page: pagination.page + 1 })}
                 className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800 text-xs font-medium text-slate-300 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >

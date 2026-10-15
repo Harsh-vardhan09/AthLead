@@ -56,11 +56,9 @@ const EventDetails = ({ selected, setIsOpen }) => {
           );
         }
       })
-      .catch((error) => {
+      .catch(() => {
         if (isCurrent) {
-          toast.error(
-            error.apiMessage || "Couldn't check your event registration.",
-          );
+          setIsRegistered(false);
         }
       })
       .finally(() => {
@@ -85,19 +83,39 @@ const EventDetails = ({ selected, setIsOpen }) => {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    const handleEscape = (event) => {
+      if (event.key === "Escape") setIsOpen(false);
+    };
+    document.addEventListener("keydown", handleEscape);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", handleEscape);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [setIsOpen]);
+
   return (
     <section
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="event-details-title"
       onClick={() => setIsOpen(false)}
-      className="fixed inset-0 z-10 min-h-screen h-full w-full bg-black/60 backdrop-blur-md flex items-center justify-center"
+      className="fixed inset-0 z-50 min-h-screen h-full w-full bg-black/60 backdrop-blur-md flex items-center justify-center"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-xl h-full max-h-4/6 bg-[#040e1a]/95 rounded-4xl border border-[rgba(6,182,212,0.2)] shadow-[0_0_60px_rgba(6,182,212,0.15)]"
+        className="w-full max-w-xl max-h-[85vh] overflow-y-auto bg-[#040e1a]/95 rounded-4xl border border-[rgba(6,182,212,0.2)] shadow-[0_0_60px_rgba(6,182,212,0.15)]"
       >
         <div className="flex flex-col  justify-start my-5 gap-5 mx-5">
           <div className="text-3xl">{sportIcon(selected.sport)}</div>
           <div>
-            <p className="text-white text-xl font-bold font-akkurat">
+            <p
+              id="event-details-title"
+              className="text-white text-xl font-bold font-akkurat"
+            >
               {selected.title}
             </p>
             <p className="basic text-sm">

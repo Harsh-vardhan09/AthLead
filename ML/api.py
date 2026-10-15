@@ -56,7 +56,6 @@ except Exception:
 
 app = FastAPI()
 
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -131,6 +130,19 @@ def model_info():
         "model_type": type(model).__name__,
         "supported_sports": [str(sport) for sport in sports],
         "feature_count": int(feature_count) if feature_count is not None else None,
+    }
+
+
+
+@app.get("/health")
+def health_check():
+    model_loaded = (
+        model is not None and scaler is not None and label_encoders is not None
+    )
+    status = "ok" if model_loaded else "error"
+    return {
+        "status": status,
+        "model_loaded": model_loaded,
     }
 
 

@@ -51,6 +51,21 @@ const Dashboard = () => {
   const [compactCharts, setCompactCharts] = useState(
     () => window.matchMedia("(max-width: 639px)").matches,
   );
+  const [avatarError, setAvatarError] = useState(false);
+
+  useEffect(() => {
+    setAvatarError(false);
+  }, [user?.image]);
+
+  const getInitials = (fullname) => {
+    if (!fullname) return "U";
+    const parts = fullname.trim().split(" ").filter(Boolean);
+    if (parts.length === 0) return "U";
+    if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+    return (
+      parts[0].charAt(0) + parts[parts.length - 1].charAt(0)
+    ).toUpperCase();
+  };
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(max-width: 639px)");
@@ -60,64 +75,74 @@ const Dashboard = () => {
     return () => mediaQuery.removeEventListener("change", updateChartSize);
   }, []);
 
-  useEffect(() => {
-    setRadarChartData([]);
+  const buildRadarData = (data) => {
+    if (!data || typeof data !== "object") return [];
+    return [
+      { metric: "VO2 Max", value: Number(data.vo2_max) || 0 },
+      { metric: "HRV", value: Number(data.hrv) || 0 },
+      {
+        metric: "Lactate Threshold",
+        value: Number(data.lactate_threshold) || 0,
+      },
+      { metric: "Stride Length", value: Number(data.stride_length) || 0 },
+      { metric: "Cadence", value: Number(data.cadence) || 0 },
+      {
+        metric: "Force Application",
+        value: Number(data.force_application) || 0,
+      },
+      {
+        metric: "Performance Score",
+        value: Number(data.performance_score) || 0,
+      },
+      {
+        metric: "Adaptability Score",
+        value: Number(data.adaptability_score) || 0,
+      },
+    ];
+  };
 
+  useEffect(() => {
     if (!user?._id) {
+      setRadarChartData([]);
       return;
     }
 
     const scoreStorageKey = `athlead_score_data:${user._id}`;
-    const storedScore = localStorage.getItem(scoreStorageKey);
 
-    if (!storedScore) {
-      return;
-    }
-
-    try {
-      const scoreData = JSON.parse(storedScore);
-
-      if (!scoreData || typeof scoreData !== "object") {
-        return;
+    const loadRadarData = async () => {
+      let serverLoaded = false;
+      try {
+        const res = await scoreService.getScoreInput();
+        if (res.data?.success && res.data?.data) {
+          const scoreData = res.data.data;
+          const radarData = buildRadarData(scoreData);
+          if (radarData.length > 0) {
+            setRadarChartData(radarData);
+            localStorage.setItem(scoreStorageKey, JSON.stringify(scoreData));
+            serverLoaded = true;
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch score input from server:", error);
       }
 
-      setRadarChartData([
-        {
-          metric: "VO2 Max",
-          value: scoreData.vo2_max,
-        },
-        {
-          metric: "HRV",
-          value: scoreData.hrv,
-        },
-        {
-          metric: "Lactate Threshold",
-          value: scoreData.lactate_threshold,
-        },
-        {
-          metric: "Stride Length",
-          value: scoreData.stride_length,
-        },
-        {
-          metric: "Cadence",
-          value: scoreData.cadence,
-        },
-        {
-          metric: "Force Application",
-          value: scoreData.force_application,
-        },
-        {
-          metric: "Performance Score",
-          value: scoreData.performance_score,
-        },
-        {
-          metric: "Adaptability Score",
-          value: scoreData.adaptability_score,
-        },
-      ]);
-    } catch (error) {
-      console.error("Failed to parse stored score data:", error);
-    }
+      if (!serverLoaded) {
+        const storedScore = localStorage.getItem(scoreStorageKey);
+        if (storedScore) {
+          try {
+            const scoreData = JSON.parse(storedScore);
+            setRadarChartData(buildRadarData(scoreData));
+          } catch (error) {
+            console.error("Failed to parse stored score data:", error);
+            setRadarChartData([]);
+          }
+        } else {
+          setRadarChartData([]);
+        }
+      }
+    };
+
+    loadRadarData();
   }, [user]);
 
   const fetchScores = useCallback(async () => {
@@ -237,11 +262,18 @@ const Dashboard = () => {
               <ProfileSkeleton />
             ) : (
               <>
-                <img
-                  src={user?.image}
-                  alt="Profile"
-                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-full p-2 shrink-0"
-                />
+                {user?.image && !avatarError ? (
+                  <img
+                    src={user.image}
+                    alt={user.fullname || "Profile"}
+                    onError={() => setAvatarError(true)}
+                    className="w-16 h-16 sm:w-20 sm:h-20 rounded-full p-2 shrink-0 object-cover"
+                  />
+                ) : (
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-teal-500/20 border border-teal-500/40 text-teal-300 font-bold text-xl flex items-center justify-center shrink-0">
+                    {getInitials(user?.fullname)}
+                  </div>
+                )}
 
                 <div className="flex min-w-0 flex-col items-start justify-center">
                   <h1 className="font-semibold font-segoe text-xl break-words">
@@ -347,13 +379,13 @@ const Dashboard = () => {
                         {p.originalRank && p.originalRank <= 4 ? (
                           <div
                             className={`mx-auto w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${
-                              p.originalRank === 2
-                                ? "bg-amber-400/15 text-amber-400"
-                                : p.originalRank === 3
-                                  ? "bg-slate-400/15 text-slate-400"
-                                  : p.originalRank === 1
-                                    ? "bg-orange-800/15 text-orange-700"
-                                    : "bg-slate-400/15 text-slate-400"
+                              p.originalRank === 1
+                                ? "bg-amber-400/20 text-amber-400"
+                                : p.originalRank === 2
+                                  ? "bg-slate-300/20 text-slate-300"
+                                  : p.originalRank === 3
+                                    ? "bg-amber-700/20 text-amber-500"
+                                    : "bg-slate-500/15 text-slate-400"
                             }`}
                           >
                             {p.originalRank}
@@ -373,7 +405,9 @@ const Dashboard = () => {
                         {p.user?.fullname?.split(" ")[0]}{" "}
                       </td>
 
-                      <td className="px-3 py-3 whitespace-nowrap">cycling</td>
+                      <td className="px-3 py-3 whitespace-nowrap capitalize">
+                        {p.sport || p.user?.sport || "N/A"}
+                      </td>
                       <td className="px-3 py-3 whitespace-nowrap">
                         {p.user?.state}
                       </td>
@@ -497,7 +531,15 @@ const Dashboard = () => {
               <div aria-hidden="true">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={placeholderScores}>
-                    <XAxis dataKey="date" className="text-xs" stroke="#444" />
+                    <XAxis
+                      dataKey="date"
+                      className="text-xs"
+                      stroke="#444"
+                      interval={compactCharts ? "preserveStartEnd" : 0}
+                      angle={compactCharts ? -25 : 0}
+                      textAnchor={compactCharts ? "end" : "middle"}
+                      height={compactCharts ? 50 : 30}
+                    />
                     <YAxis className="text-xs" stroke="#444" />
 
                     <Line
@@ -525,9 +567,20 @@ const Dashboard = () => {
               </div>
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer
+              width="100%"
+              height={compactCharts ? 250 : 300}
+            >
               <LineChart data={scores}>
-                <XAxis dataKey="date" className="text-xs" stroke="#888" />
+                <XAxis
+                  dataKey="date"
+                  className="text-xs"
+                  stroke="#888"
+                  interval={compactCharts ? "preserveStartEnd" : 0}
+                  angle={compactCharts ? -25 : 0}
+                  textAnchor={compactCharts ? "end" : "middle"}
+                  height={compactCharts ? 50 : 30}
+                />
                 <YAxis className="text-xs" stroke="#888" />
 
                 <Tooltip

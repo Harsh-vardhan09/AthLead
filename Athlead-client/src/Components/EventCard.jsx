@@ -15,13 +15,26 @@ const EventCard = ({ e, setSelected, setIsOpen }) => {
       ? Math.max(0, e.capacity - (e.registeredCount || 0))
       : null;
 
+  const openDetails = () => {
+    setSelected(e);
+    setIsOpen(true);
+  };
+
+  const handleKeyDown = (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      openDetails();
+    }
+  };
+
   return (
     <div
-      key={e.id}
-      className=" h-65 w-auto bg-white/5 border border-white/10 rounded-xl cursor-pointer hover:scale-[1.01] transition overflow-hidden "
-      onClick={() => {
-        (setSelected(e), setIsOpen(true));
-      }}
+      role="button"
+      tabIndex={0}
+      aria-label={`View details for ${e.title}`}
+      onKeyDown={handleKeyDown}
+      className=" h-65 w-auto bg-white/5 border border-white/10 rounded-xl cursor-pointer hover:scale-[1.01] transition overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400"
+      onClick={openDetails}
     >
       <div className="realtive top-0 left-0 right-0 h-0.75 bg-linear-to-r from-cyan-400 to-cyan-600 rounded-t-2xl " />
       {/* Header */}
@@ -71,8 +84,11 @@ const EventCard = ({ e, setSelected, setIsOpen }) => {
         </div>
       </div>
       <div className="flex justify-start items-center text-xs px-3">
-        {e.tags.map((tag) => (
-          <div className="border border-gray-100/5 w-15 h-5 text-teal-600 text-center rounded-full mx-1 bg-gray-800 overflow-hidden">
+        {(e.tags ?? []).map((tag) => (
+          <div
+            key={tag}
+            className="border border-gray-100/5 w-15 h-5 text-teal-600 text-center rounded-full mx-1 bg-gray-800 overflow-hidden"
+          >
             {tag}
           </div>
         ))}

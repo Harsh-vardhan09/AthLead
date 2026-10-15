@@ -6,15 +6,15 @@ const AthLeadLogo = ({ className = "" }) => (
     <img
       src={logoDark}
       alt=""
-      width="560"
-      height="160"
+      width="1062"
+      height="323"
       className="athlead-logo-dark block h-auto w-full"
     />
     <img
       src={logoLight}
       alt=""
-      width="560"
-      height="160"
+      width="1062"
+      height="323"
       className="athlead-logo-light h-auto w-full"
     />
   </span>

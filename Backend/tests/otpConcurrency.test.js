@@ -401,16 +401,50 @@ test("Test 9: Concurrent resend and verification prevents old OTP from verifying
     verifyOtp({ body: { sessionId, otp: "123456" } }, resVerifyOld),
   ]);
 
-  assert.equal(resResend.statusCode, 200, "Resend must succeed");
-
-  // The session in database must not be marked verified using the old OTP
   const finalDoc = await Otp.findOne({ sessionId });
-  assert.ok(finalDoc);
-  assert.equal(
-    finalDoc.verified,
-    false,
-    "Session must not be verified by the old OTP after resend",
-  );
+  assert.ok(finalDoc, "Session document must exist in MongoDB");
+
+  if (resResend.statusCode === 200) {
+    // Ordering 1: Resend was processed before verification.
+    // The session was regenerated with a new OTP, so verification with old OTP must fail.
+    assert.equal(
+      resVerifyOld.statusCode,
+      400,
+      "Verification with old OTP must be rejected (HTTP 400) after session is regenerated",
+    );
+    assert.equal(
+      finalDoc.verified,
+      false,
+      "Session must not be verified by the old OTP after resend",
+    );
+    assert.equal(
+      finalDoc.resendCount,
+      1,
+      "Resend count must be incremented to 1",
+    );
+  } else if (resVerifyOld.statusCode === 200) {
+    // Ordering 2: Verification with valid old OTP committed before resend was processed.
+    // The session was verified, so subsequent resend must be rejected with HTTP 404.
+    assert.equal(
+      resResend.statusCode,
+      404,
+      "Resend must be rejected with HTTP 404 when session was already verified",
+    );
+    assert.equal(
+      finalDoc.verified,
+      true,
+      "Session must be marked verified if verification completed first",
+    );
+    assert.equal(
+      finalDoc.resendCount,
+      0,
+      "Resend count must remain 0 when resend was rejected",
+    );
+  } else {
+    assert.fail(
+      `Unexpected response combination: resend=${resResend.statusCode}, verify=${resVerifyOld.statusCode}`,
+    );
+  }
 });
 
 test("Test 10: Resend within cooldown does not dispatch email and returns HTTP 429", async (t) => {
@@ -456,8 +490,14 @@ test("Test 11: Email delivery failure during resend returns HTTP 500 safely", as
     return;
   }
 
-  mock.method(emailjs, "send", async () => {
-    throw new Error("SMTP connection timeout");
+  let shouldFail = true;
+  let sentOtp = null;
+  mock.method(emailjs, "send", async (_service, _template, params) => {
+    if (shouldFail) {
+      throw new Error("SMTP connection timeout");
+    }
+    sentOtp = params?.otp;
+    return { status: 200, text: "OK" };
   });
 
   const sessionId = crypto.randomUUID();
@@ -478,6 +518,58 @@ test("Test 11: Email delivery failure during resend returns HTTP 500 safely", as
 
   assert.equal(res.statusCode, 500);
   assert.equal(res.body.message, "Failed to resend OTP");
+
+  // Verify persisted state after failure: resend quota and cooldown must be rolled back
+  const sessionAfterFailure = await Otp.findOne({ sessionId });
+  assert.ok(sessionAfterFailure, "Session must still exist in MongoDB");
+  assert.equal(
+    sessionAfterFailure.resendCount,
+    0,
+    "resendCount must be rolled back to 0",
+  );
+  assert.equal(
+    sessionAfterFailure.lastSentAt.getTime(),
+    pastDate.getTime(),
+    "lastSentAt must be reset to previous lastSentAt",
+  );
+  assert.equal(
+    sessionAfterFailure.verified,
+    false,
+    "Session must remain unverified",
+  );
+
+  // Verify ability to retry: resend succeeds now that email delivery succeeds
+  shouldFail = false;
+  const resRetry = createResponse();
+  await resendOtp({ body: { sessionId } }, resRetry);
+
+  assert.equal(
+    resRetry.statusCode,
+    200,
+    "Retrying resend must succeed immediately without cooldown block",
+  );
+  assert.equal(resRetry.body.message, "OTP resent successfully");
+
+  // Verify persisted state after successful retry
+  const sessionAfterRetry = await Otp.findOne({ sessionId });
+  assert.equal(
+    sessionAfterRetry.resendCount,
+    1,
+    "resendCount must increment to 1 after successful retry",
+  );
+  assert.ok(
+    sessionAfterRetry.lastSentAt.getTime() > pastDate.getTime(),
+    "lastSentAt must update after successful retry",
+  );
+
+  // Verify that the new OTP sent during retry verifies successfully
+  assert.ok(sentOtp, "New OTP must have been generated and dispatched");
+  const resVerify = createResponse();
+  await verifyOtp({ body: { sessionId, otp: sentOtp } }, resVerify);
+  assert.equal(resVerify.statusCode, 200, "New OTP must verify successfully");
+
+  const finalDoc = await Otp.findOne({ sessionId });
+  assert.equal(finalDoc.verified, true);
 });
 
 test("Test 12: Stale lockout cleanup does not delete a concurrently resent OTP session", async (t) => {

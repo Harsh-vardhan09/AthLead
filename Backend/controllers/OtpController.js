@@ -120,7 +120,7 @@ export const resendOtp = async (req, res) => {
           attempts: 0,
         },
       },
-      { returnDocument: "after" },
+      { returnDocument: "before" },
     );
 
     if (!updatedDoc) {
@@ -173,7 +173,22 @@ export const resendOtp = async (req, res) => {
       });
     }
 
-    await sendOtpEmail(updatedDoc.email, plainOtp);
+    try {
+      await sendOtpEmail(updatedDoc.email, plainOtp);
+    } catch (emailError) {
+      await Otp.updateOne(
+        {
+          _id: updatedDoc._id,
+          otpHash: newOtpHash,
+          verified: false,
+        },
+        {
+          $inc: { resendCount: -1 },
+          $set: { lastSentAt: updatedDoc.lastSentAt },
+        },
+      );
+      throw emailError;
+    }
 
     return res
       .status(200)

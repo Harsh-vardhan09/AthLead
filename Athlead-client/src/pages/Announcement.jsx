@@ -13,22 +13,27 @@ const Announcement = () => {
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
+  const [usingCache, setUsingCache] = useState(false);
 
   const getNews = async () => {
     try {
       setIsLoading(true);
       setError(null);
+      setUsingCache(false);
       const { data } = await newsService.getAll();
       if (data.success && data.message.length > 0) {
         setNews(data.message);
       } else if (localAnnouncements && localAnnouncements.length > 0) {
         setNews(localAnnouncements);
+        setUsingCache(true);
       } else {
         setNews([]);
       }
-    } catch {
+    } catch (err) {
       console.warn("API unavailable, using local announcements fallback");
       setNews(localAnnouncements);
+      setUsingCache(true);
+      setError(err);
     } finally {
       setIsLoading(false);
     }
@@ -52,10 +57,20 @@ const Announcement = () => {
 
   // Apply search + category filter together
   const filteredNews = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
     return news.filter((item) => {
-      const matchesSearch =
-        !searchQuery ||
-        item.title?.toLowerCase().includes(searchQuery.toLowerCase());
+      const haystack = [
+        item.title,
+        item.content,
+        item.description,
+        item.type,
+        item.author,
+        ...(Array.isArray(item.tags) ? item.tags : []),
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      const matchesSearch = !query || haystack.includes(query);
 
       const matchesCategory =
         activeCategory === "All" ||
@@ -69,7 +84,7 @@ const Announcement = () => {
     });
   }, [news, searchQuery, activeCategory]);
 
-  if (!isLoading && error) {
+  if (!isLoading && error && news.length === 0) {
     return (
       <section className="relative min-h-screen flex flex-col items-center justify-center mt-10 mx-6">
         <div className="w-full max-w-4xl bg-slate-900/60 border border-slate-800 rounded-2xl p-6">
@@ -110,10 +125,27 @@ const Announcement = () => {
       {/* Search + Filter Bar */}
       {!isLoading && (
         <div className="w-full max-w-4xl flex flex-col gap-4 mb-6">
+          {usingCache && (
+            <div className="w-full px-4 py-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-200 text-sm flex items-center justify-between gap-3">
+              <span>
+                Showing cached announcements while the live feed is
+                unavailable.
+              </span>
+              <button
+                onClick={getNews}
+                className="shrink-0 px-3 py-1 rounded-md bg-amber-500/20 border border-amber-500/40 text-xs font-medium hover:bg-amber-500/30 transition-colors"
+              >
+                Retry
+              </button>
+            </div>
+          )}
+          <p className="text-xs text-neutral-400" aria-live="polite">
+            {filteredNews.length} of {news.length} announcements
+          </p>
           <input
             type="text"
-            aria-label="Search announcements by title"
-            placeholder="Search announcements by title..."
+            aria-label="Search announcements"
+            placeholder="Search announcements..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full px-4 py-2 rounded-lg bg-neutral-900 border border-neutral-700 text-white placeholder-neutral-500 focus:outline-none focus:border-teal-500 transition-colors"

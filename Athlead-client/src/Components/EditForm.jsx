@@ -16,7 +16,7 @@ const EditForm = ({ setEditForm }) => {
     setValue,
     reset,
     formState: { errors, isDirty, isSubmitting },
-  } = useForm();
+  } = useForm({ mode: "onBlur" });
 
   const navigate = useNavigate();
   const { setUser, user } = useAuth();
@@ -146,13 +146,24 @@ const EditForm = ({ setEditForm }) => {
                   +91
                 </span>
                 <input
-                  type="number"
-                  placeholder="98765 43210"
-                  {...register("phone", { required: true })}
-                  className={`flex-1 max-w-full bg-white/7 border rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-white/25 outline-none focus:bg-[#1d9e75]/8 transition-all ${
-                    errors.phone ? "border-red-500/80" : "border-white/12"
+                  type="tel"
+                  placeholder="Enter phone number"
+                  {...register("phone", {
+                    required: "Phone number is required",
+                    pattern: {
+                      value: /^[6-9]\d{9}\$/,
+                      message: "Please enter a valid 10-digit phone number",
+                    },
+                  })}
+                  className={`w-full bg-transparent border rounded-xl px-3.5 py-2.5 text-sm text-white outline-none ${
+                    errors.phone ? "border-red-500" : "border-white/12"
                   }`}
                 />
+                {errors.phone && (
+                  <p className="text-xs text-red-500 mt-1">
+                    {errors.phone.message}
+                  </p>
+                )}
               </div>
             </div>
           </div>

@@ -11,7 +11,9 @@ const EventSignup = () => {
     handleSubmit,
     reset,
     formState: { errors, isDirty, isSubmitting },
-  } = useForm();
+  } = useForm({
+    mode: "onBlur", // Immediate inline feedback as users interact with fields
+  });
 
   const navigate = useNavigate();
   const { eventId } = useParams();
@@ -45,31 +47,11 @@ const EventSignup = () => {
           </span>
         </div>
 
-        {/* Stats Bar */}
-        {/* <div className="grid grid-cols-3 gap-2.5 px-8 py-4">
-          {[
-            { num: "847", label: "Registered" },
-            { num: "153", label: "Spots left" },
-            { num: "25 days", label: "To go" },
-          ].map((s) => (
-            <div
-              key={s.label}
-              className="bg-white/5 border border-white/8 rounded-xl py-2.5 text-center"
-            >
-              <span className="block text-lg font-semibold text-[#5dcaa5]">
-                {s.num}
-              </span>
-              <span className="block text-[11px] text-white/35 mt-0.5">
-                {s.label}
-              </span>
-            </div>
-          ))}
-        </div> */}
-
         <form
           onSubmit={handleSubmit(onSubmit)}
           className="flex flex-col gap-3 px-8 pb-8"
         >
+          {/* Full Name */}
           <div>
             <label className="block text-[11px] font-medium text-white/50 uppercase tracking-widest mb-1.5">
               Full Name
@@ -78,7 +60,7 @@ const EventSignup = () => {
               type="text"
               placeholder="John Doe..."
               {...register("fullname", {
-                required: true,
+                required: "Full name is required",
                 maxLength: { value: 20, message: "Must be < 20 letters" },
               })}
               className={`w-full bg-white/7 border rounded-xl px-3.5 py-2.5 text-sm text-white placeholder:text-white/25 outline-none focus:bg-[#1d9e75]/8 transition-all ${
@@ -92,6 +74,7 @@ const EventSignup = () => {
             )}
           </div>
 
+          {/* Email */}
           <div>
             <label className="block text-[11px] font-medium text-white/50 uppercase tracking-widest mb-1.5">
               Email
@@ -100,9 +83,9 @@ const EventSignup = () => {
               type="email"
               placeholder="you@email.com"
               {...register("email", {
-                required: true,
+                required: "Email is required",
                 pattern: {
-                  value: /^[a-zA-Z0-9._%+-]+[@][a-zA-Z0-9.-]+[.][a-zA-Z]{2,}$/,
+                  value: /^[a-zA-Z0-9._%+-]+[@][a-zA-Z0-9.-]+[.][a-zA-Z]{2,}\$/,
                   message: "Wrong email format",
                 },
               })}
@@ -117,7 +100,8 @@ const EventSignup = () => {
             )}
           </div>
 
-          <div className="grid grid-cols-1 gap-3 ">
+          {/* Phone */}
+          <div className="grid grid-cols-1 gap-3">
             <div>
               <label className="block text-[11px] font-medium text-white/50 uppercase tracking-widest mb-1.5">
                 Phone
@@ -127,17 +111,29 @@ const EventSignup = () => {
                   +91
                 </span>
                 <input
-                  type="number"
-                  placeholder="98765 43210"
-                  {...register("phone", { required: true })}
+                  type="tel"
+                  placeholder="9876543210"
+                  {...register("phone", {
+                    required: "Phone number is required",
+                    pattern: {
+                      value: /^[6-9]\d{9}\$/,
+                      message: "Please enter a valid 10-digit mobile number",
+                    },
+                  })}
                   className={`flex-1 max-w-full bg-white/7 border rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-white/25 outline-none focus:bg-[#1d9e75]/8 transition-all ${
                     errors.phone ? "border-red-500/80" : "border-white/12"
                   }`}
                 />
               </div>
+              {errors.phone && (
+                <p className="text-xs text-red-400 mt-1">
+                  {errors.phone.message}
+                </p>
+              )}
             </div>
           </div>
 
+          {/* Gender */}
           <div>
             <label className="block text-[11px] font-medium text-white/50 uppercase tracking-widest mb-1.5">
               Gender
@@ -152,7 +148,7 @@ const EventSignup = () => {
                     type="radio"
                     value={g}
                     {...register("gender", {
-                      required: { value: true, message: "Required" },
+                      required: "Please select a gender",
                     })}
                     className="hidden"
                   />

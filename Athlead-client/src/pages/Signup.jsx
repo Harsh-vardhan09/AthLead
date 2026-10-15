@@ -34,7 +34,9 @@ const Signup = () => {
     setValue,
     getValues,
     formState: { errors },
-  } = useForm();
+  } = useForm({
+    mode: "onBlur", // Validates fields when user leaves them for immediate UX feedback
+  });
 
   const [show, setShow] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
@@ -48,12 +50,9 @@ const Signup = () => {
   const onSubmitForm = async (data) => {
     setSendingOtp(true);
     try {
-      console.log("BASE URL:", import.meta.env.VITE_BASE_URL);
       const res = await authService.sendOtp(data.email);
 
       if (res.data.success) {
-        // Store the UUID in localStorage — OtpVerification reads it from there.
-        // We never put email in localStorage; the UUID maps to email server-side.
         localStorage.setItem(OTP_SESSION_KEY, res.data.sessionId);
         setMaskedEmail(maskEmail(data.email));
         toast.success("OTP sent to your email!");
@@ -72,15 +71,12 @@ const Signup = () => {
   const onOtpVerified = async () => {
     const data = getValues();
 
-    // Format DOB from DD/MM/YYYY → YYYY-MM-DD for the backend
     const formattedData = { ...data };
     if (data.DOB) {
       const [day, month, year] = data.DOB.split("/");
       formattedData.DOB = `${year}-${month}-${day}`;
     }
 
-    // Remove email from the payload — the backend reads it from the OTP session.
-    // This prevents a client-side email substitution after verification.
     delete formattedData.email;
 
     const sessionId = localStorage.getItem(OTP_SESSION_KEY);
@@ -94,11 +90,11 @@ const Signup = () => {
     try {
       const res = await authService.signup({
         ...formattedData,
-        sessionId, // backend looks up email via this UUID
+        sessionId,
       });
 
       if (res.data.success) {
-        localStorage.removeItem(OTP_SESSION_KEY); // clean up
+        localStorage.removeItem(OTP_SESSION_KEY);
         toast.success(res.data.message);
         navigate("/login");
       } else {
@@ -117,7 +113,7 @@ const Signup = () => {
   return (
     <section className="dark-bg relative max-w-screen min-h-screen flex items-center justify-center bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[60px_60px] bg-repeat overflow-hidden">
       <Toaster />
-      <div className="h-2/3 max-w-96 w-full bg-[#08325b]/30 border border-[#47a2bf]/60 text-start text-white rounded-xl">
+      <div className="h-2/3 max-w-96 w-full bg-[#08325b]/30 border border-[#47a2bf]/60 text-start text-white rounded-xl overflow-y-auto p-2">
         {/* ── OTP screen (shown during otp + submitting steps) ──── */}
         {(step === STEP_OTP || step === STEP_SUBMITTING) && (
           <OtpVerification
@@ -159,13 +155,13 @@ const Signup = () => {
                   type="text"
                   placeholder="John Doe..."
                   {...register("fullname", {
-                    required: true,
+                    required: "Full name is required",
                     maxLength: { value: 20, message: "Must be < 20 letters" },
                   })}
-                  className={`input mb-4 ${errors.fullname ? "border-red-500/80" : "border-white/30"}`}
+                  className={`input mb-1 ${errors.fullname ? "border-red-500/80" : "border-white/30"}`}
                 />
                 {errors.fullname && (
-                  <p className="text-sm text-red-700">
+                  <p className="text-xs text-red-400 mb-3">
                     {errors.fullname.message}
                   </p>
                 )}
@@ -178,29 +174,50 @@ const Signup = () => {
                   type="email"
                   placeholder="XXX@ABC.com"
                   {...register("email", {
-                    required: true,
+                    required: "Email is required",
                     pattern: {
-                      value:
-                        /^[a-zA-Z0-9._%+-]+[@][a-zA-Z0-9.-]+[.][a-zA-Z]{2,}$/,
+                      value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
                       message: "Wrong email format",
                     },
                   })}
-                  className={`input mb-4 ${errors.email ? "border-red-500/80" : "border-white/30"}`}
+                  className={`input mb-1 ${errors.email ? "border-red-500/80" : "border-white/30"}`}
                 />
                 {errors.email && (
-                  <p className="text-sm text-red-700">{errors.email.message}</p>
+                  <p className="text-xs text-red-400 mb-3">
+                    {errors.email.message}
+                  </p>
                 )}
               </div>
 
               {/* Phone */}
+              {/* Phone */}
               <div>
                 <label className="label">Phone</label>
                 <input
-                  type="number"
-                  placeholder="+91 XXX XXX"
-                  {...register("phone")}
-                  className={`input mb-4 ${errors.phone ? "border-red-500/80" : "border-white/30"}`}
+                  type="tel"
+                  maxLength={10}
+                  placeholder="9876543210"
+                  {...register("phone", {
+                    required: "Phone number is required",
+                    validate: (value) => {
+                      if (!value) return "Phone number is required";
+                      const cleanVal = String(value).trim();
+                      if (cleanVal.length !== 10) {
+                        return "Phone number must be exactly 10 digits";
+                      }
+                      if (!/^[6-9]/.test(cleanVal)) {
+                        return "Phone number must start with 6, 7, 8, or 9";
+                      }
+                      return true;
+                    },
+                  })}
+                  className={`input mb-1 ${errors.phone ? "border-red-500/80" : "border-white/30"}`}
                 />
+                {errors.phone && (
+                  <p className="text-xs text-red-400 mb-3">
+                    {errors.phone.message}
+                  </p>
+                )}
               </div>
 
               {/* Date of Birth */}
@@ -212,13 +229,10 @@ const Signup = () => {
                     placeholder="DD/MM/YYYY"
                     {...register("DOB", {
                       required: "Date of Birth is Required",
-                      pattern: {
-                        value:
-                          /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/,
-                        message: "Use DD/MM/YYYY Format",
-                      },
+                      // Remove or relax the regex pattern since CalendarPicker already formats it cleanly:
                       validate: {
                         notFuture: (value) => {
+                          if (!value) return "Date of Birth is Required";
                           const [day, month, year] = value
                             .split("/")
                             .map(Number);
@@ -232,7 +246,7 @@ const Signup = () => {
                         },
                       },
                     })}
-                    className={`input mb-4 pr-10 ${errors.DOB ? "border-red-500/80" : "border-white/30"}`}
+                    className={`input mb-1 pr-10 ${errors.DOB ? "border-red-500/80" : "border-white/30"}`}
                     readOnly
                   />
                   <Calendar
@@ -243,19 +257,22 @@ const Signup = () => {
                     <CalendarPicker
                       selectedDate={watch("DOB")}
                       onSelect={(formatted) => {
-                        setValue("DOB", formatted);
+                        setValue("DOB", formatted, { shouldValidate: true });
                       }}
                       onClose={() => setIsCalendarOpen(false)}
                     />
                   )}
                 </div>
                 {errors.DOB && (
-                  <p className="text-sm text-red-700">{errors.DOB.message}</p>
+                  <p className="text-xs text-red-400 mb-3">
+                    {errors.DOB.message}
+                  </p>
                 )}
               </div>
 
               {/* Gender */}
               <div>
+                <label className="label mb-1.5 block">Gender</label>
                 <div className="flex gap-2.5">
                   {["male", "female"].map((g) => (
                     <label
@@ -266,7 +283,7 @@ const Signup = () => {
                         type="radio"
                         value={g}
                         {...register("gender", {
-                          required: { value: true, message: "Required" },
+                          required: "Please select a gender",
                         })}
                         className="hidden"
                       />
@@ -276,7 +293,7 @@ const Signup = () => {
                   ))}
                 </div>
                 {errors.gender && (
-                  <p className="text-xs text-red-400 mt-1">
+                  <p className="text-xs text-red-400 mt-1 mb-3">
                     {errors.gender.message}
                   </p>
                 )}
@@ -284,8 +301,9 @@ const Signup = () => {
 
               {/* Password */}
               <div>
+                <label className="label">Password</label>
                 <fieldset
-                  className={`input mb-4 ${errors.password ? "border-red-500/80" : "border-white/30"}`}
+                  className={`input mb-1 flex items-center ${errors.password ? "border-red-500/80" : "border-white/30"}`}
                 >
                   <input
                     type={show ? "text" : "password"}
@@ -295,17 +313,17 @@ const Signup = () => {
                       validate: (value) =>
                         isValidPassword(value) || PASSWORD_ERROR_MESSAGE,
                     })}
-                    className="transparent w-full h-full focus:outline-none focus:ring-0"
+                    className="bg-transparent w-full h-full focus:outline-none focus:ring-0 text-white"
                   />
                   <div
                     onClick={() => setShow((e) => !e)}
-                    className="cursor-pointer"
+                    className="cursor-pointer text-white/60 hover:text-white"
                   >
-                    {show ? <Eye /> : <EyeClosed />}
+                    {show ? <Eye size={18} /> : <EyeClosed size={18} />}
                   </div>
                 </fieldset>
                 {errors.password && (
-                  <p className="text-sm text-red-700">
+                  <p className="text-xs text-red-400 mb-3">
                     {errors.password.message}
                   </p>
                 )}
@@ -314,7 +332,7 @@ const Signup = () => {
               <button
                 type="submit"
                 disabled={sendingOtp}
-                className="w-full border border-white/20 rounded-md h-9 bg-linear-to-r from-teal-400 via-teal-800 to-blue-400 cursor-pointer hover:from-teal-600 hover:to-blue-800 hover:scale-105 transition-all hover:duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                className="w-full border border-white/20 rounded-md h-9 bg-linear-to-r from-teal-400 via-teal-800 to-blue-400 cursor-pointer hover:from-teal-600 hover:to-blue-800 hover:scale-105 transition-all hover:duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 mt-2"
               >
                 {sendingOtp ? (
                   <span className="flex items-center justify-center gap-2">

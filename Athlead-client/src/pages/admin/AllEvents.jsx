@@ -20,7 +20,12 @@ const fields = [
   { name: "level", label: "Level", type: "text" },
   { name: "location", label: "Location", type: "text" },
   { name: "prize", label: "Prize", type: "number" },
-  { name: "capacity", label: "Capacity (Optional)", type: "number", required: false },
+  {
+    name: "capacity",
+    label: "Capacity (Optional)",
+    type: "number",
+    required: false,
+  },
   { name: "date", label: "Date", type: "date" },
   { name: "time", label: "Time", type: "time" },
 ];
@@ -219,7 +224,7 @@ const AllEvents = () => {
                     defaultValue={
                       f.name === "date"
                         ? editing.date?.slice(0, 10)
-                        : editing[f.name] ?? ""
+                        : (editing[f.name] ?? "")
                     }
                     className="rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-800 outline-none focus:border-slate-500 focus:bg-white"
                   />

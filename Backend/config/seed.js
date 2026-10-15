@@ -60,7 +60,7 @@ const seed = async () => {
       const eventDate = new Date(event.date);
 
       const deleteAt = new Date(eventDate);
-      deleteAt.setDate(deleteAt.getDate() - 3);
+      deleteAt.setUTCDate(deleteAt.getUTCDate() + 3);
 
       return {
         ...event,

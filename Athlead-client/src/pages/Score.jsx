@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import toast from "react-hot-toast";
+import { Loader2 } from "lucide-react";
 import { scoreService } from "../api";
 import { useNavigate } from "react-router";
 import { useAuth } from "../context/useAuth";
+import { ErrorState } from "../Components/AsyncState";
 
 export default function Score() {
   const [formData, setFormData] = useState({
@@ -22,6 +24,8 @@ export default function Score() {
 
   // Track validation errors locally to display inline messages
   const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
 
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -154,12 +158,16 @@ export default function Score() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
+    if (isSubmitting) return;
 
     if (!validateForm()) {
       toast.error("Please fix the errors before submitting.");
       return;
     }
+
+    setIsSubmitting(true);
+    setSubmitError(null);
 
     try {
       const res = await scoreService.submit(formData);
@@ -192,10 +200,15 @@ export default function Score() {
         toast.success(res.data.message);
         navigate("/dashboard");
       } else {
+        setSubmitError(res.data.message || "Failed to generate score");
         toast.error(res.data.message);
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || "Something went wrong.");
+      const errMsg = error.response?.data?.message || "Something went wrong.";
+      setSubmitError(errMsg);
+      toast.error(errMsg);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -292,12 +305,29 @@ export default function Score() {
               </div>
             ))}
           </div>
-          <div className="p-6 flex items-center justify-center">
+          <div className="p-6 flex flex-col items-center justify-center gap-3">
+            {submitError && !isSubmitting && (
+              <ErrorState
+                title="Score Generation Failed"
+                error={submitError}
+                onRetry={handleSubmit}
+                retryLabel="Retry"
+                className="p-3 bg-red-950/30 rounded-xl border border-red-500/30"
+              />
+            )}
             <button
               type="submit"
-              className="mt-4 w-full bg-linear-to-r from-teal-300 to-teal-800 hover:to-purple-700 py-2 px-4 rounded-lg text-white font-semibold"
+              disabled={isSubmitting}
+              className="mt-4 w-full bg-linear-to-r from-teal-300 to-teal-800 hover:to-purple-700 py-2.5 px-4 rounded-lg text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-60 cursor-pointer"
             >
-              Generate Score
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <span>Generating Score...</span>
+                </>
+              ) : (
+                "Generate Score"
+              )}
             </button>
           </div>
         </form>

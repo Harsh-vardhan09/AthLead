@@ -1,6 +1,10 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useAuth } from "../../context/useAuth";
 import { Navigate } from "react-router-dom";
+import { athleteService } from "../../api";
+import LoadingState from "../../Components/LoadingState";
+import ErrorState from "../../Components/ErrorState";
+import EmptyState from "../../Components/EmptyState";
 import {
   Search,
   Filter,
@@ -16,120 +20,6 @@ import {
   Info,
   Award,
 } from "lucide-react";
-
-// Dummy data to simulate athletes based on Issue #25 requirements
-const mockAthletes = [
-  {
-    id: "1",
-    fullname: "Sarah Chen",
-    email: "sarah.chen@example.com",
-    phone: "+1 (555) 012-3456",
-    gender: "Female",
-    state: "California",
-    DOB: "1998-05-14",
-    status: "Active",
-    scoreSummary: { potentialScore: 85, currentRank: 12, trend: "+5" },
-    eventParticipation: [
-      {
-        id: "e1",
-        title: "National Summer Games",
-        date: "2026-08-15",
-        result: "Gold",
-      },
-      {
-        id: "e2",
-        title: "Regional Qualifiers",
-        date: "2026-06-20",
-        result: "Silver",
-      },
-    ],
-    accountType: "Pro Athlete",
-    joinDate: "2025-02-10",
-    image: "https://i.pravatar.cc/150?u=sarah",
-  },
-  {
-    id: "2",
-    fullname: "Marcus Johnson",
-    email: "m.johnson@example.com",
-    phone: "+1 (555) 098-7654",
-    gender: "Male",
-    state: "Texas",
-    DOB: "2001-11-22",
-    status: "Injured",
-    scoreSummary: { potentialScore: 78, currentRank: 45, trend: "-2" },
-    eventParticipation: [
-      {
-        id: "e3",
-        title: "Winter Classics",
-        date: "2025-12-05",
-        result: "Participant",
-      },
-    ],
-    accountType: "Amateur",
-    joinDate: "2025-08-01",
-    image: "https://i.pravatar.cc/150?u=marcus",
-  },
-  {
-    id: "3",
-    fullname: "Elena Rodriguez",
-    email: "elena.r@example.com",
-    phone: "+1 (555) 345-6789",
-    gender: "Female",
-    state: "Florida",
-    DOB: "1995-03-08",
-    status: "Active",
-    scoreSummary: { potentialScore: 92, currentRank: 3, trend: "+12" },
-    eventParticipation: [
-      {
-        id: "e1",
-        title: "National Summer Games",
-        date: "2026-08-15",
-        result: "Bronze",
-      },
-      { id: "e4", title: "Miami Open", date: "2026-04-10", result: "Gold" },
-    ],
-    accountType: "Elite",
-    joinDate: "2024-11-15",
-    image: "https://i.pravatar.cc/150?u=elena",
-  },
-  {
-    id: "4",
-    fullname: "David Kim",
-    email: "dkim99@example.com",
-    phone: "+1 (555) 876-5432",
-    gender: "Male",
-    state: "New York",
-    DOB: "1999-07-30",
-    status: "Inactive",
-    scoreSummary: { potentialScore: 65, currentRank: 112, trend: "0" },
-    eventParticipation: [],
-    accountType: "Amateur",
-    joinDate: "2026-01-20",
-    image: "https://i.pravatar.cc/150?u=david",
-  },
-  {
-    id: "5",
-    fullname: "Aisha Patel",
-    email: "apatel.sports@example.com",
-    phone: "+1 (555) 222-3333",
-    gender: "Female",
-    state: "Illinois",
-    DOB: "2000-01-12",
-    status: "Active",
-    scoreSummary: { potentialScore: 88, currentRank: 24, trend: "+3" },
-    eventParticipation: [
-      {
-        id: "e5",
-        title: "Chicago Marathon",
-        date: "2025-10-10",
-        result: "Top 10",
-      },
-    ],
-    accountType: "Pro Athlete",
-    joinDate: "2025-05-11",
-    image: "https://i.pravatar.cc/150?u=aisha",
-  },
-];
 
 const maskPhone = (phone) => {
   if (!phone) return "N/A";
@@ -152,23 +42,68 @@ const StatusBadge = ({ status }) => {
     </span>
   );
 };
+
 const Athlete = () => {
   const { user } = useAuth();
 
+  const [athletes, setAthletes] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [selectedAthlete, setSelectedAthlete] = useState(null);
+  const [fetchTrigger, setFetchTrigger] = useState(0);
+
+  useEffect(() => {
+    const id = setTimeout(() => setDebouncedSearch(searchQuery.trim()), 300);
+    return () => clearTimeout(id);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    let isCurrent = true;
+    setIsLoading(true);
+    setError(null);
+
+    const params = {};
+    if (debouncedSearch) params.search = debouncedSearch;
+    if (statusFilter !== "All") params.status = statusFilter;
+
+    athleteService
+      .getAll(params)
+      .then((res) => {
+        if (isCurrent) {
+          setAthletes(res.data?.athletes || []);
+        }
+      })
+      .catch((err) => {
+        if (isCurrent) {
+          setError(err);
+        }
+      })
+      .finally(() => {
+        if (isCurrent) {
+          setIsLoading(false);
+        }
+      });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [debouncedSearch, statusFilter, fetchTrigger]);
 
   const filteredAthletes = useMemo(() => {
-    return mockAthletes.filter((athlete) => {
+    const term = searchQuery.trim().toLowerCase();
+    return athletes.filter((athlete) => {
       const matchesSearch =
-        athlete.fullname.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        athlete.email.toLowerCase().includes(searchQuery.toLowerCase());
+        !term ||
+        athlete.fullname?.toLowerCase().includes(term) ||
+        athlete.email?.toLowerCase().includes(term);
       const matchesStatus =
         statusFilter === "All" || athlete.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
-  }, [searchQuery, statusFilter]);
+  }, [athletes, searchQuery, statusFilter]);
 
   if (!user || user.role !== "ADMIN") {
     return <Navigate to="/" replace />;
@@ -223,14 +158,31 @@ const Athlete = () => {
         </div>
       </header>
 
-      {/* Athletes Grid */}
-      {filteredAthletes.length === 0 ? (
-        <div className="flex flex-col items-center justify-center p-12 bg-white rounded-2xl border border-slate-200 border-dashed">
-          <Info className="text-slate-400 mb-3" size={32} />
-          <p className="text-slate-600 font-medium">No athletes found</p>
-          <p className="text-slate-400 text-sm mt-1">
-            Try adjusting your search or filters.
-          </p>
+      {/* Main Content Area: Loading, Error, Empty, or Grid */}
+      {isLoading ? (
+        <div className="flex flex-col items-center justify-center p-12 bg-slate-900 rounded-2xl border border-slate-800 shadow-sm">
+          <LoadingState
+            message="Loading athletes..."
+            description="Fetching athlete profiles and scores from the database"
+          />
+        </div>
+      ) : error ? (
+        <div className="flex flex-col items-center justify-center p-12 bg-slate-900 rounded-2xl border border-slate-800 shadow-sm">
+          <ErrorState
+            title="Failed to load athletes"
+            message="Could not retrieve athlete records from the database."
+            error={error}
+            onRetry={() => setFetchTrigger((prev) => prev + 1)}
+            retryLabel="Retry"
+          />
+        </div>
+      ) : filteredAthletes.length === 0 ? (
+        <div className="flex flex-col items-center justify-center p-12 bg-slate-900 rounded-2xl border border-slate-800 border-dashed shadow-sm">
+          <EmptyState
+            title="No athletes found"
+            description="Try adjusting your search or filters."
+            icon={Info}
+          />
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -372,7 +324,7 @@ const Athlete = () => {
                 <div className="flex flex-col items-center justify-center p-4 bg-indigo-50 rounded-xl text-indigo-900">
                   <Activity className="mb-2 text-indigo-500" size={24} />
                   <span className="text-3xl font-bold">
-                    {selectedAthlete.scoreSummary.potentialScore}
+                    {selectedAthlete.scoreSummary?.potentialScore ?? 0}
                   </span>
                   <span className="text-xs font-medium uppercase tracking-wider text-indigo-600/70 mt-1">
                     Potential Score
@@ -382,7 +334,7 @@ const Athlete = () => {
                 <div className="flex flex-col items-center justify-center p-4 bg-amber-50 rounded-xl text-amber-900">
                   <Trophy className="mb-2 text-amber-500" size={24} />
                   <span className="text-3xl font-bold">
-                    #{selectedAthlete.scoreSummary.currentRank}
+                    #{selectedAthlete.scoreSummary?.currentRank ?? "-"}
                   </span>
                   <span className="text-xs font-medium uppercase tracking-wider text-amber-600/70 mt-1">
                     Current Rank
@@ -392,7 +344,7 @@ const Athlete = () => {
                 <div className="flex flex-col items-center justify-center p-4 bg-emerald-50 rounded-xl text-emerald-900">
                   <Star className="mb-2 text-emerald-500" size={24} />
                   <span className="text-3xl font-bold">
-                    {selectedAthlete.scoreSummary.trend}
+                    {selectedAthlete.scoreSummary?.trend ?? "0"}
                   </span>
                   <span className="text-xs font-medium uppercase tracking-wider text-emerald-600/70 mt-1">
                     Recent Trend
@@ -454,7 +406,8 @@ const Athlete = () => {
                   <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
                     <Award className="text-slate-400" size={20} /> Event History
                   </h3>
-                  {selectedAthlete.eventParticipation.length === 0 ? (
+                  {!selectedAthlete.eventParticipation ||
+                  selectedAthlete.eventParticipation.length === 0 ? (
                     <p className="text-sm text-slate-500 bg-slate-50 p-4 rounded-xl border border-slate-100">
                       No event participation recorded yet.
                     </p>

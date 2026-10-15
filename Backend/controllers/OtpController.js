@@ -32,6 +32,12 @@ export const sendOtp = async (req, res) => {
       .json({ success: false, message: "Email is required" });
   }
 
+  if (typeof email !== "string") {
+    return res
+      .status(400)
+      .json({ success: false, message: "A valid email is required" });
+  }
+
   const normalizedEmail = normalizeEmail(email);
 
   try {
@@ -68,7 +74,7 @@ export const sendOtp = async (req, res) => {
 
     return res.status(500).json({
       success: false,
-      message: error.message,
+      message: "Failed to send OTP. Please try again.",
     });
   }
 };
@@ -122,6 +128,9 @@ export const resendOtp = async (req, res) => {
     const plainOtp = generateOtp();
     otpDoc.setOtp(plainOtp); // also resets attempts and bumps lastSentAt
     otpDoc.resendCount += 1;
+    // Keep the Mongo TTL window in step with the refreshed app-level expiry,
+    // otherwise a late resend would be hard-deleted before the new expiresAt.
+    otpDoc.createdAt = new Date();
     await otpDoc.save();
 
     await sendOtpEmail(otpDoc.email, plainOtp);
@@ -270,6 +279,8 @@ export const SingupAuth = async (req, res) => {
       .json({ success: true, message: "Sign Up Successful" });
   } catch (error) {
     console.error("SingupAuth error:", error);
-    return res.status(500).json({ success: false, message: error.message });
+    return res
+      .status(500)
+      .json({ success: false, message: "Failed to create account. Please try again." });
   }
 };

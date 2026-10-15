@@ -3,21 +3,27 @@ import { useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
 import { eventService } from "../api";
 import toast from "react-hot-toast";
+import { useUnsavedChanges } from "../hooks/useUnsavedChanges";
 
 const EventSignup = () => {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    reset,
+    formState: { errors, isDirty, isSubmitting },
   } = useForm();
 
   const navigate = useNavigate();
   const { eventId } = useParams();
+  const { allowNavigation } = useUnsavedChanges(isDirty);
+
   const onSubmit = async (data) => {
     try {
       const res = await eventService.register(eventId, data);
 
       if (res.data.success) {
+        reset(data);
+        allowNavigation();
         toast.success(res.data.message);
         navigate("/events");
       } else {
@@ -29,6 +35,7 @@ const EventSignup = () => {
       );
     }
   };
+
   return (
     <section className="dark-bg relative max-w-screen min-h-screen flex items-center justify-center ">
       <div className="h-2/3 max-w-180 w-full bg-linear-to-br from-[#0f2027] via-[#1a3a4a] to-[#0f2027] border border-[#1d9e75]/40 text-start text-white rounded-2xl shadow-xl">
@@ -161,12 +168,12 @@ const EventSignup = () => {
             )}
           </div>
 
-          {/* Submit */}
           <button
             type="submit"
-            className="w-full mt-1 py-3.5 rounded-xl bg-gradient-to-r from-[#1d9e75] to-[#378add] text-white text-sm font-semibold tracking-wide cursor-pointer hover:opacity-90 active:scale-99 transition-all"
+            disabled={isSubmitting}
+            className="w-full mt-1 py-3.5 rounded-xl bg-gradient-to-r from-[#1d9e75] to-[#378add] text-white text-sm font-semibold tracking-wide cursor-pointer hover:opacity-90 active:scale-99 transition-all disabled:opacity-50"
           >
-            Register Now
+            {isSubmitting ? "Registering…" : "Register Now"}
           </button>
 
           <p className="text-center text-[11px] text-white/25 mt-1">

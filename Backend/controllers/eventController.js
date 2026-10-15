@@ -1,118 +1,65 @@
 import Event from "../models/Event.js";
 import { Participation, User } from "../models/Users.js";
-
-const escapeRegex = (string) => {
-  return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-};
-
-const getStringParam = (val) => {
-  if (typeof val === "string") return val;
-  if (Array.isArray(val) && typeof val[0] === "string") return val[0];
-  return "";
-};
+import { buildEventQuery } from "../utils/eventQuery.js";
+import { filterCurrentAndUpcomingRegistrations } from "../utils/registeredEvents.js";
+import { createEventVal, updateEventVal } from "../utils/zodValidation.js";
 
 export const findAllEvent = async (req, res, next) => {
   try {
-    const sport = getStringParam(req.query.sport);
-    const level = getStringParam(req.query.level);
-    const location = getStringParam(req.query.location);
-    const date = getStringParam(req.query.date);
-    const status = getStringParam(req.query.status);
-    const search = getStringParam(req.query.search);
-    const pageVal = getStringParam(req.query.page);
-    const limitVal = getStringParam(req.query.limit);
+    const { searchStage, pagination } = buildEventQuery(req.query);
+    let events;
 
-    const query = {};
-
-    if (sport && sport !== "All") {
-      query.sport = { $regex: new RegExp(`^${escapeRegex(sport)}$`, "i") };
-    }
-
-    if (level && level !== "All") {
-      query.level = { $regex: new RegExp(`^${escapeRegex(level)}$`, "i") };
-    }
-
-    if (location.trim() !== "") {
-      query.location = { $regex: escapeRegex(location.trim()), $options: "i" };
-    }
-
-    if (date) {
-      const parsedDate = new Date(date);
-      if (!isNaN(parsedDate.getTime())) {
-        const startOfDay = new Date(parsedDate);
-        startOfDay.setUTCHours(0, 0, 0, 0);
-        const endOfDay = new Date(parsedDate);
-        endOfDay.setUTCHours(23, 59, 59, 999);
-        query.date = { $gte: startOfDay, $lte: endOfDay };
+    if (searchStage) {
+      const pipeline = [searchStage];
+      if (pagination) {
+        pipeline.push(
+          { $skip: (pagination.page - 1) * pagination.limit },
+          { $limit: pagination.limit + 1 },
+        );
       }
-    }
-
-    if (status && status !== "All") {
-      const now = new Date();
-      const startOfToday = new Date(now);
-      startOfToday.setUTCHours(0, 0, 0, 0);
-      const endOfToday = new Date(now);
-      endOfToday.setUTCHours(23, 59, 59, 999);
-
-      const statusLower = status.toLowerCase();
-      if (statusLower === "upcoming" || statusLower === "open") {
-        query.date = query.date
-          ? { ...query.date, $gte: startOfToday }
-          : { $gte: startOfToday };
-      } else if (statusLower === "ongoing" || statusLower === "live") {
-        query.date = { $gte: startOfToday, $lte: endOfToday };
-      } else if (
-        statusLower === "completed" ||
-        statusLower === "closed" ||
-        statusLower === "past"
-      ) {
-        query.date = query.date
-          ? { ...query.date, $lt: startOfToday }
-          : { $lt: startOfToday };
+      events = await Event.aggregate(pipeline).exec();
+    } else {
+      let eventQuery = Event.find({});
+      if (pagination) {
+        eventQuery = eventQuery
+          .sort({ date: 1, _id: 1 })
+          .skip((pagination.page - 1) * pagination.limit)
+          .limit(pagination.limit + 1);
       }
+      events = await eventQuery.exec();
     }
 
-    if (search.trim() !== "") {
-      const regex = new RegExp(escapeRegex(search.trim()), "i");
-      query.$or = [
-        { title: regex },
-        { description: regex },
-        { sport: regex },
-        { location: regex },
-      ];
-    }
-
-    let pageNum = parseInt(pageVal, 10);
-    let limitNum = parseInt(limitVal, 10);
-
-    if (isNaN(limitNum) || limitNum <= 0) {
-      limitNum = 0;
-    }
-    if (isNaN(pageNum) || pageNum <= 0) {
-      pageNum = 1;
-    }
-
-    const total = await Event.countDocuments(query);
-
-    let mongooseQuery = Event.find(query).sort({ date: 1 });
-
-    if (limitNum > 0) {
-      mongooseQuery = mongooseQuery.skip((pageNum - 1) * limitNum).limit(limitNum);
-    }
-
-    const events = await mongooseQuery;
-
-    res.status(200).json({
+    const response = {
       success: true,
       status: 200,
       events,
-      pagination: {
+    };
+
+    if (pagination) {
+      let total;
+      if (searchStage) {
+        const countResult = await Event.aggregate([
+          searchStage,
+          { $count: "total" },
+        ]).exec();
+        total = countResult[0]?.total ?? 0;
+      } else {
+        total = await Event.countDocuments({});
+      }
+
+      const totalPages = Math.ceil(total / pagination.limit);
+
+      response.pagination = {
+        page: pagination.page,
+        limit: pagination.limit,
         total,
-        page: pageNum,
-        limit: limitNum > 0 ? limitNum : total,
-        totalPages: limitNum > 0 ? Math.ceil(total / limitNum) || 1 : 1,
-      },
-    });
+        totalPages,
+        hasMore: events.length > pagination.limit,
+      };
+      response.events = events.slice(0, pagination.limit);
+    }
+
+    return res.status(200).json(response);
   } catch (error) {
     next(error);
   }
@@ -120,27 +67,11 @@ export const findAllEvent = async (req, res, next) => {
 
 //create event
 export const createEvent = async (req, res, next) => {
-  const { data } = req.body;
-
-  const {
-    title,
-    level,
-    location,
-    prize,
-    description,
-    sport,
-    date,
-    time,
-    tags,
-  } = data;
-
-  const eventDate = new Date(date);
-
-  const deleteAt = new Date(eventDate);
-  deleteAt.setDate(deleteAt.getDate() - 3);
-
   try {
-    const event = await Event.create({
+    const rawData = req.body?.data !== undefined ? req.body.data : req.body;
+    const validatedData = req.validatedData || createEventVal.parse(rawData);
+
+    const {
       title,
       level,
       location,
@@ -150,6 +81,26 @@ export const createEvent = async (req, res, next) => {
       date,
       time,
       tags,
+      capacity,
+    } = validatedData;
+
+    const eventDate = new Date(date);
+
+    const deleteAt = new Date(eventDate);
+    deleteAt.setUTCDate(deleteAt.getUTCDate() + 3);
+
+    const event = await Event.create({
+      title,
+      level,
+      location,
+      prize,
+      description,
+      sport,
+      date: eventDate,
+      time,
+      tags,
+      capacity: capacity !== undefined ? Number(capacity) : undefined,
+      registeredCount: 0,
       deleteAt,
     });
 
@@ -187,26 +138,28 @@ export const deleteEvent = async (req, res) => {
   }
 };
 
-export const updateEvent = async (req, res) => {
+export const updateEvent = async (req, res, next) => {
   const { eventId } = req.params;
-  const { data } = req.body;
-
-  const eventDate = new Date(data.date);
-
-  const deleteAt = new Date(eventDate);
-  deleteAt.setDate(deleteAt.getDate() - 3);
 
   try {
-    const event = await Event.findByIdAndUpdate(
-      eventId,
-      {
-        ...data,
-        deleteAt,
-      },
-      {
-        new: true,
-      },
-    );
+    const rawData = req.body?.data !== undefined ? req.body.data : req.body;
+    const validatedData = req.validatedData || updateEventVal.parse(rawData);
+
+    let deleteAt;
+    if (validatedData.date) {
+      const eventDate = new Date(validatedData.date);
+      deleteAt = new Date(eventDate);
+      deleteAt.setUTCDate(deleteAt.getUTCDate() + 3);
+    }
+
+    const updatePayload = {
+      ...validatedData,
+      ...(deleteAt ? { deleteAt } : {}),
+    };
+
+    const event = await Event.findByIdAndUpdate(eventId, updatePayload, {
+      new: true,
+    });
     if (!event) {
       return res.status(404).json({
         success: false,
@@ -220,11 +173,7 @@ export const updateEvent = async (req, res) => {
       event: event,
     });
   } catch (error) {
-    console.log(error);
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error",
-    });
+    next(error);
   }
 };
 
@@ -252,6 +201,48 @@ export const registerEvent = async (req, res, next) => {
       });
     }
 
+    const event = await Event.findById(eventId);
+
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        message: "Event not found",
+      });
+    }
+
+    // Lightweight contact checks so obvious typos do not reach the database.
+    // Missing fields are left to the model layer to preserve existing flows.
+    if (email !== undefined && email !== null && email !== "") {
+      const emailOk =
+        typeof email === "string" &&
+        /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email.trim());
+      if (!emailOk) {
+        return res.status(400).json({
+          success: false,
+          message: "A valid email is required for event registration",
+        });
+      }
+    }
+
+    if (phone !== undefined && phone !== null && phone !== "") {
+      const digits = String(phone).replace(/\D/g, "");
+      if (digits.length !== 10) {
+        return res.status(400).json({
+          success: false,
+          message: "Phone must be a 10-digit number",
+        });
+      }
+    }
+
+    if (fullname !== undefined && fullname !== null && fullname !== "") {
+      if (typeof fullname !== "string" || fullname.trim().length < 2) {
+        return res.status(400).json({
+          success: false,
+          message: "Full name is required for event registration",
+        });
+      }
+    }
+
     const alreadyRegistered = await Participation.findOne({
       user: user._id,
       event: eventId,
@@ -264,6 +255,41 @@ export const registerEvent = async (req, res, next) => {
       });
     }
 
+    let capacityIncremented = false;
+    if (event.capacity != null) {
+      const currentParticipants = await Participation.countDocuments({
+        event: eventId,
+      });
+
+      if (currentParticipants >= event.capacity) {
+        return res.status(400).json({
+          success: false,
+          message: "Event has reached maximum capacity",
+        });
+      }
+
+      // Atomic update to increment registeredCount and guard against race conditions
+      const updatedEvent = await Event.findOneAndUpdate(
+        {
+          _id: eventId,
+          $or: [
+            { registeredCount: { $lt: event.capacity } },
+            { registeredCount: { $exists: false } },
+          ],
+        },
+        { $inc: { registeredCount: 1 } },
+        { new: true },
+      );
+
+      if (!updatedEvent) {
+        return res.status(400).json({
+          success: false,
+          message: "Event has reached maximum capacity",
+        });
+      }
+      capacityIncremented = true;
+    }
+
     try {
       await Participation.create({
         user: user._id,
@@ -274,7 +300,21 @@ export const registerEvent = async (req, res, next) => {
         gender,
         DOB,
       });
+
+      if (!capacityIncremented) {
+        await Event.updateOne(
+          { _id: eventId },
+          { $inc: { registeredCount: 1 } },
+        );
+      }
     } catch (error) {
+      if (capacityIncremented) {
+        await Event.updateOne(
+          { _id: eventId, registeredCount: { $gt: 0 } },
+          { $inc: { registeredCount: -1 } },
+        );
+      }
+
       // Handle MongoDB duplicate-key error
       if (error.code === 11000) {
         return res.status(409).json({
@@ -302,7 +342,7 @@ export const getMyEvents = async (req, res, next) => {
       user: req.user._id,
     }).populate("event", "title sport date location");
 
-    const registrations = participations
+    const registrations = filterCurrentAndUpcomingRegistrations(participations)
       .map((participation) => ({
         _id: participation._id,
         status: "Registered",
@@ -323,6 +363,45 @@ export const getMyEvents = async (req, res, next) => {
       });
 
     res.json(registrations);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const cancelEventRegistration = async (req, res, next) => {
+  try {
+    const eventId = req.params.eventId;
+    const userId = req.user._id;
+
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        message: "Event not found",
+      });
+    }
+
+    const participation = await Participation.findOneAndDelete({
+      user: userId,
+      event: eventId,
+    });
+    if (!participation) {
+      return res.status(404).json({
+        success: false,
+        message: "Registration not found",
+      });
+    }
+
+    await Event.updateOne(
+      { _id: eventId, registeredCount: { $gt: 0 } },
+      { $inc: { registeredCount: -1 } },
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Event registration cancelled successfully",
+      eventId,
+    });
   } catch (error) {
     next(error);
   }

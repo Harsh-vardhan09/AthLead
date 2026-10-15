@@ -5,32 +5,37 @@ import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import { BentoGridDemo } from "../Components/Bento";
 import { announcements as localAnnouncements } from "../assets/assets.js";
+import { EmptyState, ErrorState, LoadingState } from "../Components/AsyncState";
 
 const Announcement = () => {
   const [news, setNews] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
 
   const getNews = async () => {
     try {
       setIsLoading(true);
+      setError(null);
       const { data } = await newsService.getAll();
       if (data.success && data.message.length > 0) {
         setNews(data.message);
-      } else {
+      } else if (localAnnouncements && localAnnouncements.length > 0) {
         setNews(localAnnouncements);
+      } else {
+        setNews([]);
       }
     } catch {
       console.warn("API unavailable, using local announcements fallback");
       setNews(localAnnouncements);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    getNews()
-      .then(() => setIsLoading(false))
-      .catch(() => setIsLoading(false));
+    getNews();
   }, []);
 
   // Build category list dynamically from type + tags fields (case-insensitive dedup)
@@ -64,11 +69,28 @@ const Announcement = () => {
     });
   }, [news, searchQuery, activeCategory]);
 
+  if (!isLoading && error) {
+    return (
+      <section className="relative min-h-screen flex flex-col items-center justify-center mt-10 mx-6">
+        <div className="w-full max-w-4xl bg-slate-900/60 border border-slate-800 rounded-2xl p-6">
+          <ErrorState
+            title="Failed to Load Announcements"
+            error={error}
+            onRetry={getNews}
+          />
+        </div>
+      </section>
+    );
+  }
+
   if (!isLoading && news.length === 0) {
     return (
       <section className="relative min-h-screen flex flex-col items-center justify-center mt-10 mx-6">
-        <div className="flex item-center justify-center w-full max-w-4xl text-lg lg:text-2xl mb-6">
-          <p className="text-white text-3xl">No news available</p>
+        <div className="w-full max-w-4xl bg-slate-900/60 border border-slate-800 rounded-2xl p-6">
+          <EmptyState
+            title="No announcements available"
+            description="Check back later for recent news and updates."
+          />
         </div>
       </section>
     );
@@ -117,10 +139,22 @@ const Announcement = () => {
       )}
 
       {!isLoading && filteredNews.length === 0 ? (
-        <div className="flex items-center justify-center w-full max-w-4xl text-lg mb-6">
-          <p className="text-neutral-400 text-xl">
-            No announcements match your search.
-          </p>
+        <div className="w-full max-w-4xl bg-slate-900/60 border border-slate-800 rounded-2xl p-6 mb-6">
+          <EmptyState
+            title="No announcements match your search"
+            description="Try clearing your search query or switching categories."
+            action={
+              <button
+                onClick={() => {
+                  setSearchQuery("");
+                  setActiveCategory("All");
+                }}
+                className="mt-2 px-4 py-2 text-xs sm:text-sm font-medium rounded-lg bg-teal-500/10 text-teal-300 border border-teal-500/30 hover:bg-teal-500/20 transition-colors cursor-pointer"
+              >
+                Reset filters
+              </button>
+            }
+          />
         </div>
       ) : (
         <BentoGridDemo items={filteredNews} isLoading={isLoading} />

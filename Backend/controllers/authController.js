@@ -30,8 +30,8 @@ export const LoginAuth = async (req, res) => {
   const normalizedEmail = normalizeEmail(email);
   try {
     const user = await User.findOne({ email: normalizedEmail }).select(
-  "+password",
-);
+      "+password",
+    );
     if (!user) {
       return res.json({
         success: false,
@@ -131,23 +131,37 @@ export const editUser = async (req, res) => {
       });
     }
 
+    const updates = {};
+    if (fullname !== undefined) updates.fullname = fullname;
+    if (phone !== undefined) updates.phone = phone;
+    if (address !== undefined) updates.state = address;
+    if (DOB !== undefined) updates.DOB = DOB;
+
+    if (
+      updates.phone !== undefined &&
+      updates.phone !== null &&
+      updates.phone !== ""
+    ) {
+      const digits = String(updates.phone).replace(/\D/g, "");
+      if (digits.length !== 10) {
+        return res.status(400).json({
+          success: false,
+          message: "Phone must be a 10-digit number",
+        });
+      }
+    }
+
     let imageUrl;
 
     if (req.file) {
       const profileUrl = await cloudinary.uploader.upload(req.file.path);
       imageUrl = profileUrl.url;
-      fs.unlink(req.file.path, (err) => {
-        if (err) console.error("Failed to delete temp file:", err);
-      });
     }
 
     await User.findByIdAndUpdate(
       req.user._id,
       {
-        fullname,
-        phone,
-        state: address,
-        DOB,
+        ...updates,
         ...(password !== undefined && { password: hashSync(password, 10) }),
         ...(imageUrl && { image: imageUrl }),
       },
@@ -164,6 +178,16 @@ export const editUser = async (req, res) => {
       success: false,
       message: error.message,
     });
+  } finally {
+    if (req.file?.path) {
+      try {
+        await fs.promises.unlink(req.file.path);
+      } catch (cleanupError) {
+        if (cleanupError.code !== "ENOENT") {
+          console.error("Failed to delete temp file:", cleanupError);
+        }
+      }
+    }
   }
 };
 
@@ -172,18 +196,17 @@ export const getUser = async (req, res) => {
 
   try {
     const user = await User.findOne({ _id: userId }).select(
-      "-password -createdAt -updatedAt -email",
+      "-password -createdAt -updatedAt",
     );
-    console.log(user);
 
     res.json({
       success: true,
       user,
     });
   } catch (error) {
-    res.json({
+    res.status(500).json({
       success: false,
-      message: error,
+      message: "Failed to load profile",
     });
   }
 };

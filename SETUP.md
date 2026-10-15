@@ -197,6 +197,19 @@ You can use:
 
 Update the `MONGODB_URI` variable in the Backend `.env` file accordingly.
 
+The event search and filtering API requires MongoDB Atlas with Atlas Search
+available (MongoDB 7.0+ for the index migration). Before deploying the updated
+backend, run the database migrations from `Backend/`:
+
+```bash
+npx migrate-mongo up
+```
+
+The migration creates the `events_search` index and waits for it to become
+queryable before completing. Filtered event requests rely on this index. A
+local MongoDB instance without Atlas Search cannot serve those filtered
+requests.
+
 ---
 
 

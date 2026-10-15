@@ -6,3 +6,4 @@ export { rankingService } from "./rankingService";
 export { userService } from "./userService";
 export { adminService } from "./adminService";
 export { newsService } from "./newsService";
+export { athleteService } from "./athleteService";

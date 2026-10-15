@@ -10,10 +10,12 @@ const EventSchema = new mongoose.Schema(
     location: { type: String, required: true },
     date: { type: Date, required: true },
     time: { type: String, required: true, trim: true },
+    capacity: { type: Number, min: 1 },
+    registeredCount: { type: Number, default: 0, min: 0 },
     tags: {
       type: [String],
       enum: ["Freestyle", "national", "Youth", "singles", "doubles"], // Allowed values
-      default: ["youth"],
+      default: ["Youth"],
     },
     deleteAt: {
       type: Date,
@@ -22,6 +24,8 @@ const EventSchema = new mongoose.Schema(
   },
   { timestamps: true },
 );
+
+EventSchema.index({ date: 1, _id: 1 }, { name: "events_date_id" });
 
 const Event = mongoose.model("Event", EventSchema);
 

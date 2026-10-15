@@ -11,6 +11,7 @@ import {
   Pencil,
   Trash2,
   X,
+  Users,
 } from "lucide-react";
 
 const fields = [
@@ -19,6 +20,7 @@ const fields = [
   { name: "level", label: "Level", type: "text" },
   { name: "location", label: "Location", type: "text" },
   { name: "prize", label: "Prize", type: "number" },
+  { name: "capacity", label: "Capacity (Optional)", type: "number", required: false },
   { name: "date", label: "Date", type: "date" },
   { name: "time", label: "Time", type: "time" },
 ];
@@ -67,6 +69,11 @@ const AllEvents = () => {
     const id = editing._id;
     const data = Object.fromEntries(new FormData(e.target));
     data.prize = Number(data.prize);
+    if (data.capacity) {
+      data.capacity = Number(data.capacity);
+    } else {
+      data.capacity = null;
+    }
     setBusyId(id);
     try {
       const res = await adminService.updateEvent(id, data);
@@ -150,6 +157,12 @@ const AllEvents = () => {
               <span className="flex items-center gap-1.5">
                 <Trophy size={14} className="text-slate-400" />₹{event.prize}
               </span>
+              {event.capacity != null && (
+                <span className="flex items-center gap-1.5">
+                  <Users size={14} className="text-slate-400" />
+                  {event.registeredCount || 0}/{event.capacity} spots
+                </span>
+              )}
             </div>
 
             {event.tags?.length > 0 && (
@@ -202,11 +215,11 @@ const AllEvents = () => {
                   <input
                     name={f.name}
                     type={f.type}
-                    required
+                    required={f.required !== false}
                     defaultValue={
                       f.name === "date"
                         ? editing.date?.slice(0, 10)
-                        : editing[f.name]
+                        : editing[f.name] ?? ""
                     }
                     className="rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-800 outline-none focus:border-slate-500 focus:bg-white"
                   />

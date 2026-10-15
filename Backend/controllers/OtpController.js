@@ -95,45 +95,100 @@ export const resendOtp = async (req, res) => {
   }
 
   try {
-    const otpDoc = await Otp.findOne({ sessionId, verified: false });
-
-    if (!otpDoc) {
-      return res.status(404).json({
-        success: false,
-        message: "Session not found or already verified. Please start over.",
-      });
-    }
-
-    // Cooldown guard
-    const elapsed = Date.now() - new Date(otpDoc.lastSentAt).getTime();
-    if (elapsed < RESEND_COOLDOWN_MS) {
-      const waitSecs = Math.ceil((RESEND_COOLDOWN_MS - elapsed) / 1000);
-      return res.status(429).json({
-        success: false,
-        message: `Please wait ${waitSecs}s before resending`,
-      });
-    }
-
-    // Per-session resend cap — prevents email-budget exhaustion via session replay
-    if (otpDoc.resendCount >= MAX_RESENDS) {
-      return res.status(429).json({
-        success: false,
-        message:
-          "Maximum resend limit reached. Please start a new OTP request.",
-      });
-    }
-
-    // Generate a new OTP and overwrite the hash in the same document.
-    // The sessionId stays the same — client does not need to update localStorage.
+    const now = new Date();
+    const cooldownThreshold = new Date(now.getTime() - RESEND_COOLDOWN_MS);
     const plainOtp = generateOtp();
-    otpDoc.setOtp(plainOtp); // also resets attempts and bumps lastSentAt
-    otpDoc.resendCount += 1;
-    // Keep the Mongo TTL window in step with the refreshed app-level expiry,
-    // otherwise a late resend would be hard-deleted before the new expiresAt.
-    otpDoc.createdAt = new Date();
-    await otpDoc.save();
+    const newOtpHash = hashSync(plainOtp, 8);
+    const newExpiresAt = new Date(now.getTime() + 5 * 60 * 1000);
 
-    await sendOtpEmail(otpDoc.email, plainOtp);
+    // Atomically transition state: enforces verified: false, expiry, cooldown, and resendCount cap
+    const updatedDoc = await Otp.findOneAndUpdate(
+      {
+        sessionId,
+        verified: false,
+        expiresAt: { $gt: now },
+        resendCount: { $lt: MAX_RESENDS },
+        lastSentAt: { $lte: cooldownThreshold },
+      },
+      {
+        $inc: { resendCount: 1 },
+        $set: {
+          otpHash: newOtpHash,
+          lastSentAt: now,
+          expiresAt: newExpiresAt,
+          createdAt: now,
+          attempts: 0,
+        },
+      },
+      { returnDocument: "before" },
+    );
+
+    if (!updatedDoc) {
+      // Find session to determine exact reason for failure
+      const existing = await Otp.findOne({ sessionId });
+
+      if (!existing || existing.verified) {
+        return res.status(404).json({
+          success: false,
+          message: "Session not found or already verified. Please start over.",
+        });
+      }
+
+      if (now > existing.expiresAt) {
+        await Otp.deleteOne({
+          _id: existing._id,
+          verified: false,
+          expiresAt: { $lte: now },
+        });
+        return res.status(400).json({
+          success: false,
+          message: "OTP expired. Please request a new one.",
+          expired: true,
+        });
+      }
+
+      if (existing.resendCount >= MAX_RESENDS) {
+        return res.status(429).json({
+          success: false,
+          message:
+            "Maximum resend limit reached. Please start a new OTP request.",
+        });
+      }
+
+      const elapsed = now.getTime() - new Date(existing.lastSentAt).getTime();
+      if (elapsed < RESEND_COOLDOWN_MS) {
+        const waitSecs = Math.max(
+          1,
+          Math.ceil((RESEND_COOLDOWN_MS - elapsed) / 1000),
+        );
+        return res.status(429).json({
+          success: false,
+          message: `Please wait ${waitSecs}s before resending`,
+        });
+      }
+
+      return res.status(429).json({
+        success: false,
+        message: "Please wait before resending",
+      });
+    }
+
+    try {
+      await sendOtpEmail(updatedDoc.email, plainOtp);
+    } catch (emailError) {
+      await Otp.updateOne(
+        {
+          _id: updatedDoc._id,
+          otpHash: newOtpHash,
+          verified: false,
+        },
+        {
+          $inc: { resendCount: -1 },
+          $set: { lastSentAt: updatedDoc.lastSentAt },
+        },
+      );
+      throw emailError;
+    }
 
     return res
       .status(200)
@@ -172,7 +227,11 @@ export const verifyOtp = async (req, res) => {
 
     // Application-level expiry check (5 min), independent of the DB TTL (10 min)
     if (new Date() > otpDoc.expiresAt) {
-      await otpDoc.deleteOne();
+      await Otp.deleteOne({
+        _id: otpDoc._id,
+        verified: false,
+        expiresAt: { $lte: new Date() },
+      });
       return res.status(400).json({
         success: false,
         message: "OTP expired. Please request a new one.",
@@ -182,7 +241,12 @@ export const verifyOtp = async (req, res) => {
 
     // Max attempts guard
     if (otpDoc.attempts >= MAX_ATTEMPTS) {
-      await otpDoc.deleteOne();
+      await Otp.deleteOne({
+        _id: otpDoc._id,
+        verified: false,
+        otpHash: otpDoc.otpHash,
+        attempts: { $gte: MAX_ATTEMPTS },
+      });
       return res.status(429).json({
         success: false,
         message: "Too many failed attempts. Please request a new OTP.",
@@ -193,19 +257,141 @@ export const verifyOtp = async (req, res) => {
     const isValid = otpDoc.verifyOtp(otp);
 
     if (!isValid) {
-      otpDoc.attempts += 1;
-      await otpDoc.save();
-      const remaining = MAX_ATTEMPTS - otpDoc.attempts;
+      // Atomic increment with compare-and-set: ensure attempts count is bound to the tested otpHash
+      const updated = await Otp.findOneAndUpdate(
+        {
+          _id: otpDoc._id,
+          verified: false,
+          otpHash: otpDoc.otpHash,
+          attempts: { $lt: MAX_ATTEMPTS },
+        },
+        { $inc: { attempts: 1 } },
+        { returnDocument: "after" },
+      );
+
+      if (updated) {
+        if (updated.attempts >= MAX_ATTEMPTS) {
+          // Conditional deletion: only delete if the document is still in this locked state
+          // and has not been refreshed by a concurrent resend
+          await Otp.deleteOne({
+            _id: otpDoc._id,
+            verified: false,
+            otpHash: otpDoc.otpHash,
+            attempts: { $gte: MAX_ATTEMPTS },
+          });
+          return res.status(429).json({
+            success: false,
+            message: "Too many failed attempts. Please request a new OTP.",
+            locked: true,
+          });
+        }
+
+        const remaining = MAX_ATTEMPTS - updated.attempts;
+        return res.status(400).json({
+          success: false,
+          message: `Invalid OTP. ${remaining} attempt${remaining === 1 ? "" : "s"} remaining`,
+          attemptsRemaining: remaining,
+        });
+      }
+
+      // If !updated, determine whether session was verified, locked, or replaced concurrently
+      const current = await Otp.findById(otpDoc._id);
+
+      if (current?.verified) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid OTP.",
+        });
+      }
+
+      if (!current || current.attempts >= MAX_ATTEMPTS) {
+        if (current) {
+          await Otp.deleteOne({
+            _id: otpDoc._id,
+            verified: false,
+            otpHash: otpDoc.otpHash,
+            attempts: { $gte: MAX_ATTEMPTS },
+          });
+        }
+        return res.status(429).json({
+          success: false,
+          message: "Too many failed attempts. Please request a new OTP.",
+          locked: true,
+        });
+      }
+
+      if (current.otpHash !== otpDoc.otpHash) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid or expired session. Please request a new OTP.",
+        });
+      }
+
       return res.status(400).json({
         success: false,
-        message: `Invalid OTP. ${remaining} attempt${remaining === 1 ? "" : "s"} remaining`,
-        attemptsRemaining: remaining,
+        message: "Invalid OTP.",
       });
     }
 
-    // Mark session as verified — signup will check this
-    otpDoc.verified = true;
-    await otpDoc.save();
+    // Atomic verify: only transitions to verified: true if session is still unverified,
+    // matches the tested otpHash, is unexpired, and under MAX_ATTEMPTS
+    const verifiedDoc = await Otp.findOneAndUpdate(
+      {
+        _id: otpDoc._id,
+        verified: false,
+        otpHash: otpDoc.otpHash,
+        attempts: { $lt: MAX_ATTEMPTS },
+        expiresAt: { $gt: new Date() },
+      },
+      { $set: { verified: true } },
+      { returnDocument: "after" },
+    );
+
+    if (!verifiedDoc) {
+      const current = await Otp.findById(otpDoc._id);
+
+      if (current?.verified) {
+        // Already verified by a concurrent valid request
+        return res
+          .status(200)
+          .json({ success: true, message: "Email verified successfully" });
+      }
+
+      if (!current || current.attempts >= MAX_ATTEMPTS) {
+        if (current) {
+          await Otp.deleteOne({
+            _id: otpDoc._id,
+            verified: false,
+            otpHash: otpDoc.otpHash,
+            attempts: { $gte: MAX_ATTEMPTS },
+          });
+        }
+        return res.status(429).json({
+          success: false,
+          message: "Too many failed attempts. Please request a new OTP.",
+          locked: true,
+        });
+      }
+
+      if (new Date() > current.expiresAt) {
+        await Otp.deleteOne({
+          _id: otpDoc._id,
+          verified: false,
+          expiresAt: { $lte: new Date() },
+        });
+        return res.status(400).json({
+          success: false,
+          message: "OTP expired. Please request a new one.",
+          expired: true,
+        });
+      }
+
+      // If otpHash changed due to a concurrent resend
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or expired session. Please request a new OTP.",
+      });
+    }
 
     return res
       .status(200)
@@ -279,8 +465,9 @@ export const SingupAuth = async (req, res) => {
       .json({ success: true, message: "Sign Up Successful" });
   } catch (error) {
     console.error("SingupAuth error:", error);
-    return res
-      .status(500)
-      .json({ success: false, message: "Failed to create account. Please try again." });
+    return res.status(500).json({
+      success: false,
+      message: "Failed to create account. Please try again.",
+    });
   }
 };

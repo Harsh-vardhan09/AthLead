@@ -2,6 +2,15 @@ import passport from "passport";
 
 export const requireAuth = passport.authenticate("jwt", { session: false });
 
+export const optionalAuth = (req, res, next) => {
+  passport.authenticate("jwt", { session: false }, (err, user) => {
+    if (user) {
+      req.user = user;
+    }
+    next();
+  })(req, res, next);
+};
+
 export const requireRole = (...roles) => {
   return (req, res, next) => {
     if (!req.user || !roles.includes(req.user.role)) {

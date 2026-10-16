@@ -1,7 +1,9 @@
 import { compareSync, hashSync } from "bcrypt";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
 import { LoginVal } from "../utils/zodValidation.js";
 import { User } from "../models/Users.js";
+import { RefreshToken } from "../models/RefreshToken.js";
 import { v2 as cloudinary } from "cloudinary";
 import { normalizeEmail } from "../utils/normalizeEmail.js";
 import fs from "fs";
@@ -15,6 +17,10 @@ cloudinary.config({
   api_key: process.env.CLOUD_API_KEY,
   api_secret: process.env.CLOUD_SECRET,
 });
+
+const hashToken = (token) => {
+  return crypto.createHash("sha256").update(token).digest("hex");
+};
 
 //login Auth
 export const LoginAuth = async (req, res) => {
@@ -45,11 +51,24 @@ export const LoginAuth = async (req, res) => {
       });
     }
 
-    const refreshToken = user.generateRefreshToken();
+    const family = crypto.randomUUID();
+    const refreshToken = user.generateRefreshToken(family);
     const accessToken = user.generateAccessToken();
 
-    //  console.log(refreshToken);
-    //  console.log(accessToken);
+    const decoded = jwt.decode(refreshToken);
+    const expiresAt = decoded?.exp
+      ? new Date(decoded.exp * 1000)
+      : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+    const tokenHash = hashToken(refreshToken);
+
+    await RefreshToken.create({
+      user: user._id,
+      tokenHash,
+      family,
+      revoked: false,
+      expiresAt,
+    });
 
     const option = {
       httpOnly: true,
@@ -71,8 +90,7 @@ export const LoginAuth = async (req, res) => {
 };
 
 export const refesh = async (req, res) => {
-  const token = req.cookies.refreshToken;
-  // console.log(token);
+  const token = req.cookies?.refreshToken;
 
   try {
     if (!token) {
@@ -81,16 +99,56 @@ export const refesh = async (req, res) => {
         message: "token not present",
       });
     }
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    if (!decoded) {
+
+    const secret = process.env.REFRESH_TOKEN_SECRET || process.env.JWT_SECRET;
+    let decoded;
+    try {
+      decoded = jwt.verify(token, secret);
+    } catch {
       return res.status(401).json({
         success: false,
         message: "invalid token",
       });
     }
-    const user = await User.findOne({ _id: decoded.id });
-    // console.log(user);
 
+    const tokenHash = hashToken(token);
+    const storedToken = await RefreshToken.findOne({ tokenHash });
+
+    if (!storedToken) {
+      return res.status(401).json({
+        success: false,
+        message: "Session expired. Please log in again.",
+      });
+    }
+
+    // Reuse detection: If an already-revoked refresh token is presented, revoke the entire family
+    if (storedToken.revoked) {
+      await RefreshToken.updateMany(
+        { family: storedToken.family },
+        { revoked: true },
+      );
+      res.clearCookie("refreshToken");
+      return res.status(401).json({
+        success: false,
+        message: "Invalid or revoked refresh token",
+      });
+    }
+
+    // Atomically claim the current token to prevent race conditions during rotation
+    const claimedToken = await RefreshToken.findOneAndUpdate(
+      { _id: storedToken._id, revoked: false },
+      { $set: { revoked: true } },
+      { new: true },
+    );
+
+    if (!claimedToken) {
+      return res.status(401).json({
+        success: false,
+        message: "Session expired. Please log in again.",
+      });
+    }
+
+    const user = await User.findOne({ _id: decoded.id });
     if (!user) {
       return res.status(401).json({
         success: false,
@@ -98,9 +156,32 @@ export const refesh = async (req, res) => {
       });
     }
 
+    // Rotate: Issue new refresh token within the same family
+    const newRefreshToken = user.generateRefreshToken(storedToken.family);
     const newAccessToken = user.generateAccessToken();
 
-    res.status(200).json({
+    const newDecoded = jwt.decode(newRefreshToken);
+    const newExpiresAt = newDecoded?.exp
+      ? new Date(newDecoded.exp * 1000)
+      : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+    const newTokenHash = hashToken(newRefreshToken);
+
+    await RefreshToken.create({
+      user: user._id,
+      tokenHash: newTokenHash,
+      family: storedToken.family,
+      revoked: false,
+      expiresAt: newExpiresAt,
+    });
+
+    const option = {
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
+    };
+
+    res.cookie("refreshToken", newRefreshToken, option).status(200).json({
       success: true,
       accessToken: newAccessToken,
     });
@@ -112,7 +193,25 @@ export const refesh = async (req, res) => {
   }
 };
 
-export const logout = (req, res) => {
+export const logout = async (req, res) => {
+  try {
+    const token = req.cookies?.refreshToken;
+    if (token) {
+      const tokenHash = hashToken(token);
+      const storedToken = await RefreshToken.findOne({ tokenHash });
+      if (storedToken) {
+        await RefreshToken.updateMany(
+          { family: storedToken.family },
+          { revoked: true },
+        );
+      }
+    } else if (req.user?._id) {
+      await RefreshToken.updateMany({ user: req.user._id }, { revoked: true });
+    }
+  } catch (error) {
+    console.error("Logout token revocation error:", error);
+  }
+
   res.clearCookie("accessToken").clearCookie("refreshToken");
   res.json({
     success: true,

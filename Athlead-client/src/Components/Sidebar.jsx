@@ -33,7 +33,7 @@ const Sidebar = ({ sidebar, setSidebar, navItems, pinned, showLogout }) => {
     <>
       <aside
         className={cn(
-          "fixed top-0 left-0 h-full w-64 bg-black/40 z-30 transform transition-transform duration-300",
+          "fixed top-0 left-0 h-full w-64 bg-slate-900 text-white z-30 transform transition-transform duration-300 shadow-2xl lg:shadow-none border-r border-slate-800",
           sidebar ? "translate-x-0" : "-translate-x-full",
           pinned &&
             "lg:sticky lg:top-0 lg:h-screen lg:shrink-0 lg:translate-x-0",

@@ -20,7 +20,12 @@ const fields = [
   { name: "level", label: "Level", type: "text" },
   { name: "location", label: "Location", type: "text" },
   { name: "prize", label: "Prize", type: "number" },
-  { name: "capacity", label: "Capacity (Optional)", type: "number", required: false },
+  {
+    name: "capacity",
+    label: "Capacity (Optional)",
+    type: "number",
+    required: false,
+  },
   { name: "date", label: "Date", type: "date" },
   { name: "time", label: "Time", type: "time" },
 ];
@@ -94,7 +99,7 @@ const AllEvents = () => {
   };
 
   return (
-    <section className="min-h-screen w-full flex flex-col p-5 sm:p-8 gap-6 bg-slate-50">
+    <section className="min-h-screen w-full min-w-0 flex flex-col p-4 sm:p-6 lg:p-8 gap-6 bg-slate-50">
       <header className="flex items-baseline gap-3">
         <h1 className="text-2xl font-bold text-slate-800">All Events</h1>
         <span className="text-sm text-slate-500">{events.length} total</span>
@@ -109,16 +114,16 @@ const AllEvents = () => {
         {events.map((event) => (
           <li
             key={event._id}
-            className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition-shadow"
+            className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm hover:shadow-md transition-shadow"
           >
             <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <h2 className="text-lg font-semibold text-slate-800">
+              <div className="min-w-0 flex-1">
+                <h2 className="text-lg font-semibold text-slate-800 break-words">
                   {event.title}
                 </h2>
                 <p className="text-sm text-slate-500">{event.sport}</p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 shrink-0">
                 <button
                   onClick={() => setEditing(event)}
                   className="flex items-center gap-1.5 rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
@@ -186,9 +191,12 @@ const AllEvents = () => {
           ref={(el) => el?.showModal()}
           onClose={() => setEditing(null)}
           onClick={(e) => e.target.tagName === "DIALOG" && setEditing(null)}
-          className="m-auto w-[92vw] max-w-2xl rounded-2xl border border-slate-200 bg-white p-0 shadow-2xl backdrop:bg-slate-900/50 backdrop:backdrop-blur-sm"
+          className="m-auto w-[95vw] sm:w-[92vw] max-w-2xl rounded-2xl border border-slate-200 bg-white p-0 shadow-2xl backdrop:bg-slate-900/50 backdrop:backdrop-blur-sm"
         >
-          <form onSubmit={handleUpdate} className="flex flex-col gap-4 p-6">
+          <form
+            onSubmit={handleUpdate}
+            className="flex flex-col gap-4 p-4 sm:p-6"
+          >
             <div className="flex items-start justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-slate-800">
@@ -219,7 +227,7 @@ const AllEvents = () => {
                     defaultValue={
                       f.name === "date"
                         ? editing.date?.slice(0, 10)
-                        : editing[f.name] ?? ""
+                        : (editing[f.name] ?? "")
                     }
                     className="rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-800 outline-none focus:border-slate-500 focus:bg-white"
                   />

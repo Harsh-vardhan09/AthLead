@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
 
 const UserSchema = new mongoose.Schema(
   {
@@ -56,9 +57,17 @@ UserSchema.methods.generateAccessToken = function () {
   });
 };
 
-UserSchema.methods.generateRefreshToken = function () {
-  return jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRE,
+UserSchema.methods.generateRefreshToken = function (family) {
+  const secret = process.env.REFRESH_TOKEN_SECRET || process.env.JWT_SECRET;
+  const payload = {
+    id: this._id,
+    jti: crypto.randomUUID(),
+  };
+  if (family) {
+    payload.family = family;
+  }
+  return jwt.sign(payload, secret, {
+    expiresIn: process.env.JWT_EXPIRE || "7d",
   });
 };
 

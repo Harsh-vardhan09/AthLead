@@ -33,7 +33,7 @@ const EventSignup = () => {
       }
     } catch (error) {
       toast.error(
-        error.response?.data?.message || "Could not register for event",
+        error.response?.data?.message || "Could not register for event"
       );
     }
   };
@@ -53,12 +53,18 @@ const EventSignup = () => {
         >
           {/* Full Name */}
           <div>
-            <label className="block text-[11px] font-medium text-white/50 uppercase tracking-widest mb-1.5">
+            <label
+              htmlFor="fullname"
+              className="block text-[11px] font-medium text-white/50 uppercase tracking-widest mb-1.5"
+            >
               Full Name
             </label>
             <input
+              id="fullname"
               type="text"
               placeholder="John Doe..."
+              aria-invalid={errors.fullname ? "true" : "false"}
+              aria-describedby={errors.fullname ? "fullname-error" : undefined}
               {...register("fullname", {
                 required: "Full name is required",
                 maxLength: { value: 20, message: "Must be < 20 letters" },
@@ -68,7 +74,7 @@ const EventSignup = () => {
               }`}
             />
             {errors.fullname && (
-              <p className="text-xs text-red-400 mt-1">
+              <p id="fullname-error" className="text-xs text-red-400 mt-1">
                 {errors.fullname.message}
               </p>
             )}
@@ -76,16 +82,22 @@ const EventSignup = () => {
 
           {/* Email */}
           <div>
-            <label className="block text-[11px] font-medium text-white/50 uppercase tracking-widest mb-1.5">
+            <label
+              htmlFor="email"
+              className="block text-[11px] font-medium text-white/50 uppercase tracking-widest mb-1.5"
+            >
               Email
             </label>
             <input
+              id="email"
               type="email"
               placeholder="you@email.com"
+              aria-invalid={errors.email ? "true" : "false"}
+              aria-describedby={errors.email ? "email-error" : undefined}
               {...register("email", {
                 required: "Email is required",
                 pattern: {
-                  value: /^[a-zA-Z0-9._%+-]+[@][a-zA-Z0-9.-]+[.][a-zA-Z]{2,}\$/,
+                  value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\$/,
                   message: "Wrong email format",
                 },
               })}
@@ -94,7 +106,7 @@ const EventSignup = () => {
               }`}
             />
             {errors.email && (
-              <p className="text-xs text-red-400 mt-1">
+              <p id="email-error" className="text-xs text-red-400 mt-1">
                 {errors.email.message}
               </p>
             )}
@@ -103,7 +115,10 @@ const EventSignup = () => {
           {/* Phone */}
           <div className="grid grid-cols-1 gap-3">
             <div>
-              <label className="block text-[11px] font-medium text-white/50 uppercase tracking-widest mb-1.5">
+              <label
+                htmlFor="phone"
+                className="block text-[11px] font-medium text-white/50 uppercase tracking-widest mb-1.5"
+              >
                 Phone
               </label>
               <div className="flex gap-2">
@@ -111,13 +126,21 @@ const EventSignup = () => {
                   +91
                 </span>
                 <input
+                  id="phone"
                   type="tel"
+                  maxLength={10}
                   placeholder="9876543210"
+                  aria-invalid={errors.phone ? "true" : "false"}
+                  aria-describedby={errors.phone ? "phone-error" : undefined}
                   {...register("phone", {
                     required: "Phone number is required",
-                    pattern: {
-                      value: /^[6-9]\d{9}\$/,
-                      message: "Please enter a valid 10-digit mobile number",
+                    validate: (value) => {
+                      if (!value) return "Phone number is required";
+                      const cleanVal = String(value).trim();
+                      if (!/^[6-9]\d{9}\$/.test(cleanVal)) {
+                        return "Please enter a valid 10-digit mobile number starting with 6-9";
+                      }
+                      return true;
                     },
                   })}
                   className={`flex-1 max-w-full bg-white/7 border rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-white/25 outline-none focus:bg-[#1d9e75]/8 transition-all ${
@@ -126,7 +149,7 @@ const EventSignup = () => {
                 />
               </div>
               {errors.phone && (
-                <p className="text-xs text-red-400 mt-1">
+                <p id="phone-error" className="text-xs text-red-400 mt-1">
                   {errors.phone.message}
                 </p>
               )}
@@ -147,6 +170,8 @@ const EventSignup = () => {
                   <input
                     type="radio"
                     value={g}
+                    aria-invalid={errors.gender ? "true" : "false"}
+                    aria-describedby={errors.gender ? "gender-error" : undefined}
                     {...register("gender", {
                       required: "Please select a gender",
                     })}
@@ -158,7 +183,7 @@ const EventSignup = () => {
               ))}
             </div>
             {errors.gender && (
-              <p className="text-xs text-red-400 mt-1">
+              <p id="gender-error" className="text-xs text-red-400 mt-1">
                 {errors.gender.message}
               </p>
             )}

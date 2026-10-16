@@ -138,7 +138,10 @@ const EditForm = ({ setEditForm }) => {
 
           <div className="grid grid-cols-1 gap-3">
             <div>
-              <label className="block text-[11px] font-medium text-white/50 uppercase tracking-widest mb-1.5">
+              <label
+                htmlFor="phone"
+                className="block text-[11px] font-medium text-white/50 uppercase tracking-widest mb-1.5"
+              >
                 Phone
               </label>
               <div className="flex gap-2">
@@ -146,25 +149,33 @@ const EditForm = ({ setEditForm }) => {
                   +91
                 </span>
                 <input
+                  id="phone"
                   type="tel"
-                  placeholder="Enter phone number"
+                  maxLength={10}
+                  placeholder="9876543210"
+                  aria-invalid={errors.phone ? "true" : "false"}
+                  aria-describedby={errors.phone ? "phone-error" : undefined}
                   {...register("phone", {
                     required: "Phone number is required",
-                    pattern: {
-                      value: /^[6-9]\d{9}\$/,
-                      message: "Please enter a valid 10-digit phone number",
+                    validate: (value) => {
+                      if (!value) return "Phone number is required";
+                      const cleanVal = String(value).trim();
+                      if (!/^[6-9]\d{9}\$/.test(cleanVal)) {
+                        return "Please enter a valid 10-digit mobile number starting with 6-9";
+                      }
+                      return true;
                     },
                   })}
-                  className={`w-full bg-transparent border rounded-xl px-3.5 py-2.5 text-sm text-white outline-none ${
-                    errors.phone ? "border-red-500" : "border-white/12"
+                  className={`flex-1 max-w-full bg-white/7 border rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-white/25 outline-none focus:bg-[#1d9e75]/8 transition-all ${
+                    errors.phone ? "border-red-500/80" : "border-white/12"
                   }`}
                 />
-                {errors.phone && (
-                  <p className="text-xs text-red-500 mt-1">
-                    {errors.phone.message}
-                  </p>
-                )}
               </div>
+              {errors.phone && (
+                <p id="phone-error" className="text-xs text-red-400 mt-1">
+                  {errors.phone.message}
+                </p>
+              )}
             </div>
           </div>
 

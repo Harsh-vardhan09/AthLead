@@ -1,6 +1,7 @@
 import hashlib
 import logging
 import math
+import os
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
@@ -57,11 +58,17 @@ except Exception:
 app = FastAPI()
 
 
+def _allowed_origins():
+    raw = os.getenv("ML_ALLOWED_ORIGINS", "")
+    origins = [part.strip() for part in raw.split(",") if part.strip()]
+    return origins if origins else ["http://localhost:5173"]
+
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
+    allow_origins=_allowed_origins(),
+    allow_credentials=False,
+    allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
 
@@ -98,13 +105,21 @@ class Athlete(BaseModel):
 @app.get("/health")
 def health_check():
     """Verify ML service health and artifact readiness."""
+    from fastapi.responses import JSONResponse
+
     is_model_loaded = (
         model is not None and scaler is not None and label_encoders is not None
     )
-    return {
+    body = {
         "status": "ok" if is_model_loaded else "degraded",
         "model_loaded": is_model_loaded,
+        "model_version": MODEL_VERSION,
+        "schema_version": CURRENT_SCHEMA_VERSION,
     }
+    return JSONResponse(
+        status_code=200 if is_model_loaded else 503,
+        content=body,
+    )
 
 
 @app.get("/model/info")
@@ -147,15 +162,30 @@ def rank_athlete(athlete: Athlete):
             if col in df:
                 if df[col].iloc[0] not in encoder.classes_:
                     raise HTTPException(status_code=422, detail=f"Unknown {col}")
-                df[col] = encoder.transform(df[col])
+                try:
+                    df[col] = encoder.transform(df[col])
+                except ValueError as exc:
+                    logger.warning("Encoder rejected value for %s", col)
+                    raise HTTPException(
+                        status_code=422, detail=f"Invalid {col}"
+                    ) from exc
     except HTTPException:
         raise
+    except ValueError as exc:
+        logger.warning("Invalid rank input: %s", exc)
+        raise HTTPException(status_code=422, detail="Invalid input") from exc
     except Exception:
         logger.exception("ML inference failed")
         raise HTTPException(status_code=500, detail="Prediction failed") from None
 
     try:
-        scaled_features = scaler.transform(df)
+        try:
+            scaled_features = scaler.transform(df)
+        except ValueError as exc:
+            logger.warning("Scaler rejected features: %s", exc)
+            raise HTTPException(
+                status_code=422, detail="Invalid feature values"
+            ) from exc
         score = float(model.predict(scaled_features)[0])
         if not math.isfinite(score):
             raise ValueError("Model returned a non-finite score")
@@ -183,6 +213,13 @@ def rank_athlete(athlete: Athlete):
                 logger.warning("Prediction spread unavailable", exc_info=True)
 
         return response
+    except HTTPException as exc:
+        # Preserve client errors from input/scaler validation (422),
+        # but hide any other HTTP details from model failures.
+        if exc.status_code == 422:
+            raise
+        logger.exception("ML inference failed")
+        raise HTTPException(status_code=500, detail="Prediction failed") from None
     except Exception:
         logger.exception("ML inference failed")
         raise HTTPException(status_code=500, detail="Prediction failed") from None

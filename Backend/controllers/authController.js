@@ -33,13 +33,13 @@ export const LoginAuth = async (req, res) => {
       "+password",
     );
     if (!user) {
-      return res.json({
+      return res.status(401).json({
         success: false,
         message: "No User with this mail",
       });
     }
     if (!compareSync(password, user.password)) {
-      return res.json({
+      return res.status(401).json({
         success: false,
         message: "Wrong password",
       });
@@ -63,7 +63,7 @@ export const LoginAuth = async (req, res) => {
       accessToken,
     });
   } catch (error) {
-    res.json({
+    res.status(500).json({
       success: false,
       message: error.message,
     });
@@ -198,6 +198,13 @@ export const getUser = async (req, res) => {
     const user = await User.findOne({ _id: userId }).select(
       "-password -createdAt -updatedAt",
     );
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
 
     res.json({
       success: true,

@@ -18,8 +18,10 @@ api.interceptors.request.use((config) => {
 const getApiErrorMessage = (status) => {
   const messages = {
     400: "Bad request. Please check your input.",
+    401: "Unauthorized. Please check your credentials.",
     403: "You do not have permission to perform this action.",
     404: "The requested resource was not found.",
+    409: "Conflict. Resource already exists.",
     429: "Too many requests. Please try again later.",
     500: "Server error. Please try again later.",
   };
@@ -33,7 +35,11 @@ api.interceptors.response.use(
     const originalRequest = err.config;
     const status = err.response?.status;
 
-    if (status === 401 && !originalRequest._retry) {
+    if (
+      status === 401 &&
+      !originalRequest._retry &&
+      !originalRequest.url?.includes("/login")
+    ) {
       originalRequest._retry = true;
 
       try {

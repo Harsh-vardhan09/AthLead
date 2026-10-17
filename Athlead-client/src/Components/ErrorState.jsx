@@ -29,9 +29,7 @@ const ErrorState = ({
         <Icon size={26} />
       </div>
 
-      <h3 className="text-base sm:text-lg font-semibold text-white">
-        {title}
-      </h3>
+      <h3 className="text-base sm:text-lg font-semibold text-white">{title}</h3>
 
       <p className="text-xs sm:text-sm text-slate-300 max-w-md mt-1 mb-4">
         {displayMessage}

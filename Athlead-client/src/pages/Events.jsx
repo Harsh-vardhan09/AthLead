@@ -142,7 +142,11 @@ const Events = () => {
       } catch (err) {
         if (isCancelled) return;
         console.error(err);
-        setError(err?.response?.data?.message || err?.message || "Failed to load events. Please try again.");
+        setError(
+          err?.response?.data?.message ||
+            err?.message ||
+            "Failed to load events. Please try again.",
+        );
         setIsLoading(false);
       }
     };
@@ -402,30 +406,32 @@ const Events = () => {
         )}
 
         {/* Pagination Section */}
-        {!isLoading && !error && (pagination.page > 1 || pagination.hasMore) && (
-          <div className="flex flex-col sm:flex-row items-center justify-between w-full py-4 border-t border-slate-800 text-slate-300 gap-4">
-            <span className="text-xs text-slate-400">
-              Showing page {pagination.page}
-            </span>
-            <div className="flex items-center gap-2">
-              <button
-                disabled={pagination.page <= 1}
-                onClick={() => updateFilters({ page: pagination.page - 1 })}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800 text-xs font-medium text-slate-300 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              >
-                <ChevronLeft size={16} /> Previous
-              </button>
+        {!isLoading &&
+          !error &&
+          (pagination.page > 1 || pagination.hasMore) && (
+            <div className="flex flex-col sm:flex-row items-center justify-between w-full py-4 border-t border-slate-800 text-slate-300 gap-4">
+              <span className="text-xs text-slate-400">
+                Showing page {pagination.page}
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  disabled={pagination.page <= 1}
+                  onClick={() => updateFilters({ page: pagination.page - 1 })}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800 text-xs font-medium text-slate-300 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  <ChevronLeft size={16} /> Previous
+                </button>
 
-              <button
-                disabled={!pagination.hasMore}
-                onClick={() => updateFilters({ page: pagination.page + 1 })}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800 text-xs font-medium text-slate-300 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              >
-                Next <ChevronRight size={16} />
-              </button>
+                <button
+                  disabled={!pagination.hasMore}
+                  onClick={() => updateFilters({ page: pagination.page + 1 })}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800 text-xs font-medium text-slate-300 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  Next <ChevronRight size={16} />
+                </button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
       </div>
 
       {isOpen && <EventDetails selected={selected} setIsOpen={setIsOpen} />}

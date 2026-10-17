@@ -108,7 +108,7 @@ export const refesh = async (req, res) => {
   } catch (error) {
     res.status(401).json({
       success: false,
-      message: error.message,
+      message: "Invalid or expired token",
     });
   }
 };

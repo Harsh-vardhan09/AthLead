@@ -3,7 +3,8 @@ import test, { mock } from "node:test";
 import bcrypt from "bcrypt";
 import { User } from "../models/Users.js";
 import { Otp } from "../models/Otp.js";
-import { LoginAuth, getUser } from "../controllers/authController.js";
+import jwt from "jsonwebtoken";
+import { LoginAuth, getUser, refesh } from "../controllers/authController.js";
 import { sendOtp, verifyOtp, SingupAuth } from "../controllers/OtpController.js";
 
 const createResponse = () => ({
@@ -331,4 +332,48 @@ test("Issue #143: SingupAuth with missing sessionId returns HTTP 400", async () 
 
   assert.equal(res.statusCode, 400, "Expected HTTP 400 for missing sessionId");
   assert.equal(res.body.success, false);
+});
+
+test("Issue #143: refesh with missing cookie returns HTTP 401", async () => {
+  const req = { cookies: {} };
+  const res = createResponse();
+
+  await refesh(req, res);
+
+  assert.equal(res.statusCode, 401, "Expected HTTP 401 when token is missing");
+  assert.equal(res.body.success, false);
+  assert.equal(res.body.message, "token not present");
+});
+
+test("Issue #143: refesh error path returns generic message without leaking exception details", async () => {
+  const internalError = "Secret crypto failure / jwt malformed stack dump";
+  mock.method(jwt, "verify", () => {
+    throw new Error(internalError);
+  });
+
+  try {
+    const req = {
+      cookies: {
+        refreshToken: "malformed.or.expired.token",
+      },
+    };
+    const res = createResponse();
+
+    await refesh(req, res);
+
+    assert.equal(res.statusCode, 401, "Expected HTTP 401 for token verification failure");
+    assert.equal(res.body.success, false);
+    assert.equal(res.body.message, "Invalid or expired token");
+    assert.ok(
+      !res.body.message.includes(internalError),
+      "Response message must not leak underlying exception details"
+    );
+    assert.equal(
+      Object.prototype.hasOwnProperty.call(res.body, "error"),
+      false,
+      "Response object must not contain raw error property"
+    );
+  } finally {
+    mock.reset();
+  }
 });

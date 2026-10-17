@@ -38,7 +38,8 @@ api.interceptors.response.use(
     if (
       status === 401 &&
       !originalRequest._retry &&
-      !originalRequest.url?.includes("/login")
+      !originalRequest.url?.includes("/login") &&
+      !originalRequest.url?.includes("/api/auth/verify-otp")
     ) {
       originalRequest._retry = true;
 

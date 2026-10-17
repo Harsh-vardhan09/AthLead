@@ -35,13 +35,13 @@ export const LoginAuth = async (req, res) => {
     if (!user) {
       return res.status(401).json({
         success: false,
-        message: "No User with this mail",
+        message: "Invalid email or password",
       });
     }
     if (!compareSync(password, user.password)) {
       return res.status(401).json({
         success: false,
-        message: "Wrong password",
+        message: "Invalid email or password",
       });
     }
 
@@ -63,9 +63,10 @@ export const LoginAuth = async (req, res) => {
       accessToken,
     });
   } catch (error) {
+    console.error("LoginAuth error:", error);
     res.status(500).json({
       success: false,
-      message: error.message,
+      message: "Login failed. Please try again.",
     });
   }
 };

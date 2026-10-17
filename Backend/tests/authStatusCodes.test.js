@@ -42,7 +42,7 @@ test("Issue #143: LoginAuth with non-existent email returns HTTP 401 instead of 
 
     assert.equal(res.statusCode, 401, "Expected HTTP 401 for non-existent user");
     assert.equal(res.body.success, false);
-    assert.equal(res.body.message, "No User with this mail");
+    assert.equal(res.body.message, "Invalid email or password");
   } finally {
     mock.reset();
   }
@@ -71,7 +71,7 @@ test("Issue #143: LoginAuth with wrong password returns HTTP 401 instead of 200"
 
     assert.equal(res.statusCode, 401, "Expected HTTP 401 for wrong password");
     assert.equal(res.body.success, false);
-    assert.equal(res.body.message, "Wrong password");
+    assert.equal(res.body.message, "Invalid email or password");
   } finally {
     mock.reset();
   }
@@ -143,7 +143,7 @@ test("Issue #143: LoginAuth unexpected database error returns HTTP 500 instead o
 
     assert.equal(res.statusCode, 500, "Expected HTTP 500 for server error");
     assert.equal(res.body.success, false);
-    assert.equal(res.body.message, "Database timeout");
+    assert.equal(res.body.message, "Login failed. Please try again.");
   } finally {
     mock.reset();
   }

@@ -98,7 +98,7 @@ const EventSignup = () => {
       }
     } catch (error) {
       toast.error(
-        error.response?.data?.message || "Could not register for event"
+        error.response?.data?.message || "Could not register for event",
       );
     }
   };
@@ -252,7 +252,9 @@ const EventSignup = () => {
                     type="radio"
                     value={g}
                     aria-invalid={errors.gender ? "true" : "false"}
-                    aria-describedby={errors.gender ? "gender-error" : undefined}
+                    aria-describedby={
+                      errors.gender ? "gender-error" : undefined
+                    }
                     {...register("gender", {
                       required: "Please select a gender",
                     })}

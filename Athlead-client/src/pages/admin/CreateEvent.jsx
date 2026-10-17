@@ -72,10 +72,10 @@ const CreateEvent = () => {
   };
 
   return (
-    <section className="flex min-h-screen w-full items-center justify-center bg-gradient-to-br from-slate-100 via-slate-50 to-slate-200 p-5 sm:p-10">
+    <section className="flex min-h-screen w-full min-w-0 items-center justify-center bg-gradient-to-br from-slate-100 via-slate-50 to-slate-200 p-3 sm:p-6 lg:p-10">
       <div className="w-full max-w-3xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
-        <header className="flex items-center gap-4 border-b border-slate-200 bg-slate-50/80 px-6 py-5 sm:px-8">
-          <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-600/10 text-emerald-700">
+        <header className="flex items-center gap-3 sm:gap-4 border-b border-slate-200 bg-slate-50/80 px-4 py-4 sm:px-8 sm:py-5">
+          <span className="flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-xl bg-emerald-600/10 text-emerald-700 shrink-0">
             <CalendarPlus size={22} />
           </span>
           <div>
@@ -90,7 +90,7 @@ const CreateEvent = () => {
 
         <form
           onSubmit={handleSubmit(onSubmit)}
-          className="flex flex-col gap-5 px-6 py-6 sm:px-8"
+          className="flex flex-col gap-5 px-4 py-5 sm:px-8 sm:py-6"
         >
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {fields.map((f) => (

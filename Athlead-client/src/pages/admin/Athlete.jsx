@@ -110,7 +110,7 @@ const Athlete = () => {
   }
 
   return (
-    <section className="min-h-screen w-full flex flex-col p-5 sm:p-8 gap-6 bg-slate-50">
+    <section className="min-h-screen w-full min-w-0 flex flex-col p-4 sm:p-6 lg:p-8 gap-6 bg-slate-50">
       {/* Header Area */}
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
@@ -281,7 +281,7 @@ const Athlete = () => {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header with Gradient */}
-            <div className="relative bg-gradient-to-r from-indigo-600 to-purple-700 p-8 pb-12 text-white">
+            <div className="relative bg-gradient-to-r from-indigo-600 to-purple-700 p-5 sm:p-8 pb-10 sm:pb-12 text-white">
               <button
                 onClick={() => setSelectedAthlete(null)}
                 autoFocus
@@ -291,17 +291,17 @@ const Athlete = () => {
                 <X size={20} aria-hidden="true" />
               </button>
 
-              <div className="flex items-end gap-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-end gap-4 sm:gap-6">
                 <img
                   src={selectedAthlete.image}
                   alt={selectedAthlete.fullname}
-                  className="w-24 h-24 rounded-full border-4 border-white/20 shadow-xl object-cover bg-white"
+                  className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-4 border-white/20 shadow-xl object-cover bg-white shrink-0"
                 />
-                <div className="mb-2">
-                  <div className="flex items-center gap-3 mb-1">
+                <div className="mb-2 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-1">
                     <h2
                       id="athlete-profile-title"
-                      className="text-3xl font-bold"
+                      className="text-2xl sm:text-3xl font-bold truncate"
                     >
                       {selectedAthlete.fullname}
                     </h2>
@@ -318,8 +318,8 @@ const Athlete = () => {
             </div>
 
             {/* Modal Content */}
-            <div className="flex-1 overflow-y-auto p-8 -mt-6">
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 relative z-10">
+            <div className="flex-1 overflow-y-auto p-5 sm:p-8 -mt-6">
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-8 relative z-10">
                 {/* Score Summary */}
                 <div className="flex flex-col items-center justify-center p-4 bg-indigo-50 rounded-xl text-indigo-900">
                   <Activity className="mb-2 text-indigo-500" size={24} />

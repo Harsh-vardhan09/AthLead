@@ -26,6 +26,7 @@ const AdminDashboard = () => {
   const [events, setEvents] = useState([]);
   const [athletes, setAthletes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [eventsError, setEventsError] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -42,6 +43,8 @@ const AdminDashboard = () => {
             eventsRes.value?.data?.events
           ) {
             setEvents(eventsRes.value.data.events);
+          } else if (eventsRes.status === "rejected") {
+            setEventsError(true);
           }
           if (athletesRes.status === "fulfilled") {
             const data = athletesRes.value.data;
@@ -63,9 +66,30 @@ const AdminDashboard = () => {
 
   const totalPrize = events.reduce((sum, e) => sum + (Number(e.prize) || 0), 0);
   const now = new Date();
-  const upcomingEvents = events.filter(
-    (e) => !e.date || new Date(e.date) >= now,
-  );
+  const upcomingEvents = events.filter((e) => {
+    if (!e.date) return true;
+    const eventDate = new Date(e.date);
+    if (isNaN(eventDate.getTime())) return true;
+    if (e.time && typeof e.time === "string") {
+      const match = e.time.match(/^(\d{1,2}):(\d{2})/);
+      if (match) {
+        eventDate.setHours(
+          parseInt(match[1], 10),
+          parseInt(match[2], 10),
+          0,
+          0,
+        );
+        return eventDate >= now;
+      }
+    }
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const eventDay = new Date(
+      eventDate.getFullYear(),
+      eventDate.getMonth(),
+      eventDate.getDate(),
+    );
+    return eventDay >= today;
+  });
 
   // Group events by sport for the chart
   const sportDistribution = Object.entries(
@@ -78,16 +102,6 @@ const AdminDashboard = () => {
     .map(([sport, count]) => ({ sport, count }))
     .sort((a, b) => b.count - a.count)
     .slice(0, 6);
-
-  const fallbackChartData =
-    sportDistribution.length > 0
-      ? sportDistribution
-      : [
-          { sport: "Athletics", count: 4 },
-          { sport: "Swimming", count: 3 },
-          { sport: "Badminton", count: 2 },
-          { sport: "Wrestling", count: 2 },
-        ];
 
   return (
     <div className="w-full min-w-0 p-4 sm:p-6 lg:p-8 flex flex-col gap-8 bg-slate-50 min-h-screen">
@@ -140,10 +154,14 @@ const AdminDashboard = () => {
               Active Athletes
             </p>
             <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 mt-2">
-              {loading ? "…" : athletes.length || "120+"}
+              {loading ? "…" : athletes.length}
             </h2>
             <span className="text-xs text-indigo-600 mt-1 inline-block font-medium">
-              Across 30+ disciplines
+              {loading
+                ? "Loading…"
+                : athletes.length === 1
+                  ? "1 registered athlete"
+                  : `${athletes.length} registered athletes`}
             </span>
           </div>
           <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
@@ -200,42 +218,54 @@ const AdminDashboard = () => {
               </p>
             </div>
           </div>
-          <div className="w-full h-64 sm:h-72 min-w-0">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={fallbackChartData}
-                margin={{ top: 10, right: 10, left: -20, bottom: 20 }}
-              >
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  vertical={false}
-                  stroke="#f1f5f9"
-                />
-                <XAxis
-                  dataKey="sport"
-                  tick={{ fill: "#64748b", fontSize: 12 }}
-                  interval={0}
-                  angle={-15}
-                  textAnchor="end"
-                />
-                <YAxis
-                  tick={{ fill: "#64748b", fontSize: 12 }}
-                  allowDecimals={false}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "#0f172a",
-                    borderRadius: "0.75rem",
-                    border: "none",
-                    color: "#fff",
-                    fontSize: "0.85rem",
-                  }}
-                  itemStyle={{ color: "#2dd4bf" }}
-                />
-                <Bar dataKey="count" fill="#0d9488" radius={[6, 6, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          {sportDistribution.length > 0 ? (
+            <div className="w-full h-64 sm:h-72 min-w-0">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={sportDistribution}
+                  margin={{ top: 10, right: 10, left: -20, bottom: 20 }}
+                >
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    vertical={false}
+                    stroke="#f1f5f9"
+                  />
+                  <XAxis
+                    dataKey="sport"
+                    tick={{ fill: "#64748b", fontSize: 12 }}
+                    interval={0}
+                    angle={-15}
+                    textAnchor="end"
+                  />
+                  <YAxis
+                    tick={{ fill: "#64748b", fontSize: 12 }}
+                    allowDecimals={false}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "#0f172a",
+                      borderRadius: "0.75rem",
+                      border: "none",
+                      color: "#fff",
+                      fontSize: "0.85rem",
+                    }}
+                    itemStyle={{ color: "#2dd4bf" }}
+                  />
+                  <Bar dataKey="count" fill="#0d9488" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <div className="w-full h-64 sm:h-72 min-w-0 flex flex-col items-center justify-center text-slate-400 border border-dashed border-slate-200 rounded-xl">
+              <Trophy size={32} className="text-slate-300 mb-2" />
+              <p className="text-sm font-medium text-slate-500">
+                No event disciplines to display
+              </p>
+              <p className="text-xs text-slate-400 mt-1">
+                Discipline distribution will appear once competitions are created.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Quick Admin Navigation Card */}
@@ -340,7 +370,11 @@ const AdminDashboard = () => {
           </Link>
         </div>
 
-        {events.length === 0 ? (
+        {eventsError ? (
+          <p className="text-sm text-red-500 py-4">
+            Failed to load recent events. Please try again later.
+          </p>
+        ) : events.length === 0 ? (
           <p className="text-sm text-slate-500 py-4">
             No events registered yet.
           </p>

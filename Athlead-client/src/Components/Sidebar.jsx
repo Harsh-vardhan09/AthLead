@@ -59,7 +59,7 @@ const Sidebar = ({ sidebar, setSidebar, navItems, pinned, showLogout }) => {
               <li
                 key={item.name}
                 onClick={() => go(item.path)}
-                className="cursor-pointer text-[#64748b] hover:text-[#a7b0bd] text-lg"
+                className="cursor-pointer text-slate-300 hover:text-white text-lg"
               >
                 {item.name}
               </li>
@@ -69,7 +69,7 @@ const Sidebar = ({ sidebar, setSidebar, navItems, pinned, showLogout }) => {
           {showLogout && (
             <button
               onClick={logout}
-              className="mt-auto flex items-center gap-2 cursor-pointer text-[#64748b] hover:text-[#a7b0bd] text-lg"
+              className="mt-auto flex items-center gap-2 cursor-pointer text-slate-300 hover:text-white text-lg"
             >
               <LogOut className="h-5 w-5" />
               Logout

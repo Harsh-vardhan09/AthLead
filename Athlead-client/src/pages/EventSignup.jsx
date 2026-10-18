@@ -23,7 +23,6 @@ const EventSignup = () => {
     status: "loading",
     event: null,
   });
-  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -41,8 +40,7 @@ const EventSignup = () => {
           const res = await eventService.getAll({ limit, page });
           const list = res.data?.events ?? res.data?.message ?? [];
           if (Array.isArray(list)) {
-            found =
-              list.find((e) => String(e._id) === String(eventId)) ?? null;
+            found = list.find((e) => String(e._id) === String(eventId)) ?? null;
           }
           if (found) break;
           const pagination = res.data?.pagination;
@@ -65,8 +63,6 @@ const EventSignup = () => {
           else setEventState({ status: "open", event: found });
         }
       } catch {
-        // Loading failure leaves the event unknown. Block signup until
-        // the event can be verified so past/full events cannot slip through.
         if (!cancelled) setEventState({ status: "unavailable", event: null });
       }
     };
@@ -74,7 +70,7 @@ const EventSignup = () => {
     return () => {
       cancelled = true;
     };
-  }, [eventId, retryCount]);
+  }, [eventId]);
 
   const onSubmit = async (data) => {
     if (eventState.status !== "open") {
@@ -124,22 +120,13 @@ const EventSignup = () => {
     eventState.status === "full" ||
     eventState.status === "unavailable";
 
-  const spotsLeft =
-    eventState.event?.capacity != null
-      ? Math.max(
-          0,
-          eventState.event.capacity - (eventState.event.registeredCount || 0),
-        )
-      : null;
-
   return (
-    <section className="dark-bg relative max-w-screen min-h-screen flex items-center justify-center ">
+    <section className="dark-bg relative max-w-screen min-h-screen flex items-center justify-center">
       <div className="h-2/3 max-w-180 w-full bg-linear-to-br from-[#0f2027] via-[#1a3a4a] to-[#0f2027] border border-[#1d9e75]/40 text-start text-white rounded-2xl shadow-xl">
         <div className="text-center pt-6 pb-2 px-8">
           <span className="inline-flex items-center gap-1.5 bg-[#1d9e75]/15 border border-[#1d9e75]/40 text-[#5dcaa5] text-xs font-medium px-3 py-1 rounded-full mb-3">
             ● {badgeText}
           </span>
-
         </div>
 
         <form
@@ -162,7 +149,6 @@ const EventSignup = () => {
               aria-describedby={errors.fullname ? "fullname-error" : undefined}
               {...register("fullname", {
                 required: "Full name is required",
-
               })}
               className={`w-full bg-white/7 border rounded-xl px-3.5 py-2.5 text-sm text-white placeholder:text-white/25 outline-none focus:bg-[#1d9e75]/8 transition-all ${
                 errors.fullname ? "border-red-500/80" : "border-white/12"
@@ -221,7 +207,17 @@ const EventSignup = () => {
                   +91
                 </span>
                 <input
-
+                  id="phone"
+                  type="tel"
+                  placeholder="9876543210"
+                  aria-invalid={errors.phone ? "true" : "false"}
+                  aria-describedby={errors.phone ? "phone-error" : undefined}
+                  {...register("phone", {
+                    required: "Phone number is required",
+                    pattern: {
+                      value: /^[6-9]\d{9}\$/,
+                      message:
+                        "Enter a valid 10-digit phone number starting with 6-9",
                     },
                   })}
                   className={`flex-1 max-w-full bg-white/7 border rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-white/25 outline-none focus:bg-[#1d9e75]/8 transition-all ${
@@ -230,7 +226,7 @@ const EventSignup = () => {
                 />
               </div>
               {errors.phone && (
-
+                <p id="phone-error" className="text-xs text-red-400 mt-1">
                   {errors.phone.message}
                 </p>
               )}

@@ -127,6 +127,11 @@ const EventSignup = () => {
           <span className="inline-flex items-center gap-1.5 bg-[#1d9e75]/15 border border-[#1d9e75]/40 text-[#5dcaa5] text-xs font-medium px-3 py-1 rounded-full mb-3">
             ● {badgeText}
           </span>
+          {eventState.event?.title && (
+            <h1 className="text-xl font-bold text-white mt-1">
+              {eventState.event?.title}
+            </h1>
+          )}
         </div>
 
         <form
@@ -149,6 +154,10 @@ const EventSignup = () => {
               aria-describedby={errors.fullname ? "fullname-error" : undefined}
               {...register("fullname", {
                 required: "Full name is required",
+                minLength: {
+                  value: 3,
+                  message: "Full name must be at least 3 characters",
+                },
               })}
               className={`w-full bg-white/7 border rounded-xl px-3.5 py-2.5 text-sm text-white placeholder:text-white/25 outline-none focus:bg-[#1d9e75]/8 transition-all ${
                 errors.fullname ? "border-red-500/80" : "border-white/12"

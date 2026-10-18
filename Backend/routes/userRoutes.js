@@ -13,7 +13,7 @@ import {
   verifyOtp,
   SingupAuth,
 } from "../controllers/OtpController.js";
-import { requireAuth } from "../middleware/middleware.js";
+import { requireAuth, optionalAuth } from "../middleware/middleware.js";
 import multer from "multer";
 
 const otpLimiter = rateLimit({
@@ -78,7 +78,7 @@ router.post("/verify-otp", otpLimiter, verifyOtp);
 
 router.post("/signup", SingupAuth);
 router.post("/login", loginEmailLimiter, loginLimiter, LoginAuth);
-router.post("/logout", requireAuth, logout);
+router.post("/logout", optionalAuth, logout);
 router.post("/refresh", refesh);
 router.get("/me", requireAuth, getUser);
 

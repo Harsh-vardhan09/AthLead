@@ -29,6 +29,8 @@ const getApiErrorMessage = (status) => {
   return messages[status] || "Something went wrong. Please try again.";
 };
 
+let refreshPromise = null;
+
 api.interceptors.response.use(
   (res) => res,
   async (err) => {
@@ -43,28 +45,36 @@ api.interceptors.response.use(
     ) {
       originalRequest._retry = true;
 
+      if (!refreshPromise) {
+        refreshPromise = axios
+          .post(
+            `${import.meta.env.VITE_BASE_URL}/api/refresh`,
+            {},
+            { withCredentials: true },
+          )
+          .then((result) => {
+            const newAccessToken = result.data.accessToken;
+            localStorage.setItem("accessToken", newAccessToken);
+            return newAccessToken;
+          })
+          .catch((error) => {
+            localStorage.removeItem("accessToken");
+            const refreshStatus = error.response?.status;
+            if (refreshStatus) {
+              error.apiMessage = getApiErrorMessage(refreshStatus);
+            }
+            throw error;
+          })
+          .finally(() => {
+            refreshPromise = null;
+          });
+      }
+
       try {
-        const result = await axios.post(
-          `${import.meta.env.VITE_BASE_URL}/api/refresh`,
-          {},
-          { withCredentials: true },
-        );
-
-        const newAccessToken = result.data.accessToken;
-
-        localStorage.setItem("accessToken", newAccessToken);
-
+        const newAccessToken = await refreshPromise;
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-
         return api(originalRequest);
       } catch (error) {
-        localStorage.removeItem("accessToken");
-
-        const refreshStatus = error.response?.status;
-        if (refreshStatus) {
-          error.apiMessage = getApiErrorMessage(refreshStatus);
-        }
-
         return Promise.reject(error);
       }
     }

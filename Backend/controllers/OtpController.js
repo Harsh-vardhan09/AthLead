@@ -45,7 +45,7 @@ export const sendOtp = async (req, res) => {
     const existingUser = await User.findOne({ email: normalizedEmail });
     if (existingUser) {
       return res
-        .status(400)
+        .status(409)
         .json({ success: false, message: "Email already registered" });
     }
 
@@ -287,7 +287,7 @@ export const verifyOtp = async (req, res) => {
         }
 
         const remaining = MAX_ATTEMPTS - updated.attempts;
-        return res.status(400).json({
+        return res.status(401).json({
           success: false,
           message: `Invalid OTP. ${remaining} attempt${remaining === 1 ? "" : "s"} remaining`,
           attemptsRemaining: remaining,
@@ -298,7 +298,7 @@ export const verifyOtp = async (req, res) => {
       const current = await Otp.findById(otpDoc._id);
 
       if (current?.verified) {
-        return res.status(400).json({
+        return res.status(401).json({
           success: false,
           message: "Invalid OTP.",
         });
@@ -442,7 +442,7 @@ export const SingupAuth = async (req, res) => {
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res
-        .status(400)
+        .status(409)
         .json({ success: false, message: "User already exists" });
     }
 

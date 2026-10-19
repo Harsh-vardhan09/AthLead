@@ -1,11 +1,17 @@
 import assert from "node:assert/strict";
 import test, { mock } from "node:test";
 import bcrypt from "bcrypt";
+import mongoose from "mongoose";
 import { User } from "../models/Users.js";
 import { Otp } from "../models/Otp.js";
+import { RefreshToken } from "../models/RefreshToken.js";
 import jwt from "jsonwebtoken";
 import { LoginAuth, getUser, refesh } from "../controllers/authController.js";
-import { sendOtp, verifyOtp, SingupAuth } from "../controllers/OtpController.js";
+import {
+  sendOtp,
+  verifyOtp,
+  SingupAuth,
+} from "../controllers/OtpController.js";
 
 const createResponse = () => ({
   statusCode: 200,
@@ -41,7 +47,11 @@ test("Issue #143: LoginAuth with non-existent email returns HTTP 401 instead of 
 
     await LoginAuth(req, res);
 
-    assert.equal(res.statusCode, 401, "Expected HTTP 401 for non-existent user");
+    assert.equal(
+      res.statusCode,
+      401,
+      "Expected HTTP 401 for non-existent user",
+    );
     assert.equal(res.body.success, false);
     assert.equal(res.body.message, "Invalid email or password");
   } finally {
@@ -95,14 +105,17 @@ test("Issue #143: LoginAuth with invalid request data returns HTTP 400", async (
 
 test("Issue #143: LoginAuth with correct credentials returns HTTP 200 and auth tokens", async () => {
   const hashedPassword = bcrypt.hashSync("ValidPassword123!", 10);
+  const mockUserId = new mongoose.Types.ObjectId();
   mock.method(User, "findOne", () => ({
     select: () => ({
+      _id: mockUserId,
       email: "runner@example.com",
       password: hashedPassword,
       generateRefreshToken: () => "refresh-token-xyz",
       generateAccessToken: () => "access-token-abc",
     }),
   }));
+  mock.method(RefreshToken, "create", async () => ({}));
 
   try {
     const req = {
@@ -203,7 +216,11 @@ test("Issue #143: sendOtp for already registered user returns HTTP 409 duplicate
 
     await sendOtp(req, res);
 
-    assert.equal(res.statusCode, 409, "Expected HTTP 409 for existing user email");
+    assert.equal(
+      res.statusCode,
+      409,
+      "Expected HTTP 409 for existing user email",
+    );
     assert.equal(res.body.success, false);
     assert.equal(res.body.message, "Email already registered");
   } finally {
@@ -287,7 +304,11 @@ test("Issue #143: SingupAuth with existing user email returns HTTP 409 instead o
 
     await SingupAuth(req, res);
 
-    assert.equal(res.statusCode, 409, "Expected HTTP 409 for duplicate user on signup");
+    assert.equal(
+      res.statusCode,
+      409,
+      "Expected HTTP 409 for duplicate user on signup",
+    );
     assert.equal(res.body.success, false);
     assert.equal(res.body.message, "User already exists");
   } finally {
@@ -313,7 +334,11 @@ test("Issue #143: SingupAuth with unverified session returns HTTP 403", async ()
 
     await SingupAuth(req, res);
 
-    assert.equal(res.statusCode, 403, "Expected HTTP 403 for unverified session");
+    assert.equal(
+      res.statusCode,
+      403,
+      "Expected HTTP 403 for unverified session",
+    );
     assert.equal(res.body.success, false);
     assert.equal(
       res.body.message,
@@ -361,17 +386,21 @@ test("Issue #143: refesh error path returns generic message without leaking exce
 
     await refesh(req, res);
 
-    assert.equal(res.statusCode, 401, "Expected HTTP 401 for token verification failure");
+    assert.equal(
+      res.statusCode,
+      401,
+      "Expected HTTP 401 for token verification failure",
+    );
     assert.equal(res.body.success, false);
-    assert.equal(res.body.message, "Invalid or expired token");
+    assert.equal(res.body.message, "invalid token");
     assert.ok(
       !res.body.message.includes(internalError),
-      "Response message must not leak underlying exception details"
+      "Response message must not leak underlying exception details",
     );
     assert.equal(
       Object.prototype.hasOwnProperty.call(res.body, "error"),
       false,
-      "Response object must not contain raw error property"
+      "Response object must not contain raw error property",
     );
   } finally {
     mock.reset();

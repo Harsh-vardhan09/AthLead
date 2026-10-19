@@ -1,7 +1,7 @@
 import GNews from "@gnews-io/gnews-io-js";
 import dayjs from "dayjs"; // Using dayjs which is already in package.json
 
-const client = new GNews(process.env.GNEWS_API);
+const client = new GNews(process.env.GNEWS_API || "missing-api-key");
 
 export const getNews = async (req, res) => {
   try {

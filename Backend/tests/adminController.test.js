@@ -91,7 +91,7 @@ test("getAthletes filters out users with role ADMIN and applies default fields",
       fullname: "Alex Runner",
       email: "alex@example.com",
       role: "USER",
-      createdAt: new Date("2026-01-15T00:00:00.000Z"),
+      createdAt: new Date(2026, 0, 15),
     },
   ];
 
@@ -455,7 +455,7 @@ test("getAthletes maps event participation and formats event date", async () => 
           user: athleteId,
           event: {
             title: "City Marathon",
-            date: new Date("2026-11-10T08:00:00.000Z"),
+            date: new Date(2026, 10, 10, 8),
           },
         },
       ],
@@ -523,10 +523,10 @@ test("getAthleteById returns athlete profile with score and participations", asy
     phone: 9876543210,
     gender: "Female",
     state: "Karnataka",
-    DOB: new Date("2002-05-20T00:00:00.000Z"),
+    DOB: new Date(2002, 4, 20),
     status: "Active",
     role: "USER",
-    createdAt: new Date("2026-02-01T00:00:00.000Z"),
+    createdAt: new Date(2026, 1, 1),
   };
 
   User.findById = () => ({
@@ -553,7 +553,7 @@ test("getAthleteById returns athlete profile with score and participations", asy
           user: athleteId,
           event: {
             title: "State Badminton Open",
-            date: new Date("2026-12-05T00:00:00.000Z"),
+            date: new Date(2026, 11, 5),
           },
         },
       ],

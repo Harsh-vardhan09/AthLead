@@ -263,6 +263,40 @@ test("errorHandler respects custom candidate status codes in 4xx range", () => {
   });
 });
 
+test("errorHandler preserves custom 5xx status codes and masks messages in production", () => {
+  const prevEnv = process.env.NODE_ENV;
+  const originalError = console.error;
+  console.error = () => {};
+  try {
+    // status field variant.
+    process.env.NODE_ENV = "development";
+    const gatewayErr = new Error("Upstream unavailable");
+    gatewayErr.status = 502;
+
+    const res1 = createMockRes();
+    errorHandler(gatewayErr, {}, res1, () => {});
+    assert.equal(res1.statusCode, 502);
+    assert.equal(res1.body.message, "Upstream unavailable");
+
+    // statusCode field variant with masked production message.
+    process.env.NODE_ENV = "production";
+    const unavailableErr = new Error("Sensitive upstream diagnostic");
+    unavailableErr.statusCode = 503;
+
+    const res2 = createMockRes();
+    errorHandler(unavailableErr, {}, res2, () => {});
+    assert.equal(res2.statusCode, 503);
+    assert.deepEqual(res2.body, {
+      success: false,
+      message: "Internal server error",
+    });
+    assert.equal(res2.body.stack, undefined);
+  } finally {
+    process.env.NODE_ENV = prevEnv;
+    console.error = originalError;
+  }
+});
+
 test("errorHandler hides error message and stack in production for 500 errors", () => {
   const prevEnv = process.env.NODE_ENV;
   const originalError = console.error;

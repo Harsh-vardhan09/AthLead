@@ -136,26 +136,48 @@ export const getScore = async (req, res) => {
   }
 };
 
+// One row per athlete, ranked by their best score (ties broken by the score's _id).
+const bestScorePerUser = [
+  { $sort: { score: -1, _id: 1 } },
+  {
+    $group: {
+      _id: "$user",
+      scoreId: { $first: "$_id" },
+      score: { $first: "$score" },
+    },
+  },
+  { $sort: { score: -1, scoreId: 1 } },
+  { $project: { _id: "$scoreId", user: "$_id", score: 1 } },
+];
+
+const populateRankedUsers = (docs) =>
+  Score.populate(docs, {
+    path: "user",
+    select: "fullname image state gender",
+  });
+
 export const getRanking = async (req, res) => {
   try {
     const { page, limit } = req.query || {};
     const isPaginated = page !== undefined || limit !== undefined;
-
-    let query = Score.find({})
-      .sort({ score: -1, _id: 1 })
-      .select("user score")
-      .populate("user", "fullname image state gender")
-      .lean();
 
     if (isPaginated) {
       const pageNum = Math.max(1, parseInt(page, 10) || 1);
       const limitNum = Math.max(1, Math.min(100, parseInt(limit, 10) || 10));
       const skip = (pageNum - 1) * limitNum;
 
-      const [rankDocs, total] = await Promise.all([
-        query.skip(skip).limit(limitNum).exec(),
-        Score.countDocuments({}),
+      const [result] = await Score.aggregate([
+        ...bestScorePerUser,
+        {
+          $facet: {
+            rows: [{ $skip: skip }, { $limit: limitNum }],
+            total: [{ $count: "count" }],
+          },
+        },
       ]);
+
+      const total = result?.total?.[0]?.count ?? 0;
+      const rankDocs = await populateRankedUsers(result?.rows ?? []);
 
       const rank = rankDocs.map((doc, idx) => ({
         ...doc,
@@ -177,7 +199,9 @@ export const getRanking = async (req, res) => {
       });
     }
 
-    const rankDocs = await query.exec();
+    const rankDocs = await populateRankedUsers(
+      await Score.aggregate(bestScorePerUser),
+    );
     const rank = rankDocs.map((doc, idx) => ({
       ...doc,
       rank: idx + 1,

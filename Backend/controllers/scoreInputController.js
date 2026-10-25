@@ -12,7 +12,7 @@ export const saveScoreInput = async (req, res, next) => {
       { new: true, upsert: true, runValidators: true },
     );
 
-    return res.json({ success: true, data: scoreInput });
+    return res.status(200).json({ success: true, data: scoreInput });
   } catch (error) {
     return next(error);
   }
@@ -24,10 +24,12 @@ export const getScoreInput = async (req, res, next) => {
     const scoreInput = await AthleteScoreInput.findOne({ user: userId });
 
     if (!scoreInput) {
-      return res.json({ success: false, message: "No score input found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "No score input found" });
     }
 
-    return res.json({ success: true, data: scoreInput });
+    return res.status(200).json({ success: true, data: scoreInput });
   } catch (error) {
     return next(error);
   }

@@ -363,6 +363,7 @@ test("Test B — Existing event registration succeeds and creates participation 
     });
 
     assert.equal(nextError, null);
+    assert.equal(response.statusCode, 201);
     assert.deepEqual(response.body, {
       success: true,
       message: "Registered to event",
@@ -414,9 +415,10 @@ test("Test C — Duplicate registration remains handled via pre-check and duplic
     const resPrecheck = await invokeRegisterEvent({
       params: { eventId: "507f1f77bcf86cd799439011" },
     });
+    assert.equal(resPrecheck.response.statusCode, 409);
     assert.deepEqual(resPrecheck.response.body, {
       success: false,
-      message: "user already registerred to event",
+      message: "User is already registered for this event.",
     });
     assert.equal(createCalled, false);
 
@@ -441,6 +443,49 @@ test("Test C — Duplicate registration remains handled via pre-check and duplic
     Event.findById = originalEventFindById;
     Participation.findOne = originalParticipationFindOne;
     Participation.create = originalParticipationCreate;
+  }
+});
+
+test("Test C1 — User not found returns HTTP 404", async () => {
+  const originalUserFindById = User.findById;
+  User.findById = async () => null;
+
+  try {
+    const { response, nextError } = await invokeRegisterEvent({
+      params: { eventId: "507f1f77bcf86cd799439011" },
+    });
+    assert.equal(nextError, null);
+    assert.equal(response.statusCode, 404);
+    assert.deepEqual(response.body, {
+      success: false,
+      message: "User not found. Please log in again.",
+    });
+  } finally {
+    User.findById = originalUserFindById;
+  }
+});
+
+test("Test C2 — Missing date of birth returns HTTP 400", async () => {
+  const originalUserFindById = User.findById;
+  User.findById = async () => ({
+    _id: "user-123",
+    email: "athlete@example.com",
+    DOB: null,
+  });
+
+  try {
+    const { response, nextError } = await invokeRegisterEvent({
+      params: { eventId: "507f1f77bcf86cd799439011" },
+    });
+    assert.equal(nextError, null);
+    assert.equal(response.statusCode, 400);
+    assert.deepEqual(response.body, {
+      success: false,
+      message:
+        "Date of birth is missing from your profile. Please update your profile before registering.",
+    });
+  } finally {
+    User.findById = originalUserFindById;
   }
 });
 

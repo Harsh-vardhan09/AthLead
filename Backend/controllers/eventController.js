@@ -181,7 +181,7 @@ export const registerEvent = async (req, res, next) => {
     const user = await User.findById(req.user._id);
 
     if (!user) {
-      return res.json({
+      return res.status(404).json({
         success: false,
         message: "User not found. Please log in again.",
       });
@@ -190,7 +190,7 @@ export const registerEvent = async (req, res, next) => {
     const DOB = user.DOB;
 
     if (!DOB) {
-      return res.json({
+      return res.status(400).json({
         success: false,
         message:
           "Date of birth is missing from your profile. Please update your profile before registering.",
@@ -245,9 +245,9 @@ export const registerEvent = async (req, res, next) => {
     });
 
     if (alreadyRegistered) {
-      return res.json({
+      return res.status(409).json({
         success: false,
-        message: "user already registerred to event",
+        message: "User is already registered for this event.",
       });
     }
 
@@ -322,7 +322,7 @@ export const registerEvent = async (req, res, next) => {
       throw error;
     }
 
-    res.json({
+    return res.status(201).json({
       success: true,
       message: "Registered to event",
     });
